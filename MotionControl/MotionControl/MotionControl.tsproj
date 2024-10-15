@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4024.62">
+	<Project ProjectGUID="{B35EF0B4-7055-4207-B8B8-88D64B4CAD73}" Target64Bit="true" ShowHideConfigurations="#x6">
+		<System>
+			<Tasks>
+				<Task Id="3" Priority="20" CycleTime="100000" AmsPort="350" AdtTasks="true">
+					<Name>PlcTask</Name>
+				</Task>
+			</Tasks>
+		</System>
+		<Motion>
+			<NC File="NC.xti"/>
+		</Motion>
+		<Plc>
+			<Project File="MotionControl.xti"/>
+		</Plc>
+	</Project>
+</TcSmProject>

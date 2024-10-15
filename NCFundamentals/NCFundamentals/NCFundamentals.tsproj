@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4024.62">
+	<Project ProjectGUID="{3D58C0F6-A4BB-483A-A1E4-5B2846AA2C5B}" TargetNetId="5.108.30.32.1.1" Target64Bit="true" ShowHideConfigurations="#x6">
+		<System>
+			<Tasks>
+				<Task Id="5" Priority="20" CycleTime="100000" AmsPort="350" AdtTasks="true">
+					<Name>PlcTask</Name>
+				</Task>
+			</Tasks>
+		</System>
+		<Motion>
+			<NC File="NC.xti"/>
+		</Motion>
+		<Plc>
+			<Project File="Untitled1.xti"/>
+		</Plc>
+		<Io>
+			<Device File="Device 1 (EtherCAT).xti" Id="1"/>
+		</Io>
+	</Project>
+	<Mappings>
+		<MappingInfo Identifier="{00000000-0010-0304-3000-040310000403}" Id="#x02030010"/>
+	</Mappings>
+</TcSmProject>

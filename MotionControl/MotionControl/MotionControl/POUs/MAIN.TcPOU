@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="MAIN" Id="{be7b5f04-c796-4510-a871-8b33ce927b04}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	fb_Habilita1: MC_Power;
+	bHabilita: BOOL;
+	MaquinaLigada: BOOL;
+	fb_Habilita2: MC_Power;
+	lrOverride_Eixo2: LREAL;
+	fb_Reset1: MC_Reset;
+	ResetaEixo: BOOL;
+	fb_Reset2: MC_Reset;
+	ResetMaquina: BOOL;
+	fb_MoveRelativoEixo1: MC_MoveRelative;
+	bMoverEixo1Rel: BOOL;
+	lrDistancia: LREAL := 10.0;
+	fb_MoveAbsolutoEixo1: MC_MoveAbsolute;
+	bMoverEixo1Abs: BOOL;
+	lrPosicao: LREAL := 250.0;
+	fb_MoveVeloEixo1: MC_MoveVelocity;
+	bMoverEixo1Velo: BOOL;
+	fb_HaltEixo1: MC_Halt;
+	bHaltEixo1: BOOL;
+	fb_ParaEixo1: MC_Stop;
+	bPararEixo1: BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Ler Status
+	GVL_Axes.Axis1.ReadStatus();
+	GVL_Axes.Axis2.ReadStatus();
+	
+//Habilitar Eixo1
+	IF MaquinaLigada THEN
+		bHabilita := 1;
+	ELSE
+		bHabilita := 0;
+	END_IF
+	fb_Habilita1(
+		Axis:= GVL_Axes.Axis1, 
+		Enable:= bHabilita, 
+		Enable_Positive:= bHabilita, 
+		Enable_Negative:= bHabilita, 
+		Override:= 100.0);
+		
+//Habilitar Eixo2
+	fb_Habilita2(
+		Axis:= GVL_Axes.Axis2, 
+		Enable:= bHabilita, 
+		Enable_Positive:= bHabilita, 
+		Enable_Negative:= bHabilita, 
+		Override:= lrOverride_Eixo2);
+		
+//Reset
+	IF ResetMaquina THEN
+		ResetaEixo := 1;
+	ELSE
+		ResetaEixo := 0;
+	END_IF
+
+	fb_Reset1(
+		Axis:= GVL_Axes.Axis1, 
+		Execute:= ResetaEixo AND GVL_Axes.Axis1.Status.Error);
+
+	fb_Reset2(
+		Axis:= GVL_Axes.Axis2, 
+		Execute:= ResetaEixo AND GVL_Axes.Axis2.Status.Error);
+		
+//Move Relative
+	fb_MoveRelativoEixo1(
+		Axis:= GVL_Axes.Axis1, 
+		Execute:= bMoverEixo1Rel, 
+		Distance:= lrDistancia, 
+		Velocity:= 5.0);
+		
+//Move Absolute
+	fb_MoveAbsolutoEixo1(
+		Axis:= GVL_Axes.Axis1, 
+		Execute:= bMoverEixo1Abs, 
+		Position:= lrPosicao, 
+		Velocity:= 50.0);
+		
+//Move Velocity
+	fb_MoveVeloEixo1(
+		Axis:= GVL_Axes.Axis1, 
+		Execute:= bMoverEixo1Velo, 
+		Velocity:= 25.0);
+		
+//Parar o Eixo1
+	fb_HaltEixo1(
+		Axis:= GVL_Axes.Axis1, 
+		Execute:= bHaltEixo1);
+		
+//Parar o Eixo1 e impedir que se mova até que desative o bloco ParaEixo
+	fb_ParaEixo1(
+		Axis:= GVL_Axes.Axis1, 
+		Execute:= bPararEixo1);]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4024.62">
+	<Project ProjectGUID="{3D58C0F6-A4BB-483A-A1E4-5B2846AA2C5B}" TargetNetId="5.79.122.170.1.1" ShowHideConfigurations="#x6">
+		<Motion>
+			<NC File="NC.xti"/>
+		</Motion>
+		<Io>
+			<Device File="Device 1 (EtherCAT).xti" Id="1"/>
+		</Io>
+	</Project>
+	<Mappings>
+		<MappingInfo Identifier="{00000000-0010-0304-3000-040310000403}" Id="#x02030010"/>
+	</Mappings>
+</TcSmProject>
