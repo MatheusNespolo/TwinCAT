@@ -24,6 +24,9 @@ VAR
 	bHaltEixo1: BOOL;
 	fb_ParaEixo1: MC_Stop;
 	bPararEixo1: BOOL;
+	fb_MoveEixo1Mod: MC_MoveModulo;
+	bMoverEixo1Mod: BOOL;
+	lrPosicaoMod: LREAL;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -95,7 +98,17 @@ END_VAR
 //Parar o Eixo1 e impedir que se mova até que desative o bloco ParaEixo
 	fb_ParaEixo1(
 		Axis:= GVL_Axes.Axis1, 
-		Execute:= bPararEixo1);]]></ST>
+		Execute:= bPararEixo1);
+		
+//Move Modulo (Mover o eixo de forma angular - 0° a 360°)
+	fb_MoveEixo1Mod(
+		Axis:= GVL_Axes.Axis1, 
+		Execute:= bMoverEixo1Mod, 
+		Position:= lrPosicaoMod, 
+		Velocity:= 25.0,  
+		Direction:= MC_Direction.MC_Shortest_Way);
+		
+]]></ST>
     </Implementation>
   </POU>
 </TcPlcObject>

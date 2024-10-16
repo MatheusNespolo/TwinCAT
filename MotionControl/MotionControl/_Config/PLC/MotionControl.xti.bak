@@ -983,7 +983,7 @@ External Setpoint Generation:
 		</DataType>
 	</DataTypes>
 	<Project GUID="{E7B0C89A-7235-41C8-AC66-655DD28ADB6C}" Name="MotionControl" PrjFilePath="..\..\MotionControl\MotionControl.plcproj" TmcFilePath="..\..\MotionControl\MotionControl.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-		<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcHash="{F85847AA-F02B-7BEE-EDEA-DB71353D5C85}">
+		<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcHash="{530F8F88-11C9-4F2B-83F2-1AF09296DF86}">
 			<Name>MotionControl Instance</Name>
 			<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 			<Vars VarGrpType="1">
