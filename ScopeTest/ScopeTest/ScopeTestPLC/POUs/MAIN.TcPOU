@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="MAIN" Id="{a51f0d6a-1ad2-462f-ae5b-180b97f4ceef}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	MaquinaLigada: BOOL;
+	bHabilita: BOOL;
+	fb_Habilita1: MC_Power;
+	fb_MoveEixo1Mod: MC_MoveModulo;
+	bMoverEixo1Mod: BOOL;
+	lrPosicaoMod: LREAL;
+	Passo: INT;
+	Timer1: TON;
+	bIniciaMoveMod: BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Ler Status
+	Axes.Axis1.ReadStatus();
+	
+//Habilitar Eixo1
+	IF MaquinaLigada THEN
+		bHabilita := 1;
+	ELSE
+		bHabilita := 0;
+	END_IF
+	fb_Habilita1(
+		Axis:= Axes.Axis1, 
+		Enable:= bHabilita, 
+		Enable_Positive:= bHabilita, 
+		Enable_Negative:= bHabilita, 
+		Override:= 100.0);
+		
+//Rotina de movimentação do eixo
+
+	lrPosicaoMod := 360;
+	Timer1(IN:= bHabilita, PT:= T#3S, Q=> bIniciaMoveMod);
+	IF Timer1.ET = T#3S THEN
+		lrPosicaoMod := 0;
+		fb_MoveEixo1Mod.Direction := MC_Direction.MC_Negative_Direction;
+	END_IF
+
+//Move Modulo (Mover o eixo de forma angular - 0° a 360°)
+	fb_MoveEixo1Mod(
+		Axis:= Axes.Axis1, 
+		Execute:= Timer1.Q, 
+		Position:= lrPosicaoMod, 
+		Velocity:= 25.0,  
+		Direction:= MC_Direction.MC_Positive_Direction);]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>
