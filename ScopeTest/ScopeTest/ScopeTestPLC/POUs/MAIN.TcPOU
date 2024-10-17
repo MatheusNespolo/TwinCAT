@@ -12,6 +12,8 @@ VAR
 	Passo: INT;
 	Timer1: TON;
 	bIniciaMoveMod: BOOL;
+	bVoltar : BOOL;
+	bInicio: BOOL;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -21,6 +23,7 @@ END_VAR
 //Habilitar Eixo1
 	IF MaquinaLigada THEN
 		bHabilita := 1;
+		bInicio := 1;
 	ELSE
 		bHabilita := 0;
 	END_IF
@@ -33,10 +36,11 @@ END_VAR
 		
 //Rotina de movimentação do eixo
 
-	lrPosicaoMod := 360;
-	Timer1(IN:= bHabilita, PT:= T#3S, Q=> bIniciaMoveMod);
+	lrPosicaoMod := 355;
+	Timer1(IN:= bInicio, PT:= T#3S);
 	IF Timer1.ET = T#3S THEN
-		lrPosicaoMod := 0;
+		bInicio := 0;
+		fb_MoveEixo1Mod.Execute := 0;
 		fb_MoveEixo1Mod.Direction := MC_Direction.MC_Negative_Direction;
 	END_IF
 
@@ -45,8 +49,10 @@ END_VAR
 		Axis:= Axes.Axis1, 
 		Execute:= Timer1.Q, 
 		Position:= lrPosicaoMod, 
-		Velocity:= 25.0,  
-		Direction:= MC_Direction.MC_Positive_Direction);]]></ST>
+		Velocity:= 50.0,  
+		Direction:= MC_Direction.MC_Positive_Direction, 
+		Done=> bVoltar);
+]]></ST>
     </Implementation>
   </POU>
 </TcPlcObject>
