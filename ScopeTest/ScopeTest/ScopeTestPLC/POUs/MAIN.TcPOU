@@ -9,11 +9,12 @@ VAR
 	fb_MoveEixo1Mod: MC_MoveModulo;
 	bMoverEixo1Mod: BOOL;
 	lrPosicaoMod: LREAL;
-	Passo: INT;
-	Timer1: TON;
 	bIniciaMoveMod: BOOL;
-	bVoltar : BOOL;
-	bInicio: BOOL;
+	fb_Move1AbsolutoEixo1: MC_MoveAbsolute;
+	bMover1Eixo1Abs: BOOL;
+	fb_Move2AbsolutoEixo1: MC_MoveAbsolute;
+	bMover2Eixo1Abs: BOOL;
+	Timer1: TON;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -23,7 +24,6 @@ END_VAR
 //Habilitar Eixo1
 	IF MaquinaLigada THEN
 		bHabilita := 1;
-		bInicio := 1;
 	ELSE
 		bHabilita := 0;
 	END_IF
@@ -36,22 +36,29 @@ END_VAR
 		
 //Rotina de movimentação do eixo
 
-	lrPosicaoMod := 355;
-	Timer1(IN:= bInicio, PT:= T#3S);
-	IF Timer1.ET = T#3S THEN
-		bInicio := 0;
-		fb_MoveEixo1Mod.Execute := 0;
-		fb_MoveEixo1Mod.Direction := MC_Direction.MC_Negative_Direction;
-	END_IF
+	Timer1(IN:= bMover1Eixo1Abs, PT:= T#2S, Q=> bMover2Eixo1Abs);
+
+	//Move Absolute 1
+	fb_Move1AbsolutoEixo1(
+		Axis:= Axes.Axis1, 
+		Execute:= bMover1Eixo1Abs, 
+		Position:= 1000, 
+		Velocity:= 50.0);
+		
+	//Move Absolute 2
+	fb_Move2AbsolutoEixo1(
+		Axis:= Axes.Axis1, 
+		Execute:= bMover2Eixo1Abs, 
+		Position:= 0, 
+		Velocity:= 50.0);
 
 //Move Modulo (Mover o eixo de forma angular - 0° a 360°)
 	fb_MoveEixo1Mod(
 		Axis:= Axes.Axis1, 
-		Execute:= Timer1.Q, 
+		Execute:= , 
 		Position:= lrPosicaoMod, 
 		Velocity:= 50.0,  
-		Direction:= MC_Direction.MC_Positive_Direction, 
-		Done=> bVoltar);
+		Direction:= MC_Direction.MC_Positive_Direction);
 ]]></ST>
     </Implementation>
   </POU>
