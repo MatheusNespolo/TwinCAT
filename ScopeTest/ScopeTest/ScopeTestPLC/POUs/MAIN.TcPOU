@@ -24,7 +24,9 @@ END_VAR
 		Enable_Positive:= bHabilita, 
 		Enable_Negative:= bHabilita, 
 		Override:= 100.0);
-]]></ST>
+
+//Chama o programa de movimento
+	MoveVirtualAxis();]]></ST>
     </Implementation>
   </POU>
 </TcPlcObject>

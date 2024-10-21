@@ -983,7 +983,7 @@ External Setpoint Generation:
 		</DataType>
 	</DataTypes>
 	<Project GUID="{0410271B-B15D-4E54-9486-91A40E0DB8DF}" Name="ScopeTestPLC" PrjFilePath="..\..\ScopeTestPLC\ScopeTestPLC.plcproj" TmcFilePath="..\..\ScopeTestPLC\ScopeTestPLC.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-		<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="ScopeTestPLC\ScopeTestPLC.tmc" TmcHash="{306B15DE-320C-41E7-D857-2738941C4F49}">
+		<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="ScopeTestPLC\ScopeTestPLC.tmc" TmcHash="{959A575E-D357-308A-3081-27A332894A2C}">
 			<Name>ScopeTestPLC Instance</Name>
 			<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 			<Vars VarGrpType="1">
