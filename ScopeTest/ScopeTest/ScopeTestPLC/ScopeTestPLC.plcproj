@@ -18,7 +18,7 @@
     <LibraryReferences>{12ea527d-377f-422f-beeb-bb7078b8dfee}</LibraryReferences>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="DUTs\EAxisStates.TcDUT">
+    <Compile Include="DUTs\EAxisCycleStates.TcDUT">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="GVLs\Axes.TcGVL">
