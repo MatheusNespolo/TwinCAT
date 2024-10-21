@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <DUT Name="EAxisCycleStates" Id="{c8878230-50f3-400c-ad1e-2ed3cef8875d}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+TYPE EAxisCycleStates :
+(
+    Init := 0,           // Inicialização
+    MovingTo1000 := 1,   // Movendo para a posição 1000
+    WaitingAt1000 := 2,  // Aguardando por 3 segundos na posição 1000
+    MovingTo0 := 3,      // Movendo para a posição 0
+    WaitingAt0 := 4,     // Aguardando por 3 segundos na posição 0
+    Stop := 5            // Estado de parada (desativado)
+); 
+END_TYPE
+
+]]></Declaration>
+  </DUT>
+</TcPlcObject>
