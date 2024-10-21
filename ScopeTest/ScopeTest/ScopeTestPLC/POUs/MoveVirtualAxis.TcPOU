@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="MoveVirtualAxis" Id="{440f1f32-ba99-42b9-b16a-52733d1dfebc}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MoveVirtualAxis
+VAR
+    currentState : EAxisStates := EAxisStates.Init; // Estado inicial
+    nextState : EAxisStates;                        // Próximo estado
+
+    // Variáveis de controle
+    axisPosition : REAL := 0.0;     			// Posição do eixo virtual
+    targetPosition : REAL := 100.0; 			// Posição alvo
+    moveSpeed : REAL := 10.0;       			// Velocidade de movimento
+    isAxisMoving : BOOL := FALSE;   			// Indicador de movimento
+	bInicio: BOOL;								// Inicia o movimento
+	fb_MoveAbsolutoEixo1: MC_MoveAbsolute;		// Bloco Move Absolute
+	bMoverEixo1Abs: BOOL;						// Aciona o bloco pela primeira vez
+	bMoverEixo1Abs2: BOOL;						// Aciona o bloco pela segunda vez
+	lrPosicao: LREAL := 1000;
+	lrPosicao2: LREAL := 0;
+	Timer1: TON;
+	Timer2: TON;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+CASE currentState OF
+    EAxisStates.Init:
+        // Inicializa o sistema
+        axisPosition := 0.0;
+        isAxisMoving := Axes.Axis1.Status.Moving := FALSE;
+        nextState := EAxisStates.Ready; // Vai para o estado "Ready"
+        
+    EAxisStates.Ready:
+        // Espera o comando para iniciar o movimento
+        IF isAxisMoving THEN
+            nextState := EAxisStates.Moving; // Se comando recebido, vai para "Moving"
+        END_IF
+
+    EAxisStates.Moving:
+        // Atualiza a posição do eixo até atingir a posição alvo
+        IF axisPosition < targetPosition THEN
+            axisPosition := axisPosition + moveSpeed * 0.1; // Atualiza a posição com base na velocidade
+        ELSE
+            nextState := EAxisStates.Stopped; // Quando atingir o alvo, vai para "Stopped"
+        END_IF
+
+    EAxisStates.Stopped:
+        // Para o movimento
+        isAxisMoving := FALSE;
+        nextState := EAxisStates.Ready; // Volta para "Ready" para receber novo comando
+END_CASE
+
+// Transição de estados
+currentState := nextState;
+
+	IF bInicio THEN
+	//Move Absolute
+	fb_MoveAbsolutoEixo1(
+		Axis:= Axes.Axis1, 
+		Execute:= bMoverEixo1Abs, 
+		Position:= lrPosicao, 
+		Velocity:= 50.0);
+	Timer1(IN:= fb_MoveAbsolutoEixo1.Done, PT:= T#3S, Q=> bMoverEixo1Abs2);
+	//Move Absolute
+	fb_MoveAbsolutoEixo1(
+		Axis:= Axes.Axis1, 
+		Execute:= bMoverEixo1Abs2, 
+		Position:= lrPosicao2, 
+		Velocity:= 50.0);
+	Timer2(IN:= , PT:= , Q=> , ET=> );
+	END_IF]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

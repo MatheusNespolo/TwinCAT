@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <DUT Name="EAxisStates" Id="{c8878230-50f3-400c-ad1e-2ed3cef8875d}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+TYPE EAxisStates :
+(
+    Init := 0,      // Inicialização
+    Ready := 1,     // Pronto para mover
+    Moving := 2,    // Eixo em movimento
+    Stopped := 3    // Eixo parado
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

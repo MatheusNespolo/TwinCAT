@@ -6,15 +6,6 @@ VAR
 	MaquinaLigada: BOOL;
 	bHabilita: BOOL;
 	fb_Habilita1: MC_Power;
-	fb_MoveEixo1Mod: MC_MoveModulo;
-	bMoverEixo1Mod: BOOL;
-	lrPosicaoMod: LREAL;
-	bIniciaMoveMod: BOOL;
-	fb_Move1AbsolutoEixo1: MC_MoveAbsolute;
-	bMover1Eixo1Abs: BOOL;
-	fb_Move2AbsolutoEixo1: MC_MoveAbsolute;
-	bMover2Eixo1Abs: BOOL;
-	Timer1: TON;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -33,32 +24,6 @@ END_VAR
 		Enable_Positive:= bHabilita, 
 		Enable_Negative:= bHabilita, 
 		Override:= 100.0);
-		
-//Rotina de movimentação do eixo
-
-	Timer1(IN:= bMover1Eixo1Abs, PT:= T#2S, Q=> bMover2Eixo1Abs);
-
-	//Move Absolute 1
-	fb_Move1AbsolutoEixo1(
-		Axis:= Axes.Axis1, 
-		Execute:= bMover1Eixo1Abs, 
-		Position:= 1000, 
-		Velocity:= 50.0);
-		
-	//Move Absolute 2
-	fb_Move2AbsolutoEixo1(
-		Axis:= Axes.Axis1, 
-		Execute:= bMover2Eixo1Abs, 
-		Position:= 0, 
-		Velocity:= 50.0);
-
-//Move Modulo (Mover o eixo de forma angular - 0° a 360°)
-	fb_MoveEixo1Mod(
-		Axis:= Axes.Axis1, 
-		Execute:= , 
-		Position:= lrPosicaoMod, 
-		Velocity:= 50.0,  
-		Direction:= MC_Direction.MC_Positive_Direction);
 ]]></ST>
     </Implementation>
   </POU>
