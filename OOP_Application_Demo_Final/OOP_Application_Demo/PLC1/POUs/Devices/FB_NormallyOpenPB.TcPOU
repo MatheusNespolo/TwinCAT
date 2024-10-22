@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_NormallyOpenPB" Id="{206be575-3602-446b-bfbb-c57a428397fd}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_NormallyOpenPB IMPLEMENTS I_Pushbutton
+VAR
+	Input AT %I* : BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Property Name="IsPressed" Id="{4f8940d5-542a-4841-91ec-44f7c53db87a}">
+      <Declaration><![CDATA[PROPERTY IsPressed : BOOL]]></Declaration>
+      <Get Name="Get" Id="{8f73b76e-b57f-4c34-87d3-87e7e2b903a2}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[IsPressed := Input;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="IsReleased" Id="{6cbd2a12-85f2-4fad-b2df-222bc8a1882d}">
+      <Declaration><![CDATA[PROPERTY IsReleased : BOOL]]></Declaration>
+      <Get Name="Get" Id="{a448a22e-897c-49bc-adc7-faa363001e4f}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[IsReleased := NOT Input;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <LineIds Name="FB_NormallyOpenPB">
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_NormallyOpenPB.IsPressed.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_NormallyOpenPB.IsReleased.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

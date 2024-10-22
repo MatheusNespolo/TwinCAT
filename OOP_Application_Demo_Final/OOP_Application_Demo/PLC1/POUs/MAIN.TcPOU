@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="MAIN" Id="{bb1f3822-6112-4b9b-955d-290fdd8d76c0}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	ConvA : FB_ConveyorMachine(ConvA_Stop,ConvA_EStop, ConvA_Start, ConvA_ProdDetect,
+							   ConvA_ConvFull, ConvA_Motor);
+
+	ConvB : FB_ConveyorMachine(ConvB_Stop,ConvB_EStop, ConvB_Start, ConvB_ProdDetect,
+							   ConvB_ConvFull, ConvB_Motor);
+	
+	ConvC : FB_ConveyorMachine(ConvC_Stop,ConvC_EStop, ConvC_Start, ConvC_ProdDetect,
+							   ConvC_ConvFull, ConvC_Motor);	
+
+	ConvD : FB_ConveyorMachine(ConvD_Stop,ConvD_EStop, ConvD_Start, ConvD_ProdDetect,
+							   ConvD_ConvFull, ConvD_Motor);
+
+	ConvE : FB_ConveyorMachine(ConvE_Stop,ConvE_EStop, ConvE_Start, ConvE_ProdDetect,
+							   ConvE_ConvFull, ConvE_Motor);
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[ConvA();
+ConvB();
+ConvC();
+ConvD();
+ConvE();]]></ST>
+    </Implementation>
+    <LineIds Name="MAIN">
+      <LineId Id="339" Count="3" />
+      <LineId Id="316" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
