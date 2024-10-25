@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="MAIN" Id="{a64fc99a-5ed5-44a8-a101-556d25ae14e7}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	stInstance : st_Event;
+	bBoolean : BOOL := FALSE;
+	RectangleA : FB_Rectangle;
+	RectangleB : FB_Rectangle;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bBoolean THEN
+	UpdateEventTimeStampSystemTime (stEvent := stInstance);
+	bBoolean := TRUE;
+END_IF
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

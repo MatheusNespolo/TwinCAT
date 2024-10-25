@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="EventLogger" Id="{2960a57c-1bad-407e-b94c-796439e003d2}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK EventLogger
+VAR
+	EventBuffer : ARRAY{1..TamanhoBuffer} OF st_Event;
+	EventBufferID : INT := 0;
+END_VAR
+VAR CONSTANT
+	TamanhoBuffer : INT := 100;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="AddEvent" Id="{383d90d1-bdd2-4ed2-b200-12569badff97}">
+      <Declaration><![CDATA[// Retorna verdadeiro se adição de evento foi concluída, falso se o buffer está cheio
+METHOD PUBLIC AddEvent : BOOL
+VAR_INPUT
+	eEventType : E_EventType;
+	eEventSeverity : TcEventSeverity;
+	nEventIdentity : UDINT;
+	sEventText : STRING(255);
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT BufferCheio() THEN
+	// Sem código ainda
+	EventBufferID := EventBufferID + 1;
+	EventBuffer[]
+	AddEvent := TRUE;
+ELSE
+	AddEvent := FALSE;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="BufferCheio" Id="{3da2f3ac-d2fa-47f2-9adf-f0ea069fc730}">
+      <Declaration><![CDATA[METHOD PRIVATE BufferCheio : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF (EventBufferID + 1) > TamanhoBuffer THEN
+	BufferCheio := TRUE;
+ELSE
+	BufferCheio := FALSE;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>
