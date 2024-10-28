@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_NormallyClosedSensor" Id="{767b69c1-a26c-49cb-9630-29aa8f94980c}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_NormallyClosedSensor IMPLEMENTS I_Sensor
+VAR
+	Input AT %I* : BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Property Name="IsActive" Id="{229e4f62-cff1-4d55-b269-5dd6ebb541b8}">
+      <Declaration><![CDATA[{warning 'add property implementation'}
+PROPERTY IsActive : BOOL
+]]></Declaration>
+      <Get Name="Get" Id="{ac7cc2f5-984e-40b5-808b-b95b7da0fc30}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[IsActive := NOT Input;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <LineIds Name="FB_NormallyClosedSensor">
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_NormallyClosedSensor.IsActive.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="Devices" Id="{c7595da3-790f-4985-bec3-6cec25f4ec3c}">
+    <Declaration><![CDATA[VAR_GLOBAL
+	//Conveyor A
+	ConvA_Stop 				: FB_NormallyClosedPB;
+	ConvA_EStop			 	: FB_NormallyClosedPB;
+	ConvA_Start	 			: FB_NormallyOpenPB;
+	ConvA_ProdDetect		: FB_NormallyOpenSensor;
+	ConvA_ConvFull	 		: FB_NormallyOpenSensor;
+	ConvA_Motor				: FB_MotorContactor;	
+	                        
+	//Conveyor B            
+	ConvB_Stop 		   		: FB_NormallyOpenPB;
+	ConvB_EStop		   	 	: FB_NormallyClosedPB;
+	ConvB_Start	 	  		: FB_NormallyOpenPB;
+	ConvB_ProdDetect		: FB_NormallyClosedSensor;
+	ConvB_ConvFull	 	 	: FB_NormallyOpenSensor;
+	ConvB_Motor				: FB_MotorContactor;
+	                        
+	//Conveyor C            
+	ConvC_Stop 		   		: FB_NormallyClosedPB;
+	ConvC_EStop		   	 	: FB_NormallyOpenPB;
+	ConvC_Start	 	  		: FB_NormallyOpenPB;
+	ConvC_ProdDetect	 	: FB_NormallyOpenSensor;
+	ConvC_ConvFull	  		: FB_NormallyClosedSensor;
+	ConvC_Motor				: FB_MotorContactor;	
+	                        
+	//Conveyor D            
+	ConvD_Stop 		   		: FB_NormallyClosedPB;
+	ConvD_EStop		   	 	: FB_NormallyClosedPB;
+	ConvD_Start	 	  		: FB_NormallyOpenPB;
+	ConvD_ProdDetect	 	: FB_NormallyOpenSensor;
+	ConvD_ConvFull	  		: FB_NormallyOpenSensor;
+	ConvD_Motor				: FB_MotorContactor;	
+	                        
+	//Conveyor E            
+	ConvE_Stop 		   		: FB_NormallyClosedPB;
+	ConvE_EStop		   	 	: FB_NormallyClosedPB;
+	ConvE_Start	 	  		: FB_NormallyOpenPB;
+	ConvE_ProdDetect	 	: FB_NormallyOpenSensor;
+	ConvE_ConvFull	  		: FB_NormallyOpenSensor;
+	ConvE_Motor				: FB_MotorContactor;
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

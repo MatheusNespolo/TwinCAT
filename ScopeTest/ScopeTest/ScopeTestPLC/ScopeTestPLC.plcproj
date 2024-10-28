@@ -18,9 +18,6 @@
     <LibraryReferences>{12ea527d-377f-422f-beeb-bb7078b8dfee}</LibraryReferences>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="DUTs\EAxisCycleStates.TcDUT">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="GVLs\Axes.TcGVL">
       <SubType>Code</SubType>
       <LinkAlways>true</LinkAlways>
@@ -29,9 +26,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="POUs\MAIN.TcPOU">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="POUs\MoveVirtualAxis.TcPOU">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

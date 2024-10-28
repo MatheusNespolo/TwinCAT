@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="FB_Rectangle" Id="{14c618ee-54da-4b99-9f7b-017562a1a7a2}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Rectangle IMPLEMENTS I_Shape
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+	rLength : REAL;
+	rWidth : REAL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="CalculateArea" Id="{8dd0b452-85fb-4a49-b1f2-c11d2d6b033d}">
+      <Declaration><![CDATA[METHOD CalculateArea : REAL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[CalculateArea := rLength * rWidth;]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="Length" Id="{7dc5cff2-e264-45ff-aef8-8525cc5d278e}">
+      <Declaration><![CDATA[PROPERTY Length : REAL]]></Declaration>
+      <Get Name="Get" Id="{4303b057-28a7-4406-9c53-d07215875fbd}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[Length := rLength;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{97db6bbb-659f-409a-9ca9-4a4e3956d1f5}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[rLength := Length;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="Width" Id="{b6576844-1967-4394-8bd5-183c8dbcdfcc}">
+      <Declaration><![CDATA[PROPERTY Width : REAL]]></Declaration>
+      <Get Name="Get" Id="{f8b31081-aae4-47db-b342-662716b20329}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[Width := rWidth;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{7db4cb98-da03-4beb-92bd-1ed6ce5abb1b}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[rWidth := Width;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+  </POU>
+</TcPlcObject>

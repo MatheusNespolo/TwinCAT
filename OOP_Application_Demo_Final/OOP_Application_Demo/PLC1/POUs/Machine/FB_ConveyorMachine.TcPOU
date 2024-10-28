@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_ConveyorMachine" Id="{bf8f32c4-ae24-4d88-8fd9-c5b105056ce8}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ConveyorMachine
+VAR
+	StopButton 				: I_Pushbutton;
+	EmergencyStopButton 	: I_Pushbutton;
+	StartButton 			: I_Pushbutton;
+	ProductDetectedSensor 	: I_Sensor;
+	ConveyorFullSensor		: I_Sensor;
+	MotorContactor 			: FB_MotorContactor;
+	Timeout 				: TOF;
+	ConveyorControl 		: BOOL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF StopButton.IsPressed OR EmergencyStopButton.IsPressed THEN	
+	ConveyorControl := FALSE;	
+ELSIF StartButton.IsPressed AND StopButton.IsReleased AND EmergencyStopButton.IsReleased THEN
+	ConveyorControl := TRUE;	
+END_IF
+
+Timeout(IN:= ConveyorControl AND ProductDetectedSensor.IsActive, PT:= T#5S);
+
+IF ConveyorControl AND Timeout.Q AND NOT ConveyorFullSensor.IsActive THEN
+	MotorContactor.SwitchOn();
+ELSE
+	MotorContactor.SwitchOff();
+END_IF
+]]></ST>
+    </Implementation>
+    <Method Name="FB_init" Id="{6da2375f-c1a0-4ca6-a605-6d38d414b673}">
+      <Declaration><![CDATA[METHOD FB_init : BOOL
+VAR_INPUT
+	bInitRetains : BOOL; // if TRUE, the retain variables are initialized (warm start / cold start)
+	bInCopyCode : BOOL;  // if TRUE, the instance afterwards gets moved into the copy code (online change)
+	StopButton 				: I_Pushbutton;
+	EmergencyStopButton 	: I_Pushbutton;
+	StartButton 			: I_Pushbutton;
+	ProductDetectedSensor 	: I_Sensor;
+	ConveyorFullSensor		: I_Sensor;
+	MotorContactor 			: FB_MotorContactor;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[THIS^.StopButton 				:= StopButton 			;	        
+THIS^.EmergencyStopButton 		:= EmergencyStopButton 	;  
+THIS^.StartButton 				:= StartButton 			;        
+THIS^.ProductDetectedSensor 	:= ProductDetectedSensor; 	
+THIS^.ConveyorFullSensor		:= ConveyorFullSensor	;	   
+THIS^.MotorContactor 			:= MotorContactor 		;	     ]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="FB_ConveyorMachine">
+      <LineId Id="20" Count="12" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ConveyorMachine.FB_init">
+      <LineId Id="7" Count="0" />
+      <LineId Id="14" Count="4" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

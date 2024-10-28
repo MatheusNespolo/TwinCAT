@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_MotorContactor" Id="{43b85ac7-8b1f-46e0-bcc2-7590801b4a39}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_MotorContactor 
+VAR
+	Output AT %Q* : BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="SwitchOff" Id="{d29289eb-8511-4575-8523-c2a0ccb2babf}">
+      <Declaration><![CDATA[METHOD SwitchOff : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[Output := FALSE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="SwitchOn" Id="{9a2dafc0-873a-49ec-92ef-38112ab95995}">
+      <Declaration><![CDATA[METHOD SwitchOn : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[Output := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="FB_MotorContactor">
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MotorContactor.SwitchOff">
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_MotorContactor.SwitchOn">
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
