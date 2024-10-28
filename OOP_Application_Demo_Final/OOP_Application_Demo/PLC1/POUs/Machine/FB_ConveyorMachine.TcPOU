@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <POU Name="FB_ConveyorMachine" Id="{bf8f32c4-ae24-4d88-8fd9-c5b105056ce8}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_ConveyorMachine
 VAR
@@ -42,21 +42,13 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[THIS^.StopButton 				:= StopButton 			;	        
-THIS^.EmergencyStopButton 		:= EmergencyStopButton 	;  
-THIS^.StartButton 				:= StartButton 			;        
-THIS^.ProductDetectedSensor 	:= ProductDetectedSensor; 	
-THIS^.ConveyorFullSensor		:= ConveyorFullSensor	;	   
-THIS^.MotorContactor 			:= MotorContactor 		;	     ]]></ST>
+        <ST><![CDATA[THIS^.StopButton 				:= StopButton 			;
+THIS^.EmergencyStopButton 		:= EmergencyStopButton 	;
+THIS^.StartButton 				:= StartButton 			;
+THIS^.ProductDetectedSensor 	:= ProductDetectedSensor;
+THIS^.ConveyorFullSensor		:= ConveyorFullSensor	;
+THIS^.MotorContactor 			:= MotorContactor 		;]]></ST>
       </Implementation>
     </Method>
-    <LineIds Name="FB_ConveyorMachine">
-      <LineId Id="20" Count="12" />
-      <LineId Id="9" Count="0" />
-    </LineIds>
-    <LineIds Name="FB_ConveyorMachine.FB_init">
-      <LineId Id="7" Count="0" />
-      <LineId Id="14" Count="4" />
-    </LineIds>
   </POU>
 </TcPlcObject>
