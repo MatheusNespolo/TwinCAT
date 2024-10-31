@@ -1,0 +1,23 @@
+/*! Branch: Detached: e4963dcfdd5a885bd7a23dd4a1bd771d4a4a04af - Commit: e4963dc - Build-Time: 14.9.2023 12:17:21 */
+var _paq = window._paq || [];
+
+var src = $('#matomo').attr('src');
+var errorPageBool = src.split('&')[1].split('=')[1] == "true";
+
+if (errorPageBool) {
+  _paq.push(['setDocumentTitle',  '404/URL = ' +  encodeURIComponent(document.location.pathname+document.location.search) + '/From = ' + encodeURIComponent(document.referrer)]);
+}
+
+_paq.push(['enableJSErrorTracking']);
+_paq.push(['trackPageView']);
+_paq.push(['enableLinkTracking']);
+
+(function () {
+
+  var u="https://statistics.beckhoff-web-services.com/";
+  _paq.push(['setTrackerUrl', u+'matomo.php']);
+  _paq.push(['setSiteId', 36]);
+  var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+  g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+
+}());

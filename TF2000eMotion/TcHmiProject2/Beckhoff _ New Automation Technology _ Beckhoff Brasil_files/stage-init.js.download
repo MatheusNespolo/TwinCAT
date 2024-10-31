@@ -1,0 +1,36 @@
+/*! Commit: 45724ef - Build-Time: 25.3.2024 15:21:58 */
+$(function () {
+  // -------------------- Carousels -----------------------
+  var children = $(".stage-carousel").children().length;
+  // Stage Carousel Home
+  var owlAutoplayTimeoutFirstItem = $(".stage-carousel").data("owlautoplaytimeoutfirstitem");
+  var owlAutoplayTimeout = 5000;
+  var $owl = $(".stage-carousel");
+  $owl.owlCarousel({
+    items: 1,
+    dots: children > 1,
+    nav: children > 1,
+    loop: true,
+    autoplay: true,
+    autoplayTimeout: owlAutoplayTimeoutFirstItem,
+    autoplayHoverPause: true,
+  });
+  $owl.on("change.owl.carousel", function (event) {
+    // console.log("ITEM: "+event.relatedTarget.relative(event.property.value));
+    if (
+      event.namespace &&
+      event.property.name === "position" &&
+      event.relatedTarget.relative(event.property.value) == 0
+    ) {
+      $owl.trigger("stop.owl.autoplay");
+      $owl.trigger("play.owl.autoplay", [owlAutoplayTimeoutFirstItem]);
+    } else if (
+      event.namespace &&
+      event.property.name === "position" &&
+      event.relatedTarget.relative(event.property.value) == 1
+    ) {
+      $owl.trigger("stop.owl.autoplay");
+      $owl.trigger("play.owl.autoplay", [owlAutoplayTimeout]);
+    }
+  });
+});

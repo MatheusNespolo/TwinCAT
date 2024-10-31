@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="E_Cores" Id="{76e1a079-5f3c-453c-948e-ed359c379e18}">
+    <Declaration><![CDATA[{attribute 'strict'}
+TYPE E_Cores :
+(
+	Vermelho := 0,
+	Azul,
+	Verde,
+	Amarelo
+);
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

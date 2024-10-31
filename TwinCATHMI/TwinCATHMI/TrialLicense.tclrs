@@ -2,9 +2,9 @@
 <TcLicenseInfo xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2011/11/TcLicenseInfo">
 	<LicenseInfo>
 		<SystemId>{A31D8DCE-67A8-6C3F-3809-70936FC6E55F}</SystemId>
-		<IssueTime>2024-10-16T12:12:00</IssueTime>
-		<ExpireTime>2024-10-24T00:00:00</ExpireTime>
-		<LicenseKey>1e3ccde59a88c36cbe87b12b9ae1e0787d159037f859d43aa8970adecc9b19eea6cb6d124f2006dd2804c0c116d5962bc4f0e27c62b2bc028917a5a39830a65684e1454f22186bab920fa83f68778eb2c0aed7d0bb79010bb0d4ef78224a33e9ee21e74d63b314e04b3586cb92130b7aa9d44b30840515d5c1aa76facaf9dc8b7717d14a34107e4217caf4021697ce40a2626ea44bc021eab5af7d33594934c4e92089302ac5e79b4a017b33f8f6923955c71c58b9c0b8bb492112e2a078edcccf2b68924e8c46604207ab34e0e8405779ea124cd2b2088d747b32fbbc462ac8df8907e6595d9b15013edd8ea691994f3be915923deb62b6d72d6ec634b16a1d</LicenseKey>
+		<IssueTime>2024-10-31T17:55:00</IssueTime>
+		<ExpireTime>2024-11-08T00:00:00</ExpireTime>
+		<LicenseKey>5c1c9c3f202da0e016f9eac8c4e7c3b7e48630986c958b36df47012df49bf186c9c7e4432f334eb2bf4c3fdc716058421aeb8753b4938240b74e5ba780216323ff399598a3d086eec5abb860e915f7120e9a9db2c7c0a6fb586fa188be34102fdc675e5f290d4fb98c50acaba3ee203b5915eeb03623ed259930b52e52fbd75b63d94e25a9fe364ef29104e9638fe74bc2386f0010a8fc28622f6352fefb757f059d579fe30fe76eb745c9c3d2038a7f20cb05eb1f26d50eaeb33152cf2c0d87975446fda14bc88c82790e74cf6d5ac3b0ea4a7d1352eb6998108d16db945fc2dd453c5fb06a66f8c9c377c6688260dfaa0cdb3af360f87702e148d582dbfb72</LicenseKey>
 		<License>
 			<LicenseId>{4C256767-E6E6-4AF5-BD68-9F7ABAD0C200}</LicenseId>
 			<Name>TC3 ADS</Name>
@@ -38,6 +38,16 @@
 			<LicenseId>{796D380F-D49E-4C0C-A05F-500052FAC883}</LicenseId>
 			<Name>TC3 HMI Server</Name>
 			<OrderNo>TF2000</OrderNo>
+		</License>
+		<License>
+			<LicenseId>{A19036CF-A53B-4E3A-99FF-023EF5C4798B}</LicenseId>
+			<Name>TC3 NC PTP Axis</Name>
+			<Instances>10</Instances>
+		</License>
+		<License>
+			<LicenseId>{520DE751-9DB6-47CB-8240-BD5C466E7E64}</LicenseId>
+			<Name>TC3 NC PTP</Name>
+			<OrderNo>TF5000</OrderNo>
 		</License>
 	</LicenseInfo>
 </TcLicenseInfo>

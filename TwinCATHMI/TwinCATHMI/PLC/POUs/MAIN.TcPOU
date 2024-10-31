@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="MAIN" Id="{91b9bb0d-f515-449b-b56e-1605f4f5713d}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	MaquinaLigada: BOOL;
+	bHabilita: BOOL;
+	fb_Habilita1: MC_Power;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Ler Status
+	Eixos.Eixo1.ReadStatus();
+	Eixos.Eixo2.ReadStatus();
+	
+//Habilitar Eixo1
+IF MaquinaLigada THEN
+		bHabilita := 1;
+	ELSE
+		bHabilita := 0;
+	END_IF
+	fb_Habilita1(
+		Axis:= Eixos.Eixo1, 
+		Enable:= bHabilita, 
+		Enable_Positive:= bHabilita, 
+		Enable_Negative:= bHabilita, 
+		Override:= 100.0);]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

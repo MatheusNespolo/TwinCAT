@@ -1,0 +1,2 @@
+/*! Branch: Detached: 936fd1c1acd1edbd3f7988cb63277d0f88580f5f - Commit: 936fd1c - Build-Time: 25.7.2023 16:52:59 */
+const webappUrl = 'https://webapp-api.beckhoff-web-services.com/'; const webServiceMyBeckhoffUrl = '/WebService.asmx/MyBeckhoff';
