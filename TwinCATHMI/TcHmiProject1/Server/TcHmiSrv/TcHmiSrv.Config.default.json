@@ -2508,11 +2508,89 @@
             },
             "USEMAPPING": true
         },
+        "PLC1.Eixos.Eixo1.NcToPlc.ActPos": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::Eixos::Eixo1::NcToPlc::ActPos",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/LREAL"
+                    },
+                    {
+                        "propertyOrder": 11
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.Eixos.Eixo1.NcToPlc.ActVelo": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::Eixos::Eixo1::NcToPlc::ActVelo",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/LREAL"
+                    },
+                    {
+                        "propertyOrder": 16
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.Eixos.Eixo1.NcToPlc.SetPos": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::Eixos::Eixo1::NcToPlc::SetPos",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/LREAL"
+                    },
+                    {
+                        "propertyOrder": 18
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.Eixos.Eixo1.NcToPlc.SetVelo": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::Eixos::Eixo1::NcToPlc::SetVelo",
+            "SCHEMA": {
+                "allOf": [
+                    {
+                        "$ref": "tchmi:general#/definitions/LREAL"
+                    },
+                    {
+                        "propertyOrder": 19
+                    }
+                ]
+            },
+            "USEMAPPING": true
+        },
         "PLC1.MAIN.MaquinaLigada": {
             "ACCESS": 3,
             "DOMAIN": "ADS",
             "DYNAMIC": true,
             "MAPPING": "PLC1::MAIN::MaquinaLigada",
+            "SCHEMA": {
+                "$ref": "tchmi:general#/definitions/BOOL"
+            },
+            "USEMAPPING": true
+        },
+        "PLC1.MAIN.bHabilita": {
+            "ACCESS": 3,
+            "DOMAIN": "ADS",
+            "DYNAMIC": true,
+            "MAPPING": "PLC1::MAIN::bHabilita",
             "SCHEMA": {
                 "$ref": "tchmi:general#/definitions/BOOL"
             },
@@ -3437,6 +3515,10 @@
                 "LocalizeText": 3,
                 "Login": 3,
                 "Logout": 3,
+                "PLC1.Eixos.Eixo1.NcToPlc.ActPos": 3,
+                "PLC1.Eixos.Eixo1.NcToPlc.ActVelo": 3,
+                "PLC1.Eixos.Eixo1.NcToPlc.SetPos": 3,
+                "PLC1.Eixos.Eixo1.NcToPlc.SetVelo": 3,
                 "PLC1.MAIN.MaquinaLigada": 3,
                 "PLC1.MAIN.bHabilita": 3,
                 "SetLocale": 3,
