@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<TcSmItem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4024.64" ClassName="CNestedPlcProjDef">
+	<Project GUID="{7B060983-1C92-42D9-80A6-441BFC582F05}" Name="Teste Github" PrjFilePath="..\..\Teste Github\Teste Github.plcproj" TmcFilePath="..\..\Teste Github\Teste Github.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
+		<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcHash="{8E75C858-008E-7C7B-D936-31C9A640633B}">
+			<Name>Teste Github Instance</Name>
+			<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
+			<Vars VarGrpType="1">
+				<Name>PlcTask Inputs</Name>
+				<Var>
+					<Name>MAIN.VarIn</Name>
+					<Type>BOOL</Type>
+				</Var>
+			</Vars>
+			<Vars VarGrpType="2" AreaNo="1">
+				<Name>PlcTask Outputs</Name>
+				<Var>
+					<Name>MAIN.VarOut</Name>
+					<Type>BOOL</Type>
+				</Var>
+			</Vars>
+			<Contexts>
+				<Context>
+					<Id>0</Id>
+					<Name>PlcTask</Name>
+					<ManualConfig>
+						<OTCID>#x02010030</OTCID>
+					</ManualConfig>
+					<Priority>20</Priority>
+					<CycleTime>10000000</CycleTime>
+				</Context>
+			</Contexts>
+			<TaskPouOids>
+				<TaskPouOid Prio="20" OTCID="#x08502001"/>
+			</TaskPouOids>
+		</Instance>
+	</Project>
+	<Mappings>
+		<OwnerA Name="Teste Github Instance">
+			<OwnerB Name="TIID^Device 1 (EtherCAT)^Term 1 (EK1100)^Term 2 (EL1008)">
+				<Link VarA="PlcTask Inputs^MAIN.VarIn" VarB="Channel 1^Input" Size="1"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Device 1 (EtherCAT)^Term 1 (EK1100)^Term 3 (EL2008)">
+				<Link VarA="PlcTask Outputs^MAIN.VarOut" VarB="Channel 1^Output" Size="1"/>
+			</OwnerB>
+		</OwnerA>
+	</Mappings>
+</TcSmItem>

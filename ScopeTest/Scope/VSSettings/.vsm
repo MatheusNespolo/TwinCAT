@@ -68,12 +68,6 @@
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>Axis 1.ActPos</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-                <Node>
                   <Title>Axis 1.SetPos</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
@@ -83,7 +77,7 @@
             </Node>
             <Node>
               <Title>Velo</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
@@ -102,7 +96,7 @@
             </Node>
             <Node>
               <Title>Torque_Erro</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
@@ -121,7 +115,7 @@
             </Node>
             <Node>
               <Title>Axis Group</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
