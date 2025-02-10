@@ -1,7 +1,9 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\GettingStarted",
+    "\\GettingStarted\\GettingStarted"
   ],
-  "SelectedNode": "\\TwinCAT_BSD_CX5240.sln",
+  "SelectedNode": "\\GettingStarted\\GettingStarted",
   "PreviewInSolutionExplorer": false
 }
