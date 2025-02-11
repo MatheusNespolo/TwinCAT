@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4024.50">
-	<Project ProjectGUID="{A9DE8B29-B842-4F3C-ABBD-DE7B230DC19B}" Target64Bit="true" ShowHideConfigurations="#x106">
+<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4026.13">
+	<Project ProjectGUID="{A9DE8B29-B842-4F3C-ABBD-DE7B230DC19B}" TargetNetId="199.4.42.250.1.1" Target64Bit="true" ShowHideConfigurations="#x106">
 		<System>
 			<Tasks>
 				<Task Id="3" Priority="20" CycleTime="100000" AmsPort="350" AdtTasks="true">
@@ -10,9 +10,56 @@
 		</System>
 		<Plc>
 			<Project GUID="{4CEB65D7-706B-400A-B33A-2E0D2C34257A}" Name="PLC1" PrjFilePath="PLC1\PLC1.plcproj" TmcFilePath="PLC1\PLC1.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="PLC1\PLC1.tmc" TmcHash="{322ED042-523B-3F27-1831-C6C0D5381519}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcHash="{322ED042-523B-3F27-1831-C6C0D5381519}" TmcPath="PLC1\PLC1.tmc">
 					<Name>PLC1 Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
+					<Vars VarGrpType="2" AreaNo="1">
+						<Name>PlcTask Outputs</Name>
+						<Var>
+							<Name>MAIN.ConvA.MotorContactor.Output</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.ConvB.MotorContactor.Output</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.ConvC.MotorContactor.Output</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.ConvD.MotorContactor.Output</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.ConvE.MotorContactor.Output</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>Devices.ConvA_Motor.Output</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>Devices.ConvB_Motor.Output</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>Devices.ConvC_Motor.Output</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>Devices.ConvD_Motor.Output</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>Devices.ConvE_Motor.Output</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>GVL.MotorContactor</Name>
+							<Type>BOOL</Type>
+						</Var>
+					</Vars>
 					<Vars VarGrpType="1">
 						<Name>PlcTask Inputs</Name>
 						<Var>
@@ -133,53 +180,6 @@
 						</Var>
 						<Var>
 							<Name>GVL.ConveyorFullSensor</Name>
-							<Type>BOOL</Type>
-						</Var>
-					</Vars>
-					<Vars VarGrpType="2" AreaNo="1">
-						<Name>PlcTask Outputs</Name>
-						<Var>
-							<Name>MAIN.ConvA.MotorContactor.Output</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.ConvB.MotorContactor.Output</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.ConvC.MotorContactor.Output</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.ConvD.MotorContactor.Output</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.ConvE.MotorContactor.Output</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>Devices.ConvA_Motor.Output</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>Devices.ConvB_Motor.Output</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>Devices.ConvC_Motor.Output</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>Devices.ConvD_Motor.Output</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>Devices.ConvE_Motor.Output</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>GVL.MotorContactor</Name>
 							<Type>BOOL</Type>
 						</Var>
 					</Vars>

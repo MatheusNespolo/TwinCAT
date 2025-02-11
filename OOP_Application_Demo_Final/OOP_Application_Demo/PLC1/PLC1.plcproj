@@ -8,7 +8,7 @@
     <WriteProductVersion>true</WriteProductVersion>
     <GenerateTpy>false</GenerateTpy>
     <Name>PLC1</Name>
-    <ProgramVersion>3.1.4023.0</ProgramVersion>
+    <ProgramVersion>3.1.4026.13</ProgramVersion>
     <Application>{2c1ae7ac-2013-46e2-8acd-335e81404a18}</Application>
     <TypeSystem>{467efe94-5377-4f30-9739-0f34edf21636}</TypeSystem>
     <Implicit_Task_Info>{554ea78b-66e7-4bf3-9114-d3405b58169a}</Implicit_Task_Info>

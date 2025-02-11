@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.11">
   <POU Name="FB_ConveyorMachine" Id="{bf8f32c4-ae24-4d88-8fd9-c5b105056ce8}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_ConveyorMachine
 VAR
@@ -50,5 +50,13 @@ THIS^.ConveyorFullSensor		:= ConveyorFullSensor	;
 THIS^.MotorContactor 			:= MotorContactor 		;]]></ST>
       </Implementation>
     </Method>
+    <LineIds Name="FB_ConveyorMachine">
+      <LineId Id="3" Count="12" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_ConveyorMachine.FB_init">
+      <LineId Id="3" Count="4" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
   </POU>
 </TcPlcObject>
