@@ -1071,8 +1071,7 @@ F8" data-tchmi-top="10" data-tchmi-top-unit="px" data-tchmi-width="50" data-tchm
 </script>
 </div>
 
-<script data-tchmi-target-attribute="data-tchmi-box-shadow" type="application/json">
-[
+<script data-tchmi-target-attribute="data-tchmi-box-shadow" type="application/json">[
   {
     "color": {
       "color": "rgba(0, 0, 0, 1)"
@@ -1087,8 +1086,7 @@ F8" data-tchmi-top="10" data-tchmi-top-unit="px" data-tchmi-width="50" data-tchm
     "spread": 0.0,
     "spreadUnit": "px"
   }
-]
-</script>
+]</script>
 
 <script data-tchmi-target-attribute="data-tchmi-border-radius" type="application/json">
 {
