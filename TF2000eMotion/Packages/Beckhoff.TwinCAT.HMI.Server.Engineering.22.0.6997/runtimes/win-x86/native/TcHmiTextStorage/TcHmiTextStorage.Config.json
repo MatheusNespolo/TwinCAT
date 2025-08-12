@@ -1,0 +1,15 @@
+{
+  "$schema": "../../TcHmiSrv/schema/ExtensionSettings.Schema.json",
+  "version": "14.4.42.0",
+  "configVersion": "1.0.1.0",
+  "guid": "9E24E779-7272-4BAB-825F-8561CFDC5B9F",
+  "visibility": "AlwaysShow",
+  "policies": [
+    "StrictPropertyValidation",
+    "StrictConfigListenerFilter"
+  ],
+  "symbols": {},
+  "packageVersion": "14.4.42.0",
+  "productVersion": "14.4.42.0",
+  "signature": "CD2rDuFaVqRbn/7bm+uoiE4DcA1jyE2rz5qw4cE32Flax7T14UBJN7FeE1NE0uBJh+44BE0w7Kr966XNwSxeMY7yWq2xASzSs35AquHOUQx1fF/o+3MV/Zc3Xp/VjAONo8M/QUiWtcK1V8mNofKM4TWu/nMYLVxQ7COSrQTLIJihdd8EBolt8FKDg5tPfpQlpkQWn02XRcGoBG4sOVNXQo5iZXQEpJKNYhaIo3jZ3M98sHKArBO0nYr1zACLDx5cHvGn4dQhLCXCyQhYdToMJ7uR+HU7Hq3zNkHHmq9X0CJifaya9JfZvk+Oe4IyssrabuRGPjmaTKbRQqoBzdGAZQ=="
+}

@@ -9,7 +9,7 @@
     <WriteProductVersion>true</WriteProductVersion>
     <GenerateTpy>false</GenerateTpy>
     <Name>MotionControl</Name>
-    <ProgramVersion>3.1.4026.13</ProgramVersion>
+    <ProgramVersion>3.1.4026.17</ProgramVersion>
     <Application>{a39596fa-8bc4-4b7f-9ef7-4adcb290e72f}</Application>
     <TypeSystem>{6641926a-eedf-4860-8301-12663c686873}</TypeSystem>
     <Implicit_Task_Info>{ef863d2f-b59f-4eb8-add6-62dd4564797c}</Implicit_Task_Info>
