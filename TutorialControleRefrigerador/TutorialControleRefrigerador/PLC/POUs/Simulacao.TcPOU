@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="Simulacao" Id="{137ab615-8155-45dc-bc80-e6bd94d2aa18}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Simulacao
+VAR
+	ReduzirTemp: TON;
+	Resfriamento: TIME := T#500ms;
+	ReduzTemp: BOOL;
+	// Tempo de aumento da temperatura
+	Delay: TIME;
+	// Tempo de aumento da temperatura se a porta estiver fechada
+	TempoPortaFechada: TIME := T#2s;
+	// Tempo de aumento da temperatura se a porta estiver aberta
+	TempoPortaAberta: TIME := T#1s;
+	AumentarTemp: TON;
+	AumentaTemp: BOOL;
+	Contador: INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* O compressor liga devido a alta temperatura, fazendo com que ela diminua *)
+
+(* A temperatura desce 0,1ºC por ciclo após um delay *)
+
+IF GVL_Var.Compressor THEN
+	ReduzirTemp(IN:= GVL_Var.Compressor, PT:= Resfriamento, Q=> ReduzTemp);
+	IF ReduzTemp THEN
+		GVL_Var.TempAtual := GVL_Var.TempAtual - 0.1;
+		ReduzirTemp(IN:= FALSE);
+	END_IF
+END_IF
+
+(* Quando a porta está aberta a temperatura sobe mais rápido *)
+
+Delay := SEL(GVL_Var.PortaAberta, TempoPortaFechada, TempoPortaAberta);
+
+(* Se o compressor estiver desligado, a temperatura vai aumentar *)
+
+AumentarTemp(IN:= TRUE, PT:= Delay, Q=> AumentaTemp);
+
+IF AumentaTemp THEN
+	GVL_Var.TempAtual := GVL_Var.TempAtual + 0.1;
+	AumentarTemp(IN:= FALSE);
+END_IF
+
+Contador := Contador + 1;
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <GVL Name="GVL_Var" Id="{c943d655-3e1b-4f8a-909f-4c4b3c1773d5}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	
+	// Temperatura atual
+	TempAtual: REAL := 7.0;
+	// Setpoint de temperatura
+	TempSet: REAL := 12.0;
+	// Status da porta do refrigerador
+	PortaAberta: BOOL := FALSE;
+	// Tempo de funcionamento do compressor
+	TempoCompressor: TIME := T#15s;
+	// Tempo de porta aberta
+	TempoPorta: TIME := T#5s;
+	// Liga e desliga o compressor
+	Compressor: BOOL;
+	// Sinal de controle
+	Sinal: BOOL;
+	// Indica se a porta está aberta
+	Lampada: BOOL;
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>
