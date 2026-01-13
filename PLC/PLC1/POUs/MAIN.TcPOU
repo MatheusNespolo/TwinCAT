@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="MAIN" Id="{28e5345b-cf50-483f-8802-7b13093170e2}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	Nivel1 		: INT := 0;
+	Nivel1Cheio	: BOOL;
+	Nivel2 		: INT := 0;
+	BombaAtiva 	: BOOL;
+	Timer		: TON;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT BombaAtiva AND Nivel1 < 100 THEN
+	Nivel1 := Nivel1 + 1;
+	IF Nivel1 = 100 THEN
+		Nivel1 := 100;
+		Nivel1Cheio := TRUE;
+	END_IF
+END_IF
+
+Timer(IN:= Nivel1Cheio, PT:= T#5S, Q=> BombaAtiva);
+
+IF BombaAtiva AND Nivel1 >= 100 THEN
+	Nivel2 := Nivel2 + 1;
+	IF Nivel2 = 100 THEN
+		Nivel2 := 100;
+		BombaAtiva := FALSE;
+	END_IF
+END_IF
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

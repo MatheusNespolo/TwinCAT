@@ -1,0 +1,8 @@
+{
+  "$schema": "./../Packages/Beckhoff.TwinCAT.HMI.Framework.14.3.212/runtimes/native1.12-tchmi/Schema/LocalizationDescription.Schema.json",
+  "locale": "pt-BR",
+  "localizedText": {
+    "Language": "Idioma",
+    "Button": "Botão"
+  }
+}
