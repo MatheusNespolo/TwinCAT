@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<Database>
+  <ID>2</ID>
+  <Name>DB1</Name>
+  <ServerName>127.0.0.1</ServerName>
+  <DatabaseName>localinstance2</DatabaseName>
+  <TableName />
+  <Authentication>True</Authentication>
+  <UserID>root</UserID>
+  <Password />
+  <Driver />
+  <Provider />
+  <Port>3306</Port>
+  <Protocol />
+  <Scheme />
+  <Sequence />
+  <SystemDB />
+  <FireBird_ClientDLLPath />
+  <OLDASCIIFormat>False</OLDASCIIFormat>
+  <ASCIISeparator />
+  <DBValueType>NONE</DBValueType>
+  <DBType>NET_MySQL</DBType>
+  <OdbcSubType>Unknown</OdbcSubType>
+  <DriverType>Unknown</DriverType>
+  <Temporary>False</Temporary>
+  <Disabled>False</Disabled>
+  <Description />
+  <FailOverDBID>0</FailOverDBID>
+  <AdditionalParameter />
+  <AuthenticationMechanism>None</AuthenticationMechanism>
+  <SslCa />
+  <SslCertificateFilePath />
+  <SslCertificatePassword />
+  <Token />
+  <ConnectionStringType />
+  <Encrypt>True</Encrypt>
+  <TrustServerCertificate>True</TrustServerCertificate>
+</Database>

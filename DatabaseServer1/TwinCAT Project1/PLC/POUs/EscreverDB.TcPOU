@@ -1,0 +1,121 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="EscreverDB" Id="{4d981f3e-e5fc-4c6d-9283-1e0e2e7dd5d8}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM EscreverDB
+VAR
+	// Variável de início do processo
+	Escrever 			: BOOL;
+	// Variável de controle da máquina de estados
+	Estado 				: USINT;
+	(* 'INSERT INTO `valores` ( `nome`, `valor` ) VALUES ( $'temperatura$', 89.4)' *)
+	Comando				: STRING;
+	// String para verificação de erros (resultado de stEvent)
+	MensagemDoEvento 	: STRING(255);
+	// String para verificação de erros (resultado de stEvent)
+	ClasseDoEvento		: STRING(255);
+	// Número do evento relatado no momento de gerenciamento de erros
+	IDdoEvento			: UDINT;
+	// Indica se há presença de erros
+	Erro				: BOOL;
+	
+	// Bloco para conexão, desconexão e criação de comandos para o MySQL, MS SQL, etc.
+	SQLDatabaseEvt: FB_SQLDatabaseEvt(sNetID := '192.168.88.1.1.1', tTimeout := TIME#5S);
+	// Bloco para formatação e envio de comandos
+	SQLCommandEvt: FB_SQLCommandEvt(sNetID := '192.168.88.1.1.1', tTimeout := TIME#5S);
+	// Estrutura de eventos para error handling
+	stEvent: Tc3_EventLogger.I_TcMessage;
+	
+	NomeDaVariavel: T_MaxString;
+	Valor: T_MaxString;
+	ValorReal: REAL;
+	
+	FormataQuery: STRING;
+	BlocoFormataString: FB_FormatString;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Essa máquina de estados permitirá enviar um comando INSERT ou UPDATE para a tabela indicada
+
+// O comando INSERT do MySQL insere uma linha na tabela com as colunas "nome" e "valor" como representações
+
+// Para que a tabela gere o timestamp e atualize automaticamente... a implementar
+
+CASE Estado OF
+	
+0: // espera
+	IF Escrever THEN
+		Estado := 1;
+		Escrever := FALSE;
+	END_IF
+	
+1: // conectar ao banco de dados
+	IF SQLDatabaseEvt.Connect(hDBID:= 2) THEN
+		IF NOT SQLDatabaseEvt.bError THEN
+			Estado := 2;
+		ELSE
+			stEvent := SQLDatabaseEvt.ipTcResult;
+			Estado := 99;
+		END_IF
+	END_IF
+	
+2: // inicializa o comando
+	NomeDaVariavel := 'temperatura';
+	Valor := REAL_TO_STRING(ValorReal);
+	FormataQuery := 'INSERT INTO `valores` ( `nome`, `valor` ) VALUES ($'%s$', %s);';
+	
+	BlocoFormataString(
+		sFormat:= FormataQuery, 
+		arg1:= F_String(NomeDaVariavel), 
+		arg2:= F_String(Valor), 
+		bError=> , 
+		nErrId=> , 
+		sOut=> Comando);
+
+	IF SQLDatabaseEvt.CreateCmd(ADR(SQLCommandEvt)) THEN
+		IF NOT SQLDatabaseEvt.bError THEN
+			Estado := 10;
+		ELSE
+			stEvent := SQLDatabaseEvt.ipTcResult;
+			Estado := 99;
+		END_IF
+	END_IF
+	
+10: // executa o comando
+	IF SQLCommandEvt.Execute(pSQLCmd:=ADR(Comando), cbSQLCmd:=SIZEOF(Comando)) THEN
+		IF NOT SQLCommandEvt.bError THEN
+			Estado := 20;
+		ELSE
+			stEvent := SQLCommandEvt.ipTcResult;
+			Estado := 99;
+		END_IF
+	END_IF
+	
+20: // encerra a conexão
+	IF SQLDatabaseEvt.Disconnect() THEN
+		IF SQLDatabaseEvt.bError THEN
+			stEvent := SQLDatabaseEvt.ipTcResult;
+			Estado := 99;
+		ELSE
+			Estado := 0;
+		END_IF
+	END_IF
+	
+99: // Error handling 1
+	IF stEvent.RequestEventText(1033, MensagemDoEvento, SIZEOF(MensagemDoEvento)) THEN
+		Estado := 100;
+	END_IF
+
+100: // Error handling 2
+	IF StEvent.RequestEventClassName(1033, ClasseDoEvento, SIZEOF(ClasseDoEvento)) THEN
+		IDdoEvento := stEvent.nEventId;
+		
+		Erro := (stEvent.eSeverity = TcEventSeverity.Error) OR
+				(stEvent.eSeverity = TcEventSeverity.Critical);
+				
+		Estado := 0;
+	END_IF
+
+END_CASE]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

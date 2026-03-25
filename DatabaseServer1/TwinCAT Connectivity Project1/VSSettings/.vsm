@@ -1,0 +1,20 @@
+<Node>
+  <Title>TwinCAT Connectivity Project1</Title>
+  <Expanded>False</Expanded>
+  <FileName></FileName>
+  <Children>
+    <Node>
+      <Title>TcDatabaseServer1</Title>
+      <Expanded>True</Expanded>
+      <FileName>C:\Users\matheusn\Documents\Aplicações teste\Linux\CX9240\DatabaseServer1\TwinCAT Connectivity Project1\TcDatabaseServer1.tcdbsrv</FileName>
+      <Children>
+        <Node>
+          <Title>DB1</Title>
+          <Expanded>False</Expanded>
+          <FileName>C:\Users\matheusn\Documents\Aplicações teste\Linux\CX9240\DatabaseServer1\TwinCAT Connectivity Project1\TcDatabaseServer1\DB1\DB1.tcdbsrvdb</FileName>
+          <Children />
+        </Node>
+      </Children>
+    </Node>
+  </Children>
+</Node>
