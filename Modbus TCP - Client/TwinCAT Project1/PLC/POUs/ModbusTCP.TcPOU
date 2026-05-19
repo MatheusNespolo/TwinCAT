@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.18">
+  <POU Name="ModbusTCP" Id="{be05f780-3c72-4931-9db7-6b48877d0f88}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM ModbusTCP
+VAR
+	ModbusRead 	: FB_MBReadRegs; 		// Bloco de função para leitura de registros
+	ModbusWrite : FB_MBWriteRegs;		// Bloco de função para escrita de registros
+	
+	Estado : INT;						// Variável de controle da máquina de estados
+	
+	ArrayLeitura : ARRAY[1..10] OF INT;	// Array de leitura dos elementos
+	ArrayEscrita : ARRAY[1..10] OF INT;	// Array de escrita dos elementos
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[CASE Estado OF
+	0:
+		ModbusRead(bExecute:=FALSE);
+		ModbusWrite(bExecute:=FALSE);
+		Estado:=10;
+	10: // Executa o bloco de leitura. Comando disparado para o escravo no endereço informado
+		ModbusRead(
+			sIPAddr:= '169.254.4.75', 
+			nTCPPort:= 502, 
+			nUnitID:= 1, 
+			nQuantity:= 10, 
+			nMBAddr:= 32768, 
+			cbLength:= SIZEOF(ArrayLeitura), 
+			pDestAddr:= ADR(ArrayLeitura), 
+			bExecute:= TRUE, 
+			tTimeout:= T#2S, 
+			bBusy=> , 
+			bError=> , 
+			nErrId=> );
+		
+		IF NOT ModbusRead.bBusy THEN
+			IF NOT ModbusRead.bError THEN
+				Estado:=20;
+			ELSE
+				Estado:=30;
+			END_IF
+		END_IF
+	20: // Executa o bloco de escrita. Comando disparado para o escravo no endereço informado
+		ModbusWrite(
+			sIPAddr:= '169.254.4.75', 
+			nTCPPort:= 502, 
+			nUnitID:= 1, 
+			nQuantity:= 10, 
+			nMBAddr:= 32768, 
+			cbLength:= SIZEOF(ArrayEscrita), 
+			pSrcAddr:= ADR(ArrayEscrita), 
+			bExecute:= TRUE, 
+			tTimeout:= T#2S, 
+			bBusy=> , 
+			bError=> , 
+			nErrId=> );
+		
+		IF NOT ModbusWrite.bError OR ModbusWrite.bBusy THEN
+			Estado:=0;
+		ELSE
+			Estado:=30;
+		END_IF
+	30:
+	; // MODBUS READ ERROR
+	31:
+	; // MODBUS WRITE ERROR
+END_CASE]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>
