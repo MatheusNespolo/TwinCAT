@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4026.22">
+	<Project ProjectGUID="{A5F229FC-F119-4ECC-9D5F-895DEB882131}" TargetNetId="5.162.174.122.1.1" Target64Bit="true" ShowHideConfigurations="#x3c7">
+		<System>
+			<Settings MaxCpus="2" NonWinCpus="1">
+				<Cpu CpuId="1"/>
+			</Settings>
+			<Licenses>
+				<Target>
+					<ManualSelect>{6952449D-F68C-49A2-ADE4-8639D85B33A4}</ManualSelect>
+				</Target>
+			</Licenses>
+			<Tasks>
+				<Task Id="2" Priority="1" CycleTime="100000" AmsPort="301">
+					<Name>AuxTask</Name>
+					<Vars VarGrpType="1" InsertType="1">
+						<Name>Inputs</Name>
+						<Var>
+							<Name>DevState</Name>
+							<Type>UINT</Type>
+						</Var>
+					</Vars>
+					<Vars VarGrpType="2" InsertType="1">
+						<Name>Outputs</Name>
+					</Vars>
+					<Image Id="3" AddrType="1" ImageType="1" SizeIn="2">
+						<Name>Image</Name>
+					</Image>
+				</Task>
+				<Task Id="4" Priority="20" CycleTime="100000" AmsPort="350" AdtTasks="true">
+					<Name>PlcTask</Name>
+				</Task>
+			</Tasks>
+		</System>
+		<Plc>
+			<Project File="PLC.xti"/>
+		</Plc>
+		<Io>
+			<Device File="Device 1 (Beckhoff CCAT).xti" Id="1"/>
+			<Device File="Device 2 (EtherCAT).xti" Id="2"/>
+		</Io>
+	</Project>
+	<Mappings>
+		<MappingInfo Identifier="{00000000-0010-0304-3000-040310000403}" Id="#x02030010"/>
+		<OwnerA Name="TIRT^AuxTask">
+			<OwnerB Name="TIID^Device 2 (EtherCAT)">
+				<Link VarA="Inputs^DevState" VarB="Inputs^DevState"/>
+			</OwnerB>
+		</OwnerA>
+	</Mappings>
+</TcSmProject>
