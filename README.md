@@ -1,6 +1,6 @@
 # TwinCAT
 
-Repositório de estudo e portfólio com projetos TwinCAT3 (Beckhoff): PLC estruturado, motion control, comunicação industrial, banco de dados, HMI e safety (TwinSAFE).
+Repositório de estudo e portfólio com projetos de TwinCAT 3 (Beckhoff): PLC em texto estruturado, motion control, comunicação industrial, banco de dados, HMI e safety (TwinSAFE).
 
 ## Estrutura
 
