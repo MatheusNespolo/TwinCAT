@@ -1,6 +1,6 @@
 # PLC-Fundamentos
 
-Programação estruturada básica de PLC no TwinCAT3: variáveis, temporizadores, lógica de controle simples — sem foco em comunicação, motion ou HMI.
+Programação estruturada básica de PLC no TwinCAT 3: variáveis, temporizadores, lógica de controle simples — sem foco em comunicação, motion ou HMI.
 
 ## Projetos
 
