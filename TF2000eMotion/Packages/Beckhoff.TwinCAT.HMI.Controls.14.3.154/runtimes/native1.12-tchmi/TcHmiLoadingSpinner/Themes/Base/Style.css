@@ -1,6 +1,0 @@
-/** Styles for base theme */
-
-/* Style for the main element */
-.TcHmi_Controls_Beckhoff_TcHmiLoadingSpinner {
-    --TcHmi_Controls_Beckhoff_TcHmiTreeview-loading-spinner-color: var(--tchmi-foreground-color-1);
-}
