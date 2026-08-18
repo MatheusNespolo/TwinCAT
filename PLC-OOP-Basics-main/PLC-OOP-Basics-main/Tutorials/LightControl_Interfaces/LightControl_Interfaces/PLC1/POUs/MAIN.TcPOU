@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.6">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.19">
   <POU Name="MAIN" Id="{df496471-2eed-4c82-abc4-53bb5313bb65}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM MAIN
 VAR
@@ -34,13 +34,5 @@ State[0] := LampCtrl[0].State;
 State[1] := LampCtrl[1].State;
 ]]></ST>
     </Implementation>
-    <LineIds Name="MAIN">
-      <LineId Id="53" Count="0" />
-      <LineId Id="67" Count="2" />
-      <LineId Id="57" Count="2" />
-      <LineId Id="70" Count="2" />
-      <LineId Id="63" Count="3" />
-      <LineId Id="33" Count="0" />
-    </LineIds>
   </POU>
 </TcPlcObject>
