@@ -179,3 +179,7 @@ OOP/PLC-OOP-Basics-main/PLC-OOP-Basics-main/Tutorials/AbstractDrive/AbstractDriv
 OOP/PLC-OOP-Basics-main/PLC-OOP-Basics-main/Tutorials/FlashGen_Overriding/FlashGen_Overriding/PLC1/PLC1.plcproj
 OOP/PLC-OOP-Basics-main/PLC-OOP-Basics-main/Tutorials/FlashGen_Overriding/FlashGen_Overriding.sln
 OOP/PLC-OOP-Basics-main/PLC-OOP-Basics-main/Tutorials/FlashGen_Overriding/FlashGen_Overriding.sln
+OOP/PLC-OOP-Basics-main/PLC-OOP-Basics-main/Extended/LightingController/LightingController.sln
+OOP/PLC-OOP-Basics-main/PLC-OOP-Basics-main/Extended/LightingController/LightingController/PLC1/PLC1.plcproj
+OOP/PLC-OOP-Basics-main/PLC-OOP-Basics-main/Extended/LightingController/LightingController/LightingController.tsproj
+OOP/PLC-OOP-Basics-main/PLC-OOP-Basics-main/Extended/LightingController/LightingController/_Config/PLC/PLC1.xti
