@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <GVL Name="GVL" Id="{dd41b6df-90ea-4f09-bfac-4f3747178658}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	Contador : INT := 50;
+	SetpointVelocidade : REAL := 20;
+END_VAR
+]]></Declaration>
+  </GVL>
+</TcPlcObject>
