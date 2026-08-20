@@ -1,7 +1,3 @@
-#connectivity
-~~Pressupõe conhecimento de: [[Command Line Interface]], [[TwinCAT-Linux Introduction]]~~
-~~Relaciona-se com: [[Publisher-Subscriber (Beckhoff RT Linux - CX8290)]], [[TF6100 - OPC UA]], [[MySQL]], [[Postgre]], [[Entendendo algoritmos]]~~
-
 # Introdução
 Diferente das notas de Conectividade que envolvem um TF (funcionalidade licenciada, como [[TF6100 - OPC UA]] ou [[TF6420 - Database Server]]), a comunicação de um script Python com o TwinCAT não exige nenhuma licença adicional: ela usa o **ADS**, o protocolo nativo de comunicação do TwinCAT, que já vem incluso em qualquer instalação. Essa nota documenta como acessar variáveis de um projeto PLC a partir de um script Python usando a biblioteca open-source `pyads`.
 
