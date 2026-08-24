@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+  <POU Name="PRG_Ex06_SequenciaAutomatica" Id="{a1b2c3d4-0001-4001-8001-000000000006}" SpecialFunc="None">
+    <Declaration><![CDATA[(*
+    Exercício 06 - Máquina de Estados para Ciclo Automático Contínuo
+    ----------------------------------------------------------------
+    Objetivo: orquestrar avanço -> espera -> recuo de um eixo linear em
+    loop contínuo usando uma máquina de estados (CASE), com parada
+    "suave" que só efetiva ao final do ciclo em andamento - nunca no
+    meio de um movimento.
+*)
+PROGRAM PRG_Ex06_SequenciaAutomatica
+VAR
+    eEstado         : E_EstadoCiclo := E_EstadoCiclo.PARADO;
+
+    fbMoveAvanco    : MC_MoveAbsolute;
+    fbMoveRecuo     : MC_MoveAbsolute;
+    tonAguarda      : TON;
+
+    xLigarCiclo      : BOOL;
+    xDesligarCiclo    : BOOL;
+    xPedidoParada     : BOOL; // "memória" do pedido de parada até o fim do ciclo
+
+    xCicloLigado      : BOOL; // TRUE em qualquer estado diferente de PARADO
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[GVL_Axes.Axis1.ReadStatus();
+
+// Memoriza o pedido de parada assim que ele chega, mesmo que o botão seja
+// solto antes do fim do ciclo atual - ele só é consultado no estado RECUA.
+IF xDesligarCiclo THEN
+    xPedidoParada := TRUE;
+END_IF
+
+CASE eEstado OF
+
+    E_EstadoCiclo.PARADO:
+        // Máquina parada. Só sai daqui com comando explícito de ligar.
+        IF xLigarCiclo THEN
+            xPedidoParada := FALSE; // limpa qualquer pedido de parada antigo
+            eEstado := E_EstadoCiclo.AVANCA;
+        END_IF
+
+    E_EstadoCiclo.AVANCA:
+        // Avança a ferramenta até a posição de trabalho (100.0 mm).
+        // Execute fica em nível (não é pulso) para o bloco reconhecer o
+        // comando durante todo o estado; ele só reexecuta se o parâmetro
+        // mudar ou o comando anterior tiver concluído.
+        fbMoveAvanco(
+            Axis     := GVL_Axes.Axis1,
+            Execute  := NOT fbMoveAvanco.Done,
+            Position := 100.0,
+            Velocity := 50.0);
+
+        IF fbMoveAvanco.Done THEN
+            tonAguarda(IN := FALSE); // garante que o TON comece zerado
+            eEstado := E_EstadoCiclo.AGUARDA;
+        END_IF
+
+    E_EstadoCiclo.AGUARDA:
+        // Aguarda 1 segundo simulando a operação da estação de trabalho.
+        tonAguarda(IN := TRUE, PT := T#1S);
+        IF tonAguarda.Q THEN
+            tonAguarda(IN := FALSE); // reseta o temporizador para o próximo ciclo
+            eEstado := E_EstadoCiclo.RECUA;
+        END_IF
+
+    E_EstadoCiclo.RECUA:
+        // Recua a ferramenta de volta à posição de repouso (10.0 mm).
+        fbMoveRecuo(
+            Axis     := GVL_Axes.Axis1,
+            Execute  := NOT fbMoveRecuo.Done,
+            Position := 10.0,
+            Velocity := 50.0);
+
+        IF fbMoveRecuo.Done THEN
+            // Só aqui, ao final do ciclo completo, checamos se havia um
+            // pedido de parada pendente. Isso garante que a parada nunca
+            // interrompe um avanço/recuo em andamento.
+            IF xPedidoParada THEN
+                eEstado := E_EstadoCiclo.PARADO;
+            ELSE
+                eEstado := E_EstadoCiclo.AVANCA; // ciclo contínuo
+            END_IF
+        END_IF
+
+END_CASE
+
+// Ciclo é considerado "ligado" em qualquer estado que não seja PARADO.
+xCicloLigado := (eEstado <> E_EstadoCiclo.PARADO);
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

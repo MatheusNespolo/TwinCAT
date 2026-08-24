@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+  <POU Name="PRG_Ex01_HabilitarEixo" Id="{a1b2c3d4-0001-4001-8001-000000000001}" SpecialFunc="None">
+    <Declaration><![CDATA[(*
+    Exercício 01 - Habilitar Eixo e Ler Status
+    -------------------------------------------
+    Objetivo: demonstrar o passo mínimo obrigatório de qualquer aplicação de
+    Motion: ler o status do eixo a cada ciclo e habilitá-lo (MC_Power) antes
+    de poder executar qualquer movimento.
+*)
+PROGRAM PRG_Ex01_HabilitarEixo
+VAR
+    // Instância do bloco PLCopen que habilita/desabilita o eixo (liga o drive)
+    fbHabilita      : MC_Power;
+
+    // Entrada simulada: botão/chave que comanda a habilitação do eixo
+    xHabilitaEixo   : BOOL;
+
+    // Saídas de depuração para acompanhar o resultado da habilitação
+    xEixoHabilitado : BOOL; // reflete MC_Power.Status
+    xEixoComErro    : BOOL; // reflete Axis1.Status.Error
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// 1) Sempre atualizar o status do eixo no início do ciclo.
+//    Sem isso, todos os bits de Axis1.Status (Enabled, Error, Moving, etc.)
+//    ficariam "congelados" com o último valor lido.
+GVL_Axes.Axis1.ReadStatus();
+
+// 2) MC_Power é o bloco que "liga" o eixo (habilita o drive).
+//    Enable_Positive/Enable_Negative permitem restringir o sentido de giro
+//    permitido; aqui usamos o mesmo sinal para liberar os dois sentidos.
+fbHabilita(
+    Axis             := GVL_Axes.Axis1,
+    Enable           := xHabilitaEixo,
+    Enable_Positive  := xHabilitaEixo,
+    Enable_Negative  := xHabilitaEixo,
+    Override         := 100.0); // 100% da velocidade programada nos moves
+
+// 3) Saídas de depuração:
+//    - Status só fica TRUE depois que o eixo realmente confirma habilitação
+//      (não é instantâneo, existe atraso do drive/simulação).
+xEixoHabilitado := fbHabilita.Status;
+
+//    - Error é lido diretamente da estrutura de status do eixo, independente
+//      do estado de habilitação (um eixo desabilitado ainda pode reportar erro).
+xEixoComErro := GVL_Axes.Axis1.Status.Error;
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

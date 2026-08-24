@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+  <POU Name="PRG_Ex05_TratamentoDeErros" Id="{a1b2c3d4-0001-4001-8001-000000000005}" SpecialFunc="None">
+    <Declaration><![CDATA[(*
+    Exercício 05 - Tratamento de Erros e Reset Global
+    ----------------------------------------------------------------
+    Objetivo: qualquer erro em qualquer um dos dois eixos deve derrubar
+    o ciclo automático inteiro, desabilitar os eixos e sinalizar falha.
+    Um botão de reset só deve ter efeito quando existe falha real - ele
+    não pode interferir na operação normal da máquina.
+*)
+PROGRAM PRG_Ex05_TratamentoDeErros
+VAR
+    fbHabilita1     : MC_Power;
+    fbHabilita2     : MC_Power;
+    xHabilitaEixos   : BOOL; // comando geral de habilitação dos eixos
+
+    fbReset1        : MC_Reset;
+    fbReset2        : MC_Reset;
+    xBotaoReset      : BOOL;
+
+    // Simula o estado de ciclo automático (neste exercício, controlado
+    // manualmente; no Exercício 06 isso vira uma máquina de estados real)
+    xCicloAutomatico : BOOL;
+
+    // Falha global = OR de todos os eixos com erro
+    xFalhaEixos      : BOOL;
+
+    // Sinalização de falha para IHM/sinaleiro - só desliga após reset OK
+    xSinalizaFalha    : BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[GVL_Axes.Axis1.ReadStatus();
+GVL_Axes.Axis2.ReadStatus();
+
+// 1) Falha global: verdadeira se QUALQUER um dos dois eixos estiver com erro.
+//    Movimentos coordenados (mesa + fuso) exigem que um erro em um eixo
+//    pare a máquina inteira, não só o eixo afetado.
+xFalhaEixos := GVL_Axes.Axis1.Status.Error OR GVL_Axes.Axis2.Status.Error;
+
+// 2) Ao detectar falha, força o desligamento imediato do ciclo automático.
+//    (Aqui é um SET simples; num sistema real isso alimentaria a máquina
+//    de estados do ciclo, forçando-a para o estado de "Parado/Erro".)
+IF xFalhaEixos THEN
+    xCicloAutomatico := FALSE;
+END_IF
+
+// 3) Habilitação dos eixos: fica condicionada a NÃO haver falha ativa.
+//    Isto é, mesmo que o operador mantenha xHabilitaEixos = TRUE, uma
+//    falha desabilita os eixos imediatamente.
+fbHabilita1(
+    Axis            := GVL_Axes.Axis1,
+    Enable          := xHabilitaEixos AND NOT xFalhaEixos,
+    Enable_Positive := xHabilitaEixos AND NOT xFalhaEixos,
+    Enable_Negative := xHabilitaEixos AND NOT xFalhaEixos,
+    Override        := 100.0);
+
+fbHabilita2(
+    Axis            := GVL_Axes.Axis2,
+    Enable          := xHabilitaEixos AND NOT xFalhaEixos,
+    Enable_Positive := xHabilitaEixos AND NOT xFalhaEixos,
+    Enable_Negative := xHabilitaEixos AND NOT xFalhaEixos,
+    Override        := 100.0);
+
+// 4) MC_Reset só é disparado se REALMENTE houver falha. Isso garante que
+//    apertar o botão de reset durante operação normal (sem erro) não faz
+//    absolutamente nada - cumprindo a regra "reset não interfere no ciclo".
+fbReset1(
+    Axis    := GVL_Axes.Axis1,
+    Execute := xBotaoReset AND xFalhaEixos);
+
+fbReset2(
+    Axis    := GVL_Axes.Axis2,
+    Execute := xBotaoReset AND xFalhaEixos);
+
+// 5) A sinalização de falha permanece ativa até que AMBOS os resets
+//    tenham concluído com sucesso - mesmo que a causa física do erro já
+//    tenha desaparecido, a falha só é considerada tratada após o reset.
+IF fbReset1.Done AND fbReset2.Done THEN
+    xSinalizaFalha := FALSE;
+ELSIF xFalhaEixos THEN
+    xSinalizaFalha := TRUE;
+END_IF
+
+// Observação: depois de fbReset1.Done/fbReset2.Done = TRUE, o Axis.Status.Error
+// some, então xFalhaEixos naturalmente cai para FALSE, o operador pode
+// habilitar os eixos novamente (passo 3) e iniciar um NOVO ciclo automático
+// normalmente - sem necessidade de reiniciar o CLP.
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

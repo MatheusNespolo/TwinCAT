@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+  <DUT Name="E_EstadoCiclo" Id="{a1b2c3d4-0001-4002-8002-000000000006}">
+    <Declaration><![CDATA[(*
+    Estados possíveis do ciclo automático do Exercício 06.
+    PARADO  -> máquina ociosa, aguardando comando de ligar.
+    AVANCA  -> ferramenta avançando até a posição de trabalho.
+    AGUARDA -> tempo de espera na posição de trabalho (simula operação).
+    RECUA   -> ferramenta recuando à posição de repouso.
+*)
+TYPE E_EstadoCiclo :
+(
+    PARADO,
+    AVANCA,
+    AGUARDA,
+    RECUA
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

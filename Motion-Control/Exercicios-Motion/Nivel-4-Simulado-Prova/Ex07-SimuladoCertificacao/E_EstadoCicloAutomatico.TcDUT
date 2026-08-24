@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+  <DUT Name="E_EstadoCicloAutomatico" Id="{a1b2c3d4-0001-4002-8002-000000000007}">
+    <Declaration><![CDATA[(*
+    Estados do ciclo automático do simulado de certificação (Exercício 07).
+
+    PARADO           -> máquina ociosa, aguardando comando de ligar ciclo.
+    POSICIONA_FUSO    -> passo A: leva o fuso para a posição de repouso (5 mm).
+    POSICIONA_MESA    -> passo B: garante que a mesa esteja numa posição de produto.
+    AVANCA_FERRAMENTA -> passo C (parte 1): avança o fuso até 40 mm.
+    AGUARDA_OPERACAO  -> passo C (parte 2): aguarda 1s na posição de trabalho.
+    RECUA_FERRAMENTA  -> passo C (parte 3): recua o fuso de volta a 5 mm.
+    GIRA_MESA         -> passo D: indexa a mesa para a próxima posição de produto.
+*)
+TYPE E_EstadoCicloAutomatico :
+(
+    PARADO,
+    POSICIONA_FUSO,
+    POSICIONA_MESA,
+    AVANCA_FERRAMENTA,
+    AGUARDA_OPERACAO,
+    RECUA_FERRAMENTA,
+    GIRA_MESA
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

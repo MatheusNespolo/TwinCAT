@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+  <POU Name="PRG_Ex03_Homing" Id="{a1b2c3d4-0001-4001-8001-000000000003}" SpecialFunc="None">
+    <Declaration><![CDATA[(*
+    Exercício 03 - Referenciamento (Homing) e Interlock de Ciclo
+    ----------------------------------------------------------------
+    Objetivo: executar a rotina de busca de referência (home) de um eixo
+    linear e usar essa informação como interlock para liberar (ou não)
+    o início de um ciclo automático.
+
+    Regra de negócio replicada da prova de certificação:
+    - o eixo SÓ pode iniciar ciclo se estiver habilitado E referenciado.
+    - a referência é perdida ao desabilitar o eixo (ele "esquece" a posição
+      absoluta real quando o motor é desligado, no caso de um fuso comum
+      sem encoder absoluto).
+*)
+PROGRAM PRG_Ex03_Homing
+VAR
+    fbHabilita          : MC_Power;
+    xHabilitaEixo        : BOOL;
+    xEixoHabilitado      : BOOL;
+
+    fbHome              : MC_Home;
+    xBotaoReferencia     : BOOL; // comando que dispara a busca de home
+    xSensorHome          : BOOL; // sensor físico de home na posição "0"
+                                  // (em muitos setups Beckhoff o sensor é
+                                  // conectado diretamente à entrada de
+                                  // captura do encoder na NC, não como
+                                  // parâmetro de MC_Home; aqui mantemos a
+                                  // variável para deixar claro qual sinal
+                                  // fisicamente dispara a captura)
+
+    // Flip-flop de referência: SET quando a home termina com sucesso,
+    // RESET quando o eixo é desabilitado ou apresenta erro.
+    xEixoReferenciado    : BOOL;
+
+    // Interlock final: só libera início de ciclo com eixo pronto E referenciado
+    xPermiteIniciarCiclo : BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[GVL_Axes.Axis1.ReadStatus();
+
+// 1) Habilita o eixo (pré-requisito para qualquer movimento, inclusive home)
+fbHabilita(
+    Axis            := GVL_Axes.Axis1,
+    Enable          := xHabilitaEixo,
+    Enable_Positive := xHabilitaEixo,
+    Enable_Negative := xHabilitaEixo,
+    Override        := 100.0);
+xEixoHabilitado := fbHabilita.Status;
+
+// 2) MC_Home só deve poder ser disparado com o eixo já habilitado.
+//    A trava "AND xEixoHabilitado" evita comandar home num eixo desligado.
+fbHome(
+    Axis     := GVL_Axes.Axis1,
+    Execute  := xBotaoReferencia AND xEixoHabilitado,
+    Position := 0.0); // posição que o eixo assume ao concluir a referência
+
+// 3) Flip-flop de referência (SET/RESET manual em ST):
+//    - SET: quando o MC_Home termina com sucesso (Done = TRUE)
+//    - RESET: quando o eixo é desabilitado (perde-se a certeza da posição
+//      absoluta) ou quando o próprio eixo reporta erro.
+IF fbHome.Done THEN
+    xEixoReferenciado := TRUE;
+ELSIF (NOT xEixoHabilitado) OR GVL_Axes.Axis1.Status.Error THEN
+    xEixoReferenciado := FALSE;
+END_IF
+
+// 4) Interlock que qualquer ciclo automático deve consultar antes de iniciar.
+//    Isso implementa o item da prova: "o ciclo não deve iniciar sem que os
+//    motores tenham feito a referência" + "eixos energizados".
+xPermiteIniciarCiclo := xEixoHabilitado AND xEixoReferenciado;
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

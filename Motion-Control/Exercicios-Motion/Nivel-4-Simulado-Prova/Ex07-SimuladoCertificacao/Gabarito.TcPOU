@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+  <POU Name="PRG_Ex07_SimuladoCertificacao" Id="{a1b2c3d4-0001-4001-8001-000000000007}" SpecialFunc="None">
+    <Declaration><![CDATA[(*
+    Exercício 07 - Simulado Completo (estilo Prova de Certificação de Motion)
+    ---------------------------------------------------------------------------
+    Cenário: mesa rotativa (Axis2, 360°/volta, 8 posições de produto a cada
+    45°, SEM home - preserva posição absoluta ao desligar) + fuso linear
+    (Axis1, 5 mm/volta, faz HOME sempre que a máquina liga).
+
+    Este POU junta os conceitos dos Exercícios 01 a 06:
+      - MC_Power / ReadStatus            (Ex.01)
+      - MC_MoveAbsolute / MC_Halt        (Ex.02)
+      - MC_Home                          (Ex.03)
+      - MC_MoveModulo + MC_Direction     (Ex.04)
+      - MC_Reset + falha global          (Ex.05)
+      - Máquina de estados CASE          (Ex.06)
+
+    Usa o DUT E_EstadoCicloAutomatico para representar os passos A-E da
+    sequência de ciclo pedida no enunciado.
+*)
+PROGRAM PRG_Ex07_SimuladoCertificacao
+VAR CONSTANT
+    PASSO_ENTRE_PRODUTOS  : LREAL := 45.0;  // graus entre posições de produto
+    POSICAO_REPOUSO_FUSO  : LREAL := 5.0;   // mm - posição A (repouso/segura)
+    POSICAO_TRABALHO_FUSO : LREAL := 40.0;  // mm - posição C (avançada, trabalho)
+    TEMPO_OPERACAO        : TIME  := T#1S;  // espera na posição de trabalho
+END_VAR
+VAR
+    // ------------------- Habilitação dos eixos -------------------
+    fbHabilitaMesa       : MC_Power;
+    fbHabilitaFuso       : MC_Power;
+    xHabilitaEixos        : BOOL; // ED5 - habilita os eixos
+    xMesaHabilitada       : BOOL;
+    xFusoHabilitado       : BOOL;
+
+    // ------------------- Referência (home) do fuso -------------------
+    fbHomeFuso           : MC_Home;
+    xBotaoReferencia      : BOOL; // ED3 - botão de referência
+    xSensorHomeFuso       : BOOL; // ED4 - sensor de home do fuso, na posição "0"
+    xFusoReferenciado     : BOOL; // flip-flop: perde-se ao desabilitar o fuso
+    xEixosReferenciados   : BOOL; // SD4 - a mesa não homa, então depende só do fuso
+
+    // ------------------- Falha e reset -------------------
+    xFalhaEixos           : BOOL; // SD8 - falha em qualquer um dos eixos
+    fbResetMesa          : MC_Reset;
+    fbResetFuso          : MC_Reset;
+    xBotaoReset           : BOOL; // ED8 - botão de reset
+
+    // ------------------- Comandos de ciclo -------------------
+    xLigarCiclo           : BOOL; // ED1 - botão ligar ciclo
+    xPararCiclo           : BOOL; // ED2 - botão parar ciclo
+    xPedidoParada         : BOOL; // memória do pedido de parada até o fim do ciclo
+    xCicloLigado          : BOOL; // SD1 - ciclo automático ligado
+
+    // ------------------- Máquina de estados do ciclo -------------------
+    eEstado              : E_EstadoCicloAutomatico := E_EstadoCicloAutomatico.PARADO;
+
+    fbMoveFusoRepouso    : MC_MoveAbsolute;
+    fbMoveFusoTrabalho   : MC_MoveAbsolute;
+    fbIndexaMesa         : MC_MoveModulo;
+    tonAguarda           : TON;
+
+    // Próxima posição de produto (múltiplo de 45°), calculada dinamicamente
+    lrProximaPosicaoMesa  : LREAL;
+
+    // Interlock: só permite iniciar/continuar o ciclo automático com os
+    // dois eixos habilitados e o fuso referenciado.
+    xPermiteCiclo         : BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// ==================================================================
+// 0) Leitura de status - sempre em primeiro lugar no ciclo de scan.
+// ==================================================================
+GVL_Axes.Axis1.ReadStatus(); // Axis1 = fuso
+GVL_Axes.Axis2.ReadStatus(); // Axis2 = mesa rotativa
+
+// ==================================================================
+// 1) FALHA GLOBAL - qualquer erro em qualquer eixo derruba tudo.
+//    Verificado antes da habilitação para já cortar os eixos no
+//    mesmo ciclo em que a falha aparece.
+// ==================================================================
+xFalhaEixos := GVL_Axes.Axis1.Status.Error OR GVL_Axes.Axis2.Status.Error;
+
+IF xFalhaEixos THEN
+    // Desliga o ciclo automático imediatamente (não espera terminar o
+    // passo atual - falha é diferente de "parar normalmente").
+    xCicloLigado  := FALSE;
+    eEstado       := E_EstadoCicloAutomatico.PARADO;
+    xPedidoParada := FALSE;
+END_IF
+
+// ==================================================================
+// 2) HABILITAÇÃO DOS EIXOS (MC_Power) - cortada automaticamente em
+//    caso de falha, mesmo que o operador segure o botão de habilitar.
+// ==================================================================
+fbHabilitaFuso(
+    Axis            := GVL_Axes.Axis1,
+    Enable          := xHabilitaEixos AND NOT xFalhaEixos,
+    Enable_Positive := xHabilitaEixos AND NOT xFalhaEixos,
+    Enable_Negative := xHabilitaEixos AND NOT xFalhaEixos,
+    Override        := 100.0);
+xFusoHabilitado := fbHabilitaFuso.Status;
+
+fbHabilitaMesa(
+    Axis            := GVL_Axes.Axis2,
+    Enable          := xHabilitaEixos AND NOT xFalhaEixos,
+    Enable_Positive := xHabilitaEixos AND NOT xFalhaEixos,
+    Enable_Negative := xHabilitaEixos AND NOT xFalhaEixos,
+    Override        := 100.0);
+xMesaHabilitada := fbHabilitaMesa.Status;
+
+// ==================================================================
+// 3) RESET DE FALHA - só age quando existe falha real, garantindo que
+//    o botão de reset "não interfere na máquina durante o ciclo
+//    automático" (nesse caso, durante operação normal sem erro).
+// ==================================================================
+fbResetFuso(Axis := GVL_Axes.Axis1, Execute := xBotaoReset AND xFalhaEixos);
+fbResetMesa(Axis := GVL_Axes.Axis2, Execute := xBotaoReset AND xFalhaEixos);
+
+// ==================================================================
+// 4) REFERÊNCIA (HOME) DO FUSO - a mesa rotativa NUNCA executa home,
+//    ela é tratada como eixo absoluto que preserva a posição real.
+//    O botão de referência e o sensor de home só podem agir com o
+//    ciclo automático DESLIGADO (interlock pedido no enunciado).
+// ==================================================================
+fbHomeFuso(
+    Axis     := GVL_Axes.Axis1,
+    Execute  := xBotaoReferencia AND xFusoHabilitado AND NOT xCicloLigado,
+    Position := 0.0); // xSensorHomeFuso é o sinal físico que a NC usa
+                        // para capturar a posição real do home; aqui ele
+                        // é apenas documentado como referência de hardware.
+
+// Flip-flop de referência do fuso: perde-se ao desabilitar ou ao falhar.
+IF fbHomeFuso.Done THEN
+    xFusoReferenciado := TRUE;
+ELSIF (NOT xFusoHabilitado) OR xFalhaEixos THEN
+    xFusoReferenciado := FALSE;
+END_IF
+
+// A mesa nunca perde referência (não faz home) - então a condição de
+// "eixos referenciados" da máquina depende apenas do fuso.
+xEixosReferenciados := xFusoReferenciado;
+
+// ==================================================================
+// 5) INTERLOCK GERAL DE CICLO - só pode iniciar/continuar com os dois
+//    eixos habilitados, o fuso referenciado e sem falha.
+// ==================================================================
+xPermiteCiclo := xFusoHabilitado AND xMesaHabilitada AND xEixosReferenciados AND NOT xFalhaEixos;
+
+// Memoriza pedido de "parar ciclo" (fim suave, só efetiva ao fim do ciclo).
+IF xPararCiclo THEN
+    xPedidoParada := TRUE;
+END_IF
+
+// ==================================================================
+// 6) MÁQUINA DE ESTADOS DO CICLO AUTOMÁTICO (passos A a E do enunciado)
+// ==================================================================
+CASE eEstado OF
+
+    E_EstadoCicloAutomatico.PARADO:
+        // Só inicia com o interlock de eixos liberado (habilitados +
+        // referenciados) e com o botão de ligar ciclo acionado.
+        IF xLigarCiclo AND xPermiteCiclo THEN
+            xPedidoParada := FALSE;
+            xCicloLigado  := TRUE;
+            eEstado       := E_EstadoCicloAutomatico.POSICIONA_FUSO;
+        END_IF
+
+    E_EstadoCicloAutomatico.POSICIONA_FUSO:
+        // Passo A: leva o fuso para a posição de repouso (5 mm).
+        fbMoveFusoRepouso(
+            Axis     := GVL_Axes.Axis1,
+            Execute  := NOT fbMoveFusoRepouso.Done,
+            Position := POSICAO_REPOUSO_FUSO,
+            Velocity := 50.0);
+
+        IF fbMoveFusoRepouso.Done THEN
+            eEstado := E_EstadoCicloAutomatico.POSICIONA_MESA;
+        END_IF
+
+    E_EstadoCicloAutomatico.POSICIONA_MESA:
+        // Passo B: se a mesa já está numa posição de produto (múltiplo
+        // exato de 45°), pula direto para o ciclo de trabalho; senão,
+        // calcula e vai para a PRIMEIRA posição de produto no sentido
+        // positivo (nunca anda para trás).
+        lrProximaPosicaoMesa := (TRUNC(GVL_Axes.Axis2.NcToPlc.ActPos / PASSO_ENTRE_PRODUTOS))
+                                * PASSO_ENTRE_PRODUTOS;
+
+        IF ABS(GVL_Axes.Axis2.NcToPlc.ActPos - lrProximaPosicaoMesa) < 0.01 THEN
+            // Já está exatamente em uma posição de produto - segue direto.
+            eEstado := E_EstadoCicloAutomatico.AVANCA_FERRAMENTA;
+        ELSE
+            // Recalcula para o PRÓXIMO múltiplo de 45° (sentido positivo).
+            lrProximaPosicaoMesa := (TRUNC(GVL_Axes.Axis2.NcToPlc.ActPos / PASSO_ENTRE_PRODUTOS) + 1)
+                                    * PASSO_ENTRE_PRODUTOS;
+
+            fbIndexaMesa(
+                Axis      := GVL_Axes.Axis2,
+                Execute   := NOT fbIndexaMesa.Done,
+                Position  := lrProximaPosicaoMesa,
+                Velocity  := 30.0,
+                Direction := MC_Direction.MC_Positive_Direction);
+
+            IF fbIndexaMesa.Done THEN
+                eEstado := E_EstadoCicloAutomatico.AVANCA_FERRAMENTA;
+            END_IF
+        END_IF
+
+    E_EstadoCicloAutomatico.AVANCA_FERRAMENTA:
+        // Passo C (parte 1): avança até a posição de trabalho (40 mm).
+        fbMoveFusoTrabalho(
+            Axis     := GVL_Axes.Axis1,
+            Execute  := NOT fbMoveFusoTrabalho.Done,
+            Position := POSICAO_TRABALHO_FUSO,
+            Velocity := 50.0);
+
+        IF fbMoveFusoTrabalho.Done THEN
+            tonAguarda(IN := FALSE); // garante temporizador zerado
+            eEstado := E_EstadoCicloAutomatico.AGUARDA_OPERACAO;
+        END_IF
+
+    E_EstadoCicloAutomatico.AGUARDA_OPERACAO:
+        // Passo C (parte 2): aguarda 1 segundo simulando a operação.
+        tonAguarda(IN := TRUE, PT := TEMPO_OPERACAO);
+        IF tonAguarda.Q THEN
+            tonAguarda(IN := FALSE);
+            eEstado := E_EstadoCicloAutomatico.RECUA_FERRAMENTA;
+        END_IF
+
+    E_EstadoCicloAutomatico.RECUA_FERRAMENTA:
+        // Passo C (parte 3): recua de volta para a posição de repouso.
+        fbMoveFusoRepouso(
+            Axis     := GVL_Axes.Axis1,
+            Execute  := NOT fbMoveFusoRepouso.Done,
+            Position := POSICAO_REPOUSO_FUSO,
+            Velocity := 50.0);
+
+        IF fbMoveFusoRepouso.Done THEN
+            eEstado := E_EstadoCicloAutomatico.GIRA_MESA;
+        END_IF
+
+    E_EstadoCicloAutomatico.GIRA_MESA:
+        // Passo D: indexa a mesa para a PRÓXIMA posição de produto,
+        // sempre no sentido positivo.
+        lrProximaPosicaoMesa := (TRUNC(GVL_Axes.Axis2.NcToPlc.ActPos / PASSO_ENTRE_PRODUTOS) + 1)
+                                * PASSO_ENTRE_PRODUTOS;
+
+        fbIndexaMesa(
+            Axis      := GVL_Axes.Axis2,
+            Execute   := NOT fbIndexaMesa.Done,
+            Position  := lrProximaPosicaoMesa,
+            Velocity  := 30.0,
+            Direction := MC_Direction.MC_Positive_Direction);
+
+        IF fbIndexaMesa.Done THEN
+            // Passo E: só aqui, ao final do ciclo completo (avanço +
+            // espera + recuo + giro), verificamos se há pedido de
+            // parada pendente. A parada NUNCA interrompe um ciclo em
+            // andamento - é sempre uma parada "suave".
+            IF xPedidoParada OR NOT xPermiteCiclo THEN
+                xCicloLigado := FALSE;
+                eEstado      := E_EstadoCicloAutomatico.PARADO;
+            ELSE
+                eEstado := E_EstadoCicloAutomatico.AVANCA_FERRAMENTA; // ciclo contínuo
+            END_IF
+        END_IF
+
+END_CASE
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

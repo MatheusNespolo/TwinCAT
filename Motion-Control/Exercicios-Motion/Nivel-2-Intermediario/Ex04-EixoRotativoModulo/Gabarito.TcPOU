@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+  <POU Name="PRG_Ex04_EixoRotativoModulo" Id="{a1b2c3d4-0001-4001-8001-000000000004}" SpecialFunc="None">
+    <Declaration><![CDATA[(*
+    Exercício 04 - Eixo Rotativo com Indexação Angular (Modulo)
+    ----------------------------------------------------------------
+    Objetivo: indexar uma mesa rotativa (eixo modulo 0-360°) sempre no
+    sentido positivo, parando na próxima posição de produto (múltiplo de
+    45°), calculando essa posição dinamicamente a partir da posição atual.
+
+    Diferença chave em relação ao eixo linear: este eixo NÃO faz home.
+    Ele é tratado como se tivesse um encoder absoluto que preserva a
+    posição real mesmo depois de desligar/religar a máquina - por isso
+    não existe aqui nenhum bloco MC_Home.
+*)
+PROGRAM PRG_Ex04_EixoRotativoModulo
+VAR CONSTANT
+    // Distância angular entre produtos consecutivos na mesa (graus)
+    PASSO_ENTRE_PRODUTOS : LREAL := 45.0;
+END_VAR
+VAR
+    fbIndexarMesa   : MC_MoveModulo;
+    xIndexarMesa     : BOOL; // borda de subida dispara a indexação
+
+    // Posição-alvo calculada dinamicamente (próximo múltiplo de 45° > atual)
+    lrProximaPosicao : LREAL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[GVL_Axes.Axis2.ReadStatus();
+
+// 1) Calcula a próxima posição de produto no sentido POSITIVO a partir da
+//    posição atual do eixo. TRUNC(x) arredonda para baixo (trunca a parte
+//    decimal), então somando 1 sempre obtemos o PRÓXIMO múltiplo de 45°,
+//    mesmo quando a posição atual já é exatamente um múltiplo de 45°
+//    (ex.: ActPos = 90.0 -> TRUNC(90/45)=2 -> (2+1)*45 = 135.0).
+lrProximaPosicao := (TRUNC(GVL_Axes.Axis2.NcToPlc.ActPos / PASSO_ENTRE_PRODUTOS) + 1)
+                    * PASSO_ENTRE_PRODUTOS;
+
+// 2) MC_MoveModulo com Direction := MC_Positive_Direction força o eixo a
+//    girar sempre "para frente", nunca escolhendo o caminho mais curto
+//    (que poderia ser andar para trás). O eixo precisa estar configurado
+//    como "Modulo" na NC (Modulo Length = 360°) para o wrap 360°->0°
+//    funcionar automaticamente.
+fbIndexarMesa(
+    Axis      := GVL_Axes.Axis2,
+    Execute   := xIndexarMesa,
+    Position  := lrProximaPosicao,
+    Velocity  := 30.0, // graus/s - valor de treino, ajuste como preferir
+    Direction := MC_Direction.MC_Positive_Direction);
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

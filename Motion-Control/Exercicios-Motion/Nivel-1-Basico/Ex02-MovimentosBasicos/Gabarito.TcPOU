@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+  <POU Name="PRG_Ex02_MovimentosBasicos" Id="{a1b2c3d4-0001-4001-8001-000000000002}" SpecialFunc="None">
+    <Declaration><![CDATA[(*
+    Exercício 02 - Movimentos Básicos (Absoluto, Relativo, Parada)
+    ----------------------------------------------------------------
+    Objetivo: praticar os comandos de movimento mais usados em Motion
+    (MC_MoveAbsolute, MC_MoveRelative) e as duas formas de parar um eixo
+    (MC_Halt = parada suave / MC_Stop = parada travada, bloqueia comandos).
+
+    Pré-requisito: eixo já habilitado (ver Exercício 01). Este POU assume
+    que outro programa (ex.: PRG_Ex01_HabilitarEixo) já está habilitando
+    GVL_Axes.Axis1.
+*)
+PROGRAM PRG_Ex02_MovimentosBasicos
+VAR
+    // --- Movimento absoluto ---
+    fbMoveAbsoluto     : MC_MoveAbsolute;
+    xMoverAbsoluto      : BOOL; // dispara o movimento na borda de subida
+
+    // --- Movimento relativo ---
+    fbMoveRelativo     : MC_MoveRelative;
+    xMoverRelativo      : BOOL;
+
+    // --- Parada suave (permite novo comando de movimento em seguida) ---
+    fbParadaSuave      : MC_Halt;
+    xParadaSuave        : BOOL;
+
+    // --- Parada travada (bloqueia novos movimentos enquanto ativa) ---
+    fbParadaTravada    : MC_Stop;
+    xParadaTravada      : BOOL;
+
+    // --- Saídas de depuração ---
+    xEixoEmMovimento    : BOOL; // Axis1.Status.Moving
+    xComandoConcluido    : BOOL; // Done de qualquer um dos moves
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Sempre atualizar o status do eixo primeiro.
+GVL_Axes.Axis1.ReadStatus();
+
+// 1) Move Absoluto: leva o eixo até a posição 50.0 mm, independente de
+//    onde ele estiver agora. Execute é acionado por borda (o bloco
+//    internamente já trata o "Execute" como pulso de disparo).
+fbMoveAbsoluto(
+    Axis     := GVL_Axes.Axis1,
+    Execute  := xMoverAbsoluto,
+    Position := 50.0,   // mm - posição alvo absoluta
+    Velocity := 50.0);  // mm/s
+
+// 2) Move Relativo: desloca +20.0 mm a partir da posição ATUAL do eixo
+//    (soma-se à posição onde o eixo já está).
+fbMoveRelativo(
+    Axis     := GVL_Axes.Axis1,
+    Execute  := xMoverRelativo,
+    Distance := 20.0,   // mm - deslocamento relativo
+    Velocity := 20.0);  // mm/s
+
+// 3) Parada suave (Halt): desacelera o eixo respeitando a rampa
+//    configurada. Depois de parado, o eixo continua "pronto" para
+//    aceitar novos comandos de movimento.
+fbParadaSuave(
+    Axis    := GVL_Axes.Axis1,
+    Execute := xParadaSuave);
+
+// 4) Parada travada (Stop): também desacelera o eixo, mas MANTÉM o eixo
+//    bloqueado (Busy=TRUE) enquanto Execute permanecer TRUE - qualquer
+//    tentativa de MoveAbsolute/MoveRelative é ignorada/rejeitada até que
+//    xParadaTravada volte para FALSE.
+fbParadaTravada(
+    Axis    := GVL_Axes.Axis1,
+    Execute := xParadaTravada);
+
+// --- Saídas de depuração ---
+xEixoEmMovimento := GVL_Axes.Axis1.Status.Moving;
+
+// Concluído = qualquer um dos blocos de movimento terminou com sucesso.
+xComandoConcluido := fbMoveAbsoluto.Done OR fbMoveRelativo.Done;
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>
