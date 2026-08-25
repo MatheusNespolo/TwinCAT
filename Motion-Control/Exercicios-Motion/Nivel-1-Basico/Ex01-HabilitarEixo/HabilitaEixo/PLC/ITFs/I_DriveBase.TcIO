@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <Itf Name="I_DriveBase" Id="{5128345e-1585-4387-9646-8862db27e221}">
+    <Declaration><![CDATA[INTERFACE I_DriveBase
+]]></Declaration>
+    <Method Name="Disable" Id="{fc485f0e-5ed1-49ff-a430-f767fedfa7cf}">
+      <Declaration><![CDATA[METHOD Disable : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="Enable" Id="{b4d05e17-2285-4c6e-a1de-f86c09305f4b}">
+      <Declaration><![CDATA[METHOD Enable : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+  </Itf>
+</TcPlcObject>

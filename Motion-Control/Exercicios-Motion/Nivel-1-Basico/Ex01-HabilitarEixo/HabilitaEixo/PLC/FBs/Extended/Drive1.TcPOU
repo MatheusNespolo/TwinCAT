@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="Drive1" Id="{3555369e-3e13-48b4-b985-4b5677e918ce}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK Drive1 EXTENDS DriveBase
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="Disable" Id="{fc7ec26f-845d-492e-8ed0-6648374057c1}">
+      <Declaration><![CDATA[{error 'Add method implementation or delete method to use base implementation'}
+METHOD Disable : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Enable" Id="{5a8a7da1-54e0-4243-8466-b125c2019fb8}">
+      <Declaration><![CDATA[{error 'Add method implementation or delete method to use base implementation'}
+METHOD Enable : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

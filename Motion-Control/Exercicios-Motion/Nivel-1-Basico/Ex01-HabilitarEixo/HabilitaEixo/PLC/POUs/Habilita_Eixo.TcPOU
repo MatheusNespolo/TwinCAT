@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="Habilita_Eixo" Id="{92c81c56-4dcc-4d36-86ca-94127a99da91}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Habilita_Eixo
+VAR
+	DriveMesa: Drive1;
+	DriveFuso: Drive2;
+	DriveBase: I_DriveBase;
+	
+	UsarMesa: BOOL;
+	UsarFuso: BOOL;
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF UsarMesa THEN
+	UsarMesa := FALSE;
+	DriveBase := DriveMesa;
+END_IF
+
+IF DriveFuso THEN
+	DriveFuso := FALSE;
+	DriveBase := DriveFuso;
+END_IF
+
+GVL_Eixos.Eixo1.ReadStatus();
+GVL_Eixos.Eixo2.ReadStatus();
+
+DriveBase.Enable();]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>
