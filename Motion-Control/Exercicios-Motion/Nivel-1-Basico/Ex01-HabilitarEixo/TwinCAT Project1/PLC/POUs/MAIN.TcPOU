@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="MAIN" Id="{3bf0370f-8f08-460a-b5b6-c7e00346ad17}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	HabilitaEixo1: MC_Power;
+	bHabilitaEixo1: BOOL;
+	HabilitaEixo2: MC_Power;
+	bHabilitaEixo2: BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+//Ler status
+Eixos.Eixo1.ReadStatus();
+Eixos.Eixo2.ReadStatus();
+
+//Habilitar Eixo 1
+HabilitaEixo1(
+	Axis:= Eixos.Eixo1, 
+	Enable:= bHabilitaEixo1, 
+	Enable_Positive:= bHabilitaEixo1, 
+	Enable_Negative:= bHabilitaEixo1, 
+	Override:= 100)
+;
+//Habilitar Eixo 2
+HabilitaEixo2(
+	Axis:= Eixos.Eixo2, 
+	Enable:= bHabilitaEixo2, 
+	Enable_Positive:= bHabilitaEixo2, 
+	Enable_Negative:= bHabilitaEixo2, 
+	Override:= 100)
+;]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

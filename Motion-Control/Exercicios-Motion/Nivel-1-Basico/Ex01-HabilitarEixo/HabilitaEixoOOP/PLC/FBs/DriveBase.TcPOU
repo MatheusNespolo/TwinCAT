@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="DriveBase" Id="{64b4e4f2-63ab-4f7a-81f2-43205a95ae82}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK DriveBase IMPLEMENTS I_DriveBase
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="Disable" Id="{3f2a73fc-f1b1-4a4f-804f-aa07f298dfda}">
+      <Declaration><![CDATA[{warning 'Add method implementation '}
+METHOD Disable : BOOL
+
+VAR
+	MaquinaDesligada: BOOL;
+	bDesabilita: BOOL;
+	fb_Habilita1: MC_Power;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF MaquinaDesligada THEN
+		bDesabilita := 1;
+	ELSE
+		bDesabilita := 0;
+	END_IF
+	fb_Habilita1(
+		Axis:= GVL_Eixos.Eixo1, 
+		Enable:= bDesabilita, 
+		Enable_Positive:= bDesabilita, 
+		Enable_Negative:= bDesabilita, 
+		Override:= 100.0);]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Enable" Id="{c474daaa-646c-4e44-ab74-3000f1f73d6e}">
+      <Declaration><![CDATA[METHOD Enable : BOOL
+
+VAR
+	MaquinaLigada: BOOL;
+	bHabilita: BOOL;
+	fb_Habilita1: MC_Power;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF MaquinaLigada THEN
+		bHabilita := 1;
+	ELSE
+		bHabilita := 0;
+	END_IF
+	fb_Habilita1(
+		Axis:= GVL_Eixos.Eixo1, 
+		Enable:= bHabilita, 
+		Enable_Positive:= bHabilita, 
+		Enable_Negative:= bHabilita, 
+		Override:= 100.0);]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

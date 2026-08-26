@@ -18,8 +18,8 @@ END_VAR
 	DriveBase := DriveMesa;
 END_IF
 
-IF DriveFuso THEN
-	DriveFuso := FALSE;
+IF UsarFuso THEN
+	UsarFuso := FALSE;
 	DriveBase := DriveFuso;
 END_IF
 
