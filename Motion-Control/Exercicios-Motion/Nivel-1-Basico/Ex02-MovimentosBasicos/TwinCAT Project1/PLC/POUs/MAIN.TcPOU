@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="MAIN" Id="{3bf0370f-8f08-460a-b5b6-c7e00346ad17}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	HabilitaEixo1: MC_Power;
+	bHabilitaEixo1: BOOL;
+	MoveAbsoluteEixo1: MC_MoveAbsolute;
+	bMoverAbsoluto: BOOL;
+	MoveRelativeEixo1: MC_MoveRelative;
+	bMoverRelativo: BOOL;
+	HaltEixo1: MC_Halt;
+	bParadaSuave: BOOL;
+	StopEixo1: MC_Stop;
+	bParadaTravada: BOOL;
+	uEstadoEixo : UDINT;
+	bComandoConcluido: BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Ler status
+Eixos.Eixo1.ReadStatus()
+;
+// Mostra o Estado do Eixo 1
+uEstadoEixo := Eixos.Eixo1.NcToPlc.AxisState
+;
+// Indica se houve Done por parte de algum dos blocos
+IF MoveAbsoluteEixo1.Done OR MoveRelativeEixo1.Done THEN
+	bComandoConcluido := TRUE;
+END_IF
+
+//Habilitar Eixo 1
+HabilitaEixo1(
+	Axis:= Eixos.Eixo1, 
+	Enable:= bHabilitaEixo1, 
+	Enable_Positive:= bHabilitaEixo1, 
+	Enable_Negative:= bHabilitaEixo1, 
+	Override:= 100)
+;
+// Move Absolute Eixo 1
+MoveAbsoluteEixo1(
+	Axis:= Eixos.Eixo1, 
+	Execute:= bMoverAbsoluto, 
+	Position:= 50, 
+	Velocity:= 50)
+;
+// Move Relative Eixo 1
+MoveRelativeEixo1(
+	Axis:= Eixos.Eixo1, 
+	Execute:= bMoverRelativo, 
+	Distance:= 20, 
+	Velocity:= 20)
+;
+// Parar o Eixo 1
+HaltEixo1(
+	Axis:= Eixos.Eixo1, 
+	Execute:= bParadaSuave)
+;
+// Parar o Eixo 1 e impedir que se mova até que  desative o bloco Stop
+StopEixo1(
+	Axis:= Eixos.Eixo1, 
+	Execute:= bParadaTravada)
+;
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <GVL Name="Eixos" Id="{530863fe-57e1-49d6-9324-1b69db309c3b}">
+    <Declaration><![CDATA[VAR_GLOBAL
+	Eixo1 : AXIS_REF;
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>
