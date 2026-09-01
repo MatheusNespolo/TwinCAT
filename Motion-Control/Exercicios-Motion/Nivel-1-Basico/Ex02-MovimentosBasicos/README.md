@@ -20,7 +20,7 @@ Usando `GVL_Axes.Axis1` (eixo já habilitado):
    disparado por `xParadaSuave`.
 4. Instancie `MC_Stop` para parar o eixo e **bloquear** qualquer novo comando de movimento enquanto
    `Execute` estiver `TRUE` (é a "parada travada"), disparado por `xParadaTravada`.
-5. Exponha `xEixoEmMovimento` ← `Axis1.Status.Moving` e `xComandoConcluido` ← que deve ser `TRUE`
+5. Exponha `xEEstadoEixo` ← `Axis1.NcToPlc.AxisState` e `xComandoConcluido` ← que deve ser `TRUE`
    quando qualquer um dos blocos de movimento reportar `Done`.
 
 ## Elementos da biblioteca Motion exigidos
