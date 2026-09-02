@@ -15,7 +15,7 @@ referência de um motor e impedir que o ciclo comece sem que a referência tenha
 
 Usando `GVL_Axes.Axis1` (eixo linear, escala 10 mm/volta):
 
-1. Configure a escala do `Axis1` em *NC → Axes → Axis 1 → Parameter → Scaling Factor Numerator*
+1. Configure a escala do `Axis1` em *NC → Axes → Axis 1 → Enc → Parameter → Scaling Factor Numerator*
    para refletir 10 mm por volta do motor.
 2. Declare uma entrada digital `xSensorHome : BOOL` simulando o sensor de home físico na posição 0.
 3. Declare um botão `xBotaoReferencia : BOOL`.
