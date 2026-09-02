@@ -19,9 +19,8 @@ próxima posição válida", não decorar um valor fixo.
 
 Usando `GVL_Axes.Axis2` (eixo rotativo, escala graus/volta):
 
-1. Configure a escala do `Axis2` para 360°/volta.
-2. Marque `Axis2` como eixo modulo em *NC → Axes → Axis 2 → Parameter → Modulo* com
-   comprimento `360.0` (isso faz o eixo "dar a volta" automaticamente).
+1. Configure a escala do Axis1 em NC → Axes → Axis 2 → Enc → Parameter → Scaling Factor Numerator para refletir 360° por volta do motor..
+2. Marque `Axis2` como eixo modulo em *NC → Axes → Axis 2 → Settings → Display (Only) → Modulo* (apenas para melhor visualização).
 3. Crie uma função/lógica que, dada a posição atual do eixo (`Axis2.NcToPlc.ActPos`), calcule qual
    é a **próxima posição múltipla de 45° no sentido positivo** (ex.: se a posição atual for 100°,
    a próxima posição de produto é 135°).
