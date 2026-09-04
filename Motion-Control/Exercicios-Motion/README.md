@@ -4,6 +4,7 @@ Esta pasta contém uma trilha progressiva de exercícios práticos usando a bibl
 `MC_*` no padrão PLCopen), a mesma biblioteca já usada no projeto [`MotionControl`](../MotionControl/).
 O objetivo é treinar, em blocos pequenos e isolados, todos os conceitos que caem na **PROVA PRÁTICA de
 certificação de Motion**, culminando em um simulado completo no Nível 4.
+Os arquivos de projeto dos programas resolvendo os exercícios foram feitos como simulação local (TwinCAT 3 4026.26 + User Mode Runtime).
 
 ## Como usar
 
