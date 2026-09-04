@@ -1,0 +1,205 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="MAIN" Id="{3bf0370f-8f08-460a-b5b6-c7e00346ad17}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	HabilitaEixo1			: MC_Power;
+	bHabilitaEixo1			: BOOL;
+	HabilitaEixo2			: MC_Power;
+	bHabilitaEixo2			: BOOL;
+	MoveAbsoluteEixo1		: MC_MoveAbsolute;
+	bMoverAbsoluto			: BOOL;
+	MoveRelativeEixo1		: MC_MoveRelative;
+	bMoverRelativo			: BOOL;
+	HaltEixo1				: MC_Halt;
+	bParadaSuave			: BOOL;
+	StopEixo1				: MC_Stop;
+	bParadaTravada			: BOOL;
+	uEstadoEixo 			: UDINT;
+	bComandoConcluido		: BOOL;
+	bSensorHome 			: BOOL;
+	bBotaoReferencia		: BOOL;
+	HomeEixo1				: MC_Home;
+	bEixoReferenciado		: BOOL;
+	bPermiteIniciarCiclo	: BOOL;
+	bEstadoHoming			: BOOL;
+	bEixoHabilitado			: BOOL;
+	lrPosicaoAtual			: LREAL;
+	lrProximaPosicao		: LREAL;
+	MoveModuloEixo2			: MC_MoveModulo;
+	bIndexarMesa			: BOOL;
+	bBotaoReset				: BOOL;
+	bFalhaEixos				: BOOL;
+	ResetEixo1				: MC_Reset;
+	ResetEixo2				: MC_Reset;
+	bSinalizarFalha AT %Q*	: BOOL;
+	bLigarCiclo				: BOOL;
+	bDesligarCiclo			: BOOL;
+	iEstado					: INT;
+	bPedidoParada			: BOOL;
+	tonAguarda				: TON;
+	bCicloLigado			: BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//Ler status
+Eixos.Eixo1.ReadStatus()
+;
+// Mostra o Estado do Eixo 1
+uEstadoEixo := Eixos.Eixo1.NcToPlc.AxisState
+;
+// Mostra e confirma o estado do homing
+bEstadoHoming := Eixos.Eixo1.Status.Homing;
+
+// Indica se houve Done por parte de algum dos blocos
+IF MoveAbsoluteEixo1.Done OR MoveRelativeEixo1.Done THEN
+	bComandoConcluido := TRUE;
+END_IF
+
+// Home Eixo 1
+HomeEixo1(
+	Axis:= Eixos.Eixo1, 
+	Execute:= bBotaoReferencia AND bEixoHabilitado, 
+	Position:= 0.0, 
+	HomingMode:= , 
+	BufferMode:= , 
+	Options:= , 
+	bCalibrationCam:= bSensorHome)
+;
+// Confirma que o Eixo 1 está referenciado e se for desabilitado perde a referência
+IF HomeEixo1.Done THEN
+	bEixoReferenciado := TRUE;
+ELSIF NOT HabilitaEixo1.Enable THEN
+	bEixoReferenciado := FALSE;
+END_IF
+
+// Intertravamento para permitir o início do ciclo
+bPermiteIniciarCiclo := bHabilitaEixo1 AND bEixoReferenciado;
+//Habilitar Eixo 1
+HabilitaEixo1(
+	Axis:= Eixos.Eixo1, 
+	Enable:= bHabilitaEixo1 AND NOT bFalhaEixos, 
+	Enable_Positive:= bHabilitaEixo1, 
+	Enable_Negative:= bHabilitaEixo1, 
+	Override:= 100)
+;
+//Habilitar Eixo 2
+HabilitaEixo2(
+	Axis:= Eixos.Eixo2, 
+	Enable:= bHabilitaEixo2 AND NOT bFalhaEixos, 
+	Enable_Positive:= bHabilitaEixo2, 
+	Enable_Negative:= bHabilitaEixo2, 
+	Override:= 100)
+;
+// Confirma eixo habilitado
+bEixoHabilitado:= Eixos.Eixo1.Status.Operational;
+// Move Relative Eixo 1
+MoveRelativeEixo1(
+	Axis:= Eixos.Eixo1, 
+	Execute:= bMoverRelativo, 
+	Distance:= 20, 
+	Velocity:= 20)
+;
+// Parar o Eixo 1
+HaltEixo1(
+	Axis:= Eixos.Eixo1, 
+	Execute:= bParadaSuave)
+;
+// Parar o Eixo 1 e impedir que se mova até que  desative o bloco Stop
+StopEixo1(
+	Axis:= Eixos.Eixo1, 
+	Execute:= bParadaTravada)
+;
+// Calcula a próxima posição múltipla de 45° no sentido positivo
+lrPosicaoAtual := Eixos.Eixo2.NcToPlc.ActPos;
+lrProximaPosicao := (TRUNC(lrPosicaoAtual / 45.0) + 1) * 45.0;
+// Move Modulo Eixo 2
+MoveModuloEixo2(
+	Axis:= Eixos.Eixo2, 
+	Execute:= bIndexarMesa, 
+	Position:= lrProximaPosicao, 
+	Velocity:= 50,  
+	Direction:= MC_Direction.MC_Positive_Direction)
+;
+// Detecta falha global se qualquer um dos eixos reportar erro
+IF Eixos.Eixo1.Status.Error OR Eixos.Eixo2.Status.Error THEN
+	bFalhaEixos := TRUE;
+ELSIF ResetEixo1.Done AND ResetEixo2.Done THEN
+	bFalhaEixos := FALSE;
+END_IF
+// Corta o ciclo automático e desabilita os dois eixos
+IF bFalhaEixos THEN
+	bHabilitaEixo1 := FALSE;
+END_IF
+// Reset Eixo 1
+ResetEixo1(
+	Axis:= Eixos.Eixo1, 
+	Execute:= bBotaoReset AND bFalhaEixos)
+;
+// Reset Eixo 2
+ResetEixo2(
+	Axis:= Eixos.Eixo2, 
+	Execute:= bBotaoReset AND bFalhaEixos)
+;
+
+IF bDesligarCiclo THEN
+    bPedidoParada := TRUE;
+END_IF
+
+// Máquina de estados
+CASE iEstado OF
+	
+	E_EstadoCiclo.PARADO:
+	// Máquina parada. Só sai com comando explícito de ligar. Eixos devidamente habilitados
+	IF bLigarCiclo THEN
+		bPedidoParada := FALSE; // limpa qualquer vestígio de pedido de parada
+		iEstado := E_EstadoCiclo.AVANCA;
+	END_IF
+	
+	E_EstadoCiclo.AVANCA:
+	// Avança a ferramenta até a posição de trabalho (100.0 mm)
+	// Move Absolute Eixo 1
+	MoveAbsoluteEixo1(
+		Axis:= Eixos.Eixo1, 
+		Execute:= NOT MoveAbsoluteEixo1.Done, 
+		Position:= 100, 
+		Velocity:= 50)
+		;
+	IF MoveAbsoluteEixo1.Done THEN
+		tonAguarda(IN := FALSE); // TON começa zerado
+		iEstado := E_EstadoCiclo.AGUARDA;
+	END_IF
+	
+	E_EstadoCiclo.AGUARDA:
+	// Aguarda 1000 ms simulando a operação da estação de trabalho
+	tonAguarda(IN:= TRUE, PT:=T#1S);
+	IF tonAguarda.Q THEN
+		tonAguarda(IN:= FALSE); // reset do TON
+		iEstado := E_EstadoCiclo.RECUA;
+	END_IF
+	
+	E_EstadoCiclo.RECUA:
+	// Recua a ferramenta de volta à posição de repouso (10.0 mm)
+	MoveAbsoluteEixo1(
+		Axis:= Eixos.Eixo1, 
+		Execute:= NOT MoveAbsoluteEixo1.Done, 
+		Position:= 10, 
+		Velocity:= 50)
+		;
+	IF MoveAbsoluteEixo1.Done THEN
+		// Checagem de pedido de parada
+		IF bPedidoParada THEN
+			iEstado := E_EstadoCiclo.PARADO;
+		ELSE
+			iEstado := E_EstadoCiclo.AVANCA; // Ciclo contínuo
+		END_IF
+	END_IF
+
+END_CASE
+
+// Ciclo considerado "ligado" em qualquer estado que não seja PARADO
+bCicloLigado := (iEstado <> E_EstadoCiclo.Parado);
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>
