@@ -10,6 +10,7 @@ VAR
 	fbParserTests    : FB_DfiPayloadParser_Tests;
 	fbSqlBuilderTests: FB_DfiSqlBuilder_Tests;
 	fbNowStringTests : F_DfiNowString_Tests;
+	fbDbWriterTests  : FB_DfiDbWriter_Tests;
 END_VAR
 ]]></Declaration>
     <Implementation>

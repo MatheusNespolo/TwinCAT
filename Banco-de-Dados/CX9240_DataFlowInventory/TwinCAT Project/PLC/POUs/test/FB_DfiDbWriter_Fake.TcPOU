@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_DfiDbWriter_Fake" Id="{2d93a3b7-760e-4042-9461-eb2d104b1435}" SpecialFunc="None">
+    <Declaration><![CDATA[// Dublê de teste de FB_DfiDbWriter: sobrescreve apenas o seam DoExecute,
+// deixando toda a maquina de estados da classe base rodar de verdade.
+// FB_SQLCommandEvt/FB_SQLDatabaseEvt exigem um TwinCAT Database Server real,
+// por isso o caminho de banco nao e coberto aqui (bancada, Task 15).
+FUNCTION_BLOCK FB_DfiDbWriter_Fake EXTENDS FB_DfiDbWriter
+VAR
+	nScript    : INT;
+	nExecCycle : INT;
+END_VAR
+VAR CONSTANT
+	// Espelhadas em FB_DfiDbWriter_Tests (VAR CONSTANT de FB nao e visivel de
+	// fora da instancia). Manter os dois blocos em sincronia.
+	SCRIPT_OK         : INT := 1;
+	SCRIPT_EXEC_ERROR : INT := 2;
+	SCRIPT_DB_LOST    : INT := 3;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Corpo vazio de proposito: o corpo do FB base (a maquina de estados) e
+// executado implicitamente antes do corpo do FB derivado. Chamar SUPER^()
+// aqui faria a maquina avancar dois estados por ciclo.
+]]></ST>
+    </Implementation>
+    <Method Name="SetScript" Id="{5a7dc5b0-bb30-47f9-b8e6-a3eff9d86101}">
+      <Declaration><![CDATA[METHOD SetScript
+VAR_INPUT
+	n : INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[nScript    := n;
+nExecCycle := 0;
+// Pula o estado CONNECT: os testes exercitam BUILD/EXECUTE/COMMIT direto.
+bDbConnected := TRUE;
+eState       := E_DfiWriterState.IDLE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="DoExecute" Id="{53ec1518-e2e5-4d33-ac7e-26f6dce9806b}">
+      <Declaration><![CDATA[METHOD PROTECTED DoExecute : INT
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// 0 = ocupado, 1 = ok, 2 = erro (mesmo contrato do metodo sobrescrito).
+IF nScript = SCRIPT_EXEC_ERROR THEN
+	DoExecute := 2;
+
+ELSIF nScript = SCRIPT_DB_LOST THEN
+	// conexao cai no meio do Execute: a base deve ir para DB_LOST sem Pop
+	bDbConnected := FALSE;
+	DoExecute := 0;
+
+ELSIF nScript = SCRIPT_OK THEN
+	// 1 ciclo "ocupado" e depois sucesso, para exercitar a espera em EXECUTE
+	IF nExecCycle = 0 THEN
+		nExecCycle := 1;
+		DoExecute := 0;
+	ELSE
+		DoExecute := 1;
+	END_IF
+
+ELSE
+	DoExecute := 1;
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>
