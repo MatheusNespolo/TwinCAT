@@ -5,6 +5,13 @@
 VAR_GLOBAL
 	gCfg  : ST_DfiConfig;
 	gDiag : ST_DfiDiag;
+	// pipeline
+	fbLoader  : FB_DfiConfigLoader;
+	fbSub     : FB_DfiMqttSubscriber;
+	fbParser  : FB_DfiPayloadParser;
+	fbBuffer  : FB_DfiRowBuffer;
+	fbSampler : FB_DfiSampler;
+	fbWriter  : FB_DfiDbWriter;
 END_VAR
 ]]></Declaration>
   </GVL>

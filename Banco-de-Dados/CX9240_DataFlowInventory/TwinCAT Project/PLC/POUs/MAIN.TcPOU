@@ -3,10 +3,103 @@
   <POU Name="MAIN" Id="{34154070-d696-46ff-9128-cc1ffe67f4c4}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM MAIN
 VAR
+	bBoot           : BOOL := TRUE;
+	stUltimoEstoque : ST_EstoqueSnapshot;
+	bEstoqueValido  : BOOL;
+	bDiff           : BOOL;
+	row             : ST_DfiRow;
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[// Orquestracao preenchida na Task 14.
+      <ST><![CDATA[// ---------------------------------------------------------------
+// Orquestracao do historian DFI (Task 14). Pipeline por ciclo:
+//   Config -> MQTT -> Parser -> Buffer -> Sampler -> DbWriter -> Diagnostico
+// ---------------------------------------------------------------
+
+// 0. Config (uma vez no arranque; retenta se falhar)
+IF bBoot THEN
+	GVL_Dfi.fbLoader(bExecute := TRUE, sPath := '/etc/dfi/historian.conf');
+	IF GVL_Dfi.fbLoader.bDone THEN
+		bBoot := FALSE;
+		IF NOT GVL_Dfi.fbLoader.bError AND GVL_Dfi.fbLoader.stCfg.bValid THEN
+			GVL_Dfi.gCfg := GVL_Dfi.fbLoader.stCfg;
+		END_IF
+	END_IF
+END_IF
+GVL_Dfi.gDiag.bConfigOk := GVL_Dfi.gCfg.bValid;
+IF NOT GVL_Dfi.gCfg.bValid THEN
+	RETURN;   // sem config valida, nao conecta em nada
+END_IF
+
+GVL_Dfi.fbBuffer(nCapacity := GVL_Dfi.gCfg.nBufferSize);
+
+// 1. MQTT
+GVL_Dfi.fbSub(stConfig := GVL_Dfi.gCfg, bEnable := TRUE);
+
+// 2. Parse + roteamento
+IF GVL_Dfi.fbSub.bNewMessage THEN
+	GVL_Dfi.fbParser(bExecute := TRUE,
+	                 sTopic   := GVL_Dfi.fbSub.sTopic,
+	                 sPayload := GVL_Dfi.fbSub.sPayload,
+	                 stConfig := GVL_Dfi.gCfg);
+	IF GVL_Dfi.fbParser.bOk THEN
+		// Limpa a linha reutilizada antes de montar (row e VAR persistente do MAIN).
+		row.sTsPlc              := '';
+		row.stEstoque.nA        := 0;
+		row.stEstoque.nB        := 0;
+		row.stEstoque.nC        := 0;
+		row.stEvento.sEvento    := '';
+		row.stEvento.sPeca      := '';
+		row.stEvento.sDetalhe   := '';
+		row.stEvento.sPayloadRaw := '';
+		CASE GVL_Dfi.fbParser.eKind OF
+			E_DfiRowKind.ESTOQUE_MUDANCA:
+				stUltimoEstoque := GVL_Dfi.fbParser.stEstoque;
+				bEstoqueValido  := TRUE;
+				bDiff := (NOT GVL_Dfi.fbWriter.bUltimoGravadoValido)
+				      OR (GVL_Dfi.fbParser.stEstoque.nA <> GVL_Dfi.fbWriter.stUltimoGravado.nA)
+				      OR (GVL_Dfi.fbParser.stEstoque.nB <> GVL_Dfi.fbWriter.stUltimoGravado.nB)
+				      OR (GVL_Dfi.fbParser.stEstoque.nC <> GVL_Dfi.fbWriter.stUltimoGravado.nC);
+				IF bDiff THEN
+					row.eKind     := E_DfiRowKind.ESTOQUE_MUDANCA;
+					row.sTsPlc    := F_DfiNowString();
+					row.stEstoque := GVL_Dfi.fbParser.stEstoque;
+					GVL_Dfi.fbBuffer.Push(row);
+				END_IF
+
+			E_DfiRowKind.EVENTO:
+				row.eKind    := E_DfiRowKind.EVENTO;
+				row.sTsPlc   := F_DfiNowString();
+				row.stEvento := GVL_Dfi.fbParser.stEvento;
+				GVL_Dfi.fbBuffer.Push(row);
+		END_CASE
+	ELSE
+		GVL_Dfi.gDiag.nParseErrors      := GVL_Dfi.gDiag.nParseErrors + 1;
+		GVL_Dfi.gDiag.sUltimoParseError := GVL_Dfi.fbParser.sParseError;
+	END_IF
+	GVL_Dfi.fbParser(bExecute := FALSE);   // rearma a borda de subida
+END_IF
+
+// 3. Amostra periodica
+GVL_Dfi.fbSampler(stUltimoEstoque := stUltimoEstoque,
+                  bValido         := bEstoqueValido,
+                  tPeriodo        := GVL_Dfi.gCfg.tSamplePeriod,
+                  fbBuffer        := GVL_Dfi.fbBuffer);
+
+// 4. Dreno para o banco
+GVL_Dfi.fbWriter(stConfig := GVL_Dfi.gCfg, fbBuffer := GVL_Dfi.fbBuffer);
+
+// 5. Diagnostico
+GVL_Dfi.gDiag.bMqttConnected   := GVL_Dfi.fbSub.bConnected;
+GVL_Dfi.gDiag.nReconnectCount  := GVL_Dfi.fbSub.nReconnectCount;
+GVL_Dfi.gDiag.bDbConnected     := GVL_Dfi.fbWriter.bDbConnected;
+GVL_Dfi.gDiag.eWriterState     := GVL_Dfi.fbWriter.eState;
+GVL_Dfi.gDiag.nRowsWritten     := GVL_Dfi.fbWriter.nRowsWritten;
+GVL_Dfi.gDiag.nDbErrors        := GVL_Dfi.fbWriter.nErrors;
+GVL_Dfi.gDiag.sUltimoDbError   := GVL_Dfi.fbWriter.sLastError;
+GVL_Dfi.gDiag.nBufferCount     := GVL_Dfi.fbBuffer.nCount;
+GVL_Dfi.gDiag.nBufferHighWater := GVL_Dfi.fbBuffer.nHighWater;
+GVL_Dfi.gDiag.nBufferDropped   := GVL_Dfi.fbBuffer.nDropped;
 ]]></ST>
     </Implementation>
   </POU>
