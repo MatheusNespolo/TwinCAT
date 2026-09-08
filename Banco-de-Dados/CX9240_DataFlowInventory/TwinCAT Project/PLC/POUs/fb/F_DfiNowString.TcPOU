@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="F_DfiNowString" Id="{e78f4122-21c3-4f6e-9386-77b892d73e6e}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_DfiNowString : STRING(23)
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// STUB — substituido na Task 10 por leitura de FB_LocalSystemTime
+F_DfiNowString := '1970-01-01 00:00:00.000';
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>
