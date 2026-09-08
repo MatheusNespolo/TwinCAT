@@ -42,6 +42,15 @@
     <Compile Include="POUs\fb\FB_DfiConfigLoader.TcPOU">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="POUs\fb\F_DfiSanitizeText.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\fb\F_DfiStripSqlUnsafe.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\fb\FB_DfiPayloadParser.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="POUs\test\PRG_DfiTests.TcPOU">
       <SubType>Code</SubType>
     </Compile>
@@ -52,6 +61,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="POUs\test\FB_DfiCfgParse_Tests.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="POUs\test\FB_DfiPayloadParser_Tests.TcPOU">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="DUTs\E_DfiRowKind.TcDUT">

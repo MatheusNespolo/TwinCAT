@@ -1,0 +1,260 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_DfiPayloadParser" Id="{70277075-d47f-4852-a2d8-598cf0c38292}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_DfiPayloadParser
+VAR_INPUT
+	sTopic   : STRING(255);
+	sPayload : STRING(510);
+	stConfig : ST_DfiConfig;
+	bExecute : BOOL;
+END_VAR
+VAR_OUTPUT
+	bDone       : BOOL;
+	bOk         : BOOL;
+	eKind       : E_DfiRowKind;
+	stEstoque   : ST_EstoqueSnapshot;
+	stEvento    : ST_EventoDfi;
+	sParseError : STRING(120);
+END_VAR
+VAR
+	fbJson    : Tc3_JsonXml.FB_JsonDomParser;
+	fbTrig    : R_TRIG;
+	jsonRoot  : Tc3_JsonXml.SJsonValue;
+	bEstoque  : BOOL;
+	bEvento   : BOOL;
+	sType     : STRING(63);
+	sEv       : STRING(254);
+	sEvClean  : STRING(254);
+	sPeca     : STRING(254);
+	sTipo     : STRING(254);
+	sDetClean : STRING(254);
+	nMax      : DINT;
+	nA        : DINT;
+	nB        : DINT;
+	nC        : DINT;
+	bV        : BOOL;
+	bFound    : BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Executa somente na borda de subida de bExecute (Step 4).
+fbTrig(CLK := bExecute);
+IF NOT fbTrig.Q THEN
+	RETURN;
+END_IF
+
+// 1) limpa saidas
+bDone       := FALSE;
+bOk         := FALSE;
+sParseError := '';
+eKind       := E_DfiRowKind.ESTOQUE_MUDANCA;
+stEstoque.nA := 0;
+stEstoque.nB := 0;
+stEstoque.nC := 0;
+stEvento.sEvento     := '';
+stEvento.sPeca       := '';
+stEvento.sDetalhe    := '';
+stEvento.sPayloadRaw := '';
+
+// 2) roteamento por topico
+bEstoque := (sTopic = stConfig.sTopicEstoque);
+bEvento  := (sTopic = stConfig.sTopicEventos);
+IF (NOT bEstoque) AND (NOT bEvento) THEN
+	sParseError := 'topic';
+	bDone := TRUE;
+	RETURN;
+END_IF
+
+// 3) parse do JSON (ParseDocument retorna a raiz; 0 => documento invalido)
+jsonRoot := fbJson.ParseDocument(sPayload);
+IF jsonRoot = 0 THEN
+	sParseError := 'json';
+	bDone := TRUE;
+	RETURN;
+END_IF
+
+// 4) campo 'type'
+sType := THIS^.GetStr(jsonRoot, 'type', bFound);
+IF (NOT bFound) OR (sType = '') THEN
+	sParseError := 'type';
+	bDone := TRUE;
+	RETURN;
+END_IF
+IF bEstoque AND (sType <> 'estoque') THEN
+	sParseError := 'type';
+	bDone := TRUE;
+	RETURN;
+END_IF
+IF bEvento AND (sType <> 'evento') THEN
+	sParseError := 'type';
+	bDone := TRUE;
+	RETURN;
+END_IF
+
+// 5) ramo ESTOQUE
+IF bEstoque THEN
+	nMax := stConfig.nEstoqueMax;
+	nA := THIS^.GetInt(jsonRoot, 'pecaA', bV);
+	IF NOT bV THEN
+		sParseError := 'campo';
+		bDone := TRUE;
+		RETURN;
+	END_IF
+	nB := THIS^.GetInt(jsonRoot, 'pecaB', bV);
+	IF NOT bV THEN
+		sParseError := 'campo';
+		bDone := TRUE;
+		RETURN;
+	END_IF
+	nC := THIS^.GetInt(jsonRoot, 'pecaC', bV);
+	IF NOT bV THEN
+		sParseError := 'campo';
+		bDone := TRUE;
+		RETURN;
+	END_IF
+	IF (nA < 0) OR (nA > nMax)
+	OR (nB < 0) OR (nB > nMax)
+	OR (nC < 0) OR (nC > nMax) THEN
+		sParseError := 'faixa';
+		bDone := TRUE;
+		RETURN;
+	END_IF
+	stEstoque.nA := DINT_TO_INT(nA);
+	stEstoque.nB := DINT_TO_INT(nB);
+	stEstoque.nC := DINT_TO_INT(nC);
+	eKind := E_DfiRowKind.ESTOQUE_MUDANCA;
+	bOk   := TRUE;
+	bDone := TRUE;
+	RETURN;
+END_IF
+
+// 6) ramo EVENTO
+sEv := THIS^.GetStr(jsonRoot, 'evento', bFound);
+IF (NOT bFound) OR (sEv = '') THEN
+	sParseError := 'campo';
+	bDone := TRUE;
+	RETURN;
+END_IF
+IF NOT F_DfiSanitizeText(sEv, 23, sEvClean) THEN
+	sParseError := 'sanit';
+	bDone := TRUE;
+	RETURN;
+END_IF
+
+// peca: se presente precisa ser 'A' | 'B' | 'C'; se ausente => ''
+IF THIS^.HasKey(jsonRoot, 'peca') THEN
+	sPeca := THIS^.GetStr(jsonRoot, 'peca', bFound);
+	IF (sPeca <> 'A') AND (sPeca <> 'B') AND (sPeca <> 'C') THEN
+		sParseError := 'peca';
+		bDone := TRUE;
+		RETURN;
+	END_IF
+	stEvento.sPeca := sPeca;
+ELSE
+	stEvento.sPeca := '';
+END_IF
+
+// tipo -> detalhe: se presente sanitiza (63); se ausente => ''
+IF THIS^.HasKey(jsonRoot, 'tipo') THEN
+	sTipo := THIS^.GetStr(jsonRoot, 'tipo', bFound);
+	IF NOT F_DfiSanitizeText(sTipo, 63, sDetClean) THEN
+		sParseError := 'sanit';
+		bDone := TRUE;
+		RETURN;
+	END_IF
+	stEvento.sDetalhe := sDetClean;
+ELSE
+	stEvento.sDetalhe := '';
+END_IF
+
+// payload_raw: filtro leve, NAO bloqueia a linha (auditoria best-effort)
+stEvento.sEvento     := sEvClean;
+stEvento.sPayloadRaw := F_DfiStripSqlUnsafe(LEFT(sPayload, 254));
+eKind := E_DfiRowKind.EVENTO;
+bOk   := TRUE;
+bDone := TRUE;
+]]></ST>
+    </Implementation>
+    <Method Name="HasKey" Id="{1c7daaaa-d199-400a-9e50-2fa2c6bc33c3}">
+      <Declaration><![CDATA[METHOD PRIVATE HasKey : BOOL
+VAR_INPUT
+	dom   : Tc3_JsonXml.SJsonValue;
+	sName : STRING(80);
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Wrapper isolado sobre a API Tc3_JsonXml (um unico ponto a corrigir no checkpoint).
+HasKey := fbJson.HasMember(dom, sName);
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetStr" Id="{2ab25657-47a3-44e7-b324-bccbf70a1077}">
+      <Declaration><![CDATA[METHOD PRIVATE GetStr : STRING(255)
+VAR_INPUT
+	dom   : Tc3_JsonXml.SJsonValue;
+	sName : STRING(80);
+END_VAR
+VAR_OUTPUT
+	bFound : BOOL;
+END_VAR
+VAR
+	j : Tc3_JsonXml.SJsonValue;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Wrapper isolado sobre a API Tc3_JsonXml.
+// bFound = TRUE somente se a chave existe E o valor e string.
+bFound := FALSE;
+GetStr := '';
+IF NOT fbJson.HasMember(dom, sName) THEN
+	RETURN;
+END_IF
+j := fbJson.FindMember(dom, sName);
+IF j = 0 THEN
+	RETURN;
+END_IF
+IF NOT fbJson.IsString(j) THEN
+	RETURN;
+END_IF
+GetStr := fbJson.GetString(j);
+bFound := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetInt" Id="{d3e52742-5c1d-4c80-8599-366f2e09b769}">
+      <Declaration><![CDATA[METHOD PRIVATE GetInt : DINT
+VAR_INPUT
+	dom   : Tc3_JsonXml.SJsonValue;
+	sName : STRING(80);
+END_VAR
+VAR_OUTPUT
+	bValid : BOOL;
+END_VAR
+VAR
+	j    : Tc3_JsonXml.SJsonValue;
+	lVal : LINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Wrapper isolado sobre a API Tc3_JsonXml.
+// bValid = TRUE somente se a chave existe E o valor e um inteiro.
+bValid := FALSE;
+GetInt := 0;
+IF NOT fbJson.HasMember(dom, sName) THEN
+	RETURN;
+END_IF
+j := fbJson.FindMember(dom, sName);
+IF j = 0 THEN
+	RETURN;
+END_IF
+IF NOT fbJson.IsInt(j) THEN
+	RETURN;
+END_IF
+lVal := fbJson.GetInt(j);
+GetInt := LINT_TO_DINT(lVal);
+bValid := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,348 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_DfiPayloadParser_Tests" Id="{7c07cbe2-101b-4df5-99cf-71248dd85d3a}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_DfiPayloadParser_Tests EXTENDS TcUnit.FB_TestSuite
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[Test_Estoque_Valido();
+Test_Evento_Entrega();
+Test_Evento_ErroTimeout_MapeiaTipoParaDetalhe();
+Test_JsonInvalido_bOkFalse();
+Test_TypeAusente_bOkFalse();
+Test_TypeDesconhecido_bOkFalse();
+Test_Estoque_CampoFaltando_bOkFalse();
+Test_Estoque_Negativo_bOkFalse();
+Test_Estoque_AcimaDoMax_bOkFalse();
+Test_Evento_SemCampoEvento_bOkFalse();
+Test_Evento_PecaInvalida_bOkFalse();
+Test_Evento_PecaAusente_Ok_PecaVazia();
+Test_Evento_DetalheComAspa_bOkFalse();
+Test_Evento_EventoComPontoEVirgula_bOkFalse();
+Test_Evento_DetalheLongo_Truncado();
+Test_Evento_PayloadRaw_Preenchido();
+Test_TopicoDesconhecido_bOkFalse();
+Test_StripSqlUnsafe_RemoveAspas();
+]]></ST>
+    </Implementation>
+    <Method Name="Test_Estoque_Valido" Id="{d3fac928-6ce1-435f-9b27-f2e442c33977}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Estoque_Valido
+VAR
+	fb  : FB_DfiPayloadParser;
+	cfg : ST_DfiConfig;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Estoque_Valido');
+cfg.sTopicEstoque := 'dataflow/estoque'; cfg.nEstoqueMax := 999;
+fb(bExecute := TRUE, sTopic := 'dataflow/estoque',
+   sPayload := '{"type":"estoque","pecaA":4,"pecaB":5,"pecaC":6}', stConfig := cfg);
+AssertTrue(fb.bOk, 'bOk');
+AssertTrue(fb.eKind = E_DfiRowKind.ESTOQUE_MUDANCA, 'eKind');
+AssertEquals_INT(4, fb.stEstoque.nA, 'A'); AssertEquals_INT(5, fb.stEstoque.nB, 'B'); AssertEquals_INT(6, fb.stEstoque.nC, 'C');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_Evento_Entrega" Id="{ac1f5e78-ea68-4a3e-98b3-c923f538d58f}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Evento_Entrega
+VAR
+	fb  : FB_DfiPayloadParser;
+	cfg : ST_DfiConfig;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Evento_Entrega');
+cfg.sTopicEventos := 'dataflow/eventos';
+fb(bExecute := TRUE, sTopic := 'dataflow/eventos',
+   sPayload := '{"type":"evento","evento":"entrega","peca":"A"}', stConfig := cfg);
+AssertTrue(fb.bOk, 'bOk');
+AssertTrue(fb.eKind = E_DfiRowKind.EVENTO, 'eKind');
+AssertEquals_STRING('entrega', fb.stEvento.sEvento, 'evento');
+AssertEquals_STRING('A', fb.stEvento.sPeca, 'peca');
+AssertEquals_STRING('', fb.stEvento.sDetalhe, 'sem detalhe');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_Evento_ErroTimeout_MapeiaTipoParaDetalhe" Id="{4d18b78e-6a5d-4311-a445-15d705b0a663}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Evento_ErroTimeout_MapeiaTipoParaDetalhe
+VAR
+	fb  : FB_DfiPayloadParser;
+	cfg : ST_DfiConfig;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Evento_ErroTimeout');
+cfg.sTopicEventos := 'dataflow/eventos';
+fb(bExecute := TRUE, sTopic := 'dataflow/eventos',
+   sPayload := '{"type":"evento","evento":"erro","tipo":"timeout","peca":"B"}', stConfig := cfg);
+AssertTrue(fb.bOk, 'bOk');
+AssertEquals_STRING('erro', fb.stEvento.sEvento, 'evento');
+AssertEquals_STRING('timeout', fb.stEvento.sDetalhe, 'tipo -> detalhe');
+AssertEquals_STRING('B', fb.stEvento.sPeca, 'peca');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_JsonInvalido_bOkFalse" Id="{38d44bd6-a2e1-4f70-8fed-bb82ba80e5c4}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_JsonInvalido_bOkFalse
+VAR
+	fb  : FB_DfiPayloadParser;
+	cfg : ST_DfiConfig;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('JsonInvalido_bOkFalse');
+cfg.sTopicEstoque := 'dataflow/estoque';
+fb(bExecute := TRUE, sTopic := 'dataflow/estoque',
+   sPayload := '{not json', stConfig := cfg);
+AssertFalse(fb.bOk, 'bOk FALSE');
+AssertEquals_STRING('json', fb.sParseError, 'sParseError');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_TypeAusente_bOkFalse" Id="{3d43b8cc-d621-406f-a354-6d7212be2282}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_TypeAusente_bOkFalse
+VAR
+	fb  : FB_DfiPayloadParser;
+	cfg : ST_DfiConfig;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('TypeAusente_bOkFalse');
+cfg.sTopicEstoque := 'dataflow/estoque';
+fb(bExecute := TRUE, sTopic := 'dataflow/estoque',
+   sPayload := '{"pecaA":1}', stConfig := cfg);
+AssertFalse(fb.bOk, 'bOk FALSE');
+AssertEquals_STRING('type', fb.sParseError, 'sParseError');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_TypeDesconhecido_bOkFalse" Id="{78dece07-fe53-4ed0-b712-8aa90e98411f}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_TypeDesconhecido_bOkFalse
+VAR
+	fb  : FB_DfiPayloadParser;
+	cfg : ST_DfiConfig;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('TypeDesconhecido_bOkFalse');
+cfg.sTopicEstoque := 'dataflow/estoque';
+fb(bExecute := TRUE, sTopic := 'dataflow/estoque',
+   sPayload := '{"type":"sensores","pecaA":1,"pecaB":2,"pecaC":3}', stConfig := cfg);
+AssertFalse(fb.bOk, 'bOk FALSE');
+AssertEquals_STRING('type', fb.sParseError, 'sParseError');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_Estoque_CampoFaltando_bOkFalse" Id="{f8a8fa99-4c82-4164-a656-cb0f71b3c5b2}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Estoque_CampoFaltando_bOkFalse
+VAR
+	fb  : FB_DfiPayloadParser;
+	cfg : ST_DfiConfig;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Estoque_CampoFaltando_bOkFalse');
+cfg.sTopicEstoque := 'dataflow/estoque';
+fb(bExecute := TRUE, sTopic := 'dataflow/estoque',
+   sPayload := '{"type":"estoque","pecaA":1,"pecaB":2}', stConfig := cfg);
+AssertFalse(fb.bOk, 'bOk FALSE');
+AssertEquals_STRING('campo', fb.sParseError, 'sParseError');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_Estoque_Negativo_bOkFalse" Id="{5d33101a-f760-4a6c-89e2-3f9b95638262}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Estoque_Negativo_bOkFalse
+VAR
+	fb  : FB_DfiPayloadParser;
+	cfg : ST_DfiConfig;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Estoque_Negativo_bOkFalse');
+cfg.sTopicEstoque := 'dataflow/estoque'; cfg.nEstoqueMax := 999;
+fb(bExecute := TRUE, sTopic := 'dataflow/estoque',
+   sPayload := '{"type":"estoque","pecaA":-1,"pecaB":2,"pecaC":3}', stConfig := cfg);
+AssertFalse(fb.bOk, 'bOk FALSE');
+AssertEquals_STRING('faixa', fb.sParseError, 'sParseError');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_Estoque_AcimaDoMax_bOkFalse" Id="{8e5f3008-602c-470a-a93c-f20be57af5db}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Estoque_AcimaDoMax_bOkFalse
+VAR
+	fb  : FB_DfiPayloadParser;
+	cfg : ST_DfiConfig;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Estoque_AcimaDoMax_bOkFalse');
+cfg.sTopicEstoque := 'dataflow/estoque'; cfg.nEstoqueMax := 10;
+fb(bExecute := TRUE, sTopic := 'dataflow/estoque',
+   sPayload := '{"type":"estoque","pecaA":1,"pecaB":2,"pecaC":11}', stConfig := cfg);
+AssertFalse(fb.bOk, 'bOk FALSE');
+AssertEquals_STRING('faixa', fb.sParseError, 'sParseError');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_Evento_SemCampoEvento_bOkFalse" Id="{a1b52d74-3c2a-44cd-baa6-1a3aca9bbc96}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Evento_SemCampoEvento_bOkFalse
+VAR
+	fb  : FB_DfiPayloadParser;
+	cfg : ST_DfiConfig;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Evento_SemCampoEvento_bOkFalse');
+cfg.sTopicEventos := 'dataflow/eventos';
+fb(bExecute := TRUE, sTopic := 'dataflow/eventos',
+   sPayload := '{"type":"evento","peca":"A"}', stConfig := cfg);
+AssertFalse(fb.bOk, 'bOk FALSE');
+AssertEquals_STRING('campo', fb.sParseError, 'sParseError');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_Evento_PecaInvalida_bOkFalse" Id="{5ca13728-5c56-42a9-a250-045e4846e66b}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Evento_PecaInvalida_bOkFalse
+VAR
+	fb  : FB_DfiPayloadParser;
+	cfg : ST_DfiConfig;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Evento_PecaInvalida_bOkFalse');
+cfg.sTopicEventos := 'dataflow/eventos';
+fb(bExecute := TRUE, sTopic := 'dataflow/eventos',
+   sPayload := '{"type":"evento","evento":"entrega","peca":"D"}', stConfig := cfg);
+AssertFalse(fb.bOk, 'bOk FALSE');
+AssertEquals_STRING('peca', fb.sParseError, 'sParseError');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_Evento_PecaAusente_Ok_PecaVazia" Id="{d84d760c-f553-4ce4-95fa-0916f9eb6c08}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Evento_PecaAusente_Ok_PecaVazia
+VAR
+	fb  : FB_DfiPayloadParser;
+	cfg : ST_DfiConfig;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Evento_PecaAusente_Ok_PecaVazia');
+cfg.sTopicEventos := 'dataflow/eventos';
+fb(bExecute := TRUE, sTopic := 'dataflow/eventos',
+   sPayload := '{"type":"evento","evento":"inicializacao"}', stConfig := cfg);
+AssertTrue(fb.bOk, 'bOk TRUE');
+AssertEquals_STRING('', fb.stEvento.sPeca, 'peca vazia');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_Evento_DetalheComAspa_bOkFalse" Id="{ed4cdfb5-ef22-476e-a95d-76a55553eac0}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Evento_DetalheComAspa_bOkFalse
+VAR
+	fb  : FB_DfiPayloadParser;
+	cfg : ST_DfiConfig;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Evento_DetalheComAspa_bOkFalse');
+cfg.sTopicEventos := 'dataflow/eventos';
+fb(bExecute := TRUE, sTopic := 'dataflow/eventos',
+   sPayload := '{"type":"evento","evento":"erro","tipo":"ti$'meout","peca":"B"}', stConfig := cfg);
+AssertFalse(fb.bOk, 'bOk FALSE');
+AssertEquals_STRING('sanit', fb.sParseError, 'sParseError');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_Evento_EventoComPontoEVirgula_bOkFalse" Id="{3e40a953-2682-473c-910a-bb27a42b19bd}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Evento_EventoComPontoEVirgula_bOkFalse
+VAR
+	fb  : FB_DfiPayloadParser;
+	cfg : ST_DfiConfig;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Evento_EventoComPontoEVirgula_bOkFalse');
+cfg.sTopicEventos := 'dataflow/eventos';
+fb(bExecute := TRUE, sTopic := 'dataflow/eventos',
+   sPayload := '{"type":"evento","evento":"a;b"}', stConfig := cfg);
+AssertFalse(fb.bOk, 'bOk FALSE');
+AssertEquals_STRING('sanit', fb.sParseError, 'sParseError');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_Evento_DetalheLongo_Truncado" Id="{7ee6bd8d-8c56-4f84-b18d-58609f03dede}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Evento_DetalheLongo_Truncado
+VAR
+	fb      : FB_DfiPayloadParser;
+	cfg     : ST_DfiConfig;
+	sTipo80 : STRING(120);
+	sBig    : STRING(510);
+	i       : INT;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Evento_DetalheLongo_Truncado');
+cfg.sTopicEventos := 'dataflow/eventos';
+sTipo80 := '';
+FOR i := 1 TO 80 DO
+	sTipo80 := CONCAT(sTipo80, 'x');
+END_FOR
+sBig := CONCAT('{"type":"evento","evento":"erro","tipo":"', CONCAT(sTipo80, '"}'));
+fb(bExecute := TRUE, sTopic := 'dataflow/eventos', sPayload := sBig, stConfig := cfg);
+AssertTrue(fb.bOk, 'bOk TRUE');
+AssertEquals_INT(63, LEN(fb.stEvento.sDetalhe), 'detalhe truncado a 63');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_Evento_PayloadRaw_Preenchido" Id="{0e591ba4-d3c3-4c52-8b5c-744ebc39ea02}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Evento_PayloadRaw_Preenchido
+VAR
+	fb  : FB_DfiPayloadParser;
+	cfg : ST_DfiConfig;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Evento_PayloadRaw_Preenchido');
+cfg.sTopicEventos := 'dataflow/eventos';
+fb(bExecute := TRUE, sTopic := 'dataflow/eventos',
+   sPayload := '{"type":"evento","evento":"entrega","peca":"A"}', stConfig := cfg);
+AssertTrue(fb.bOk, 'bOk TRUE');
+AssertEquals_STRING('{type:evento,evento:entrega,peca:A}', fb.stEvento.sPayloadRaw, 'payload_raw pos-strip');
+AssertTrue(LEN(fb.stEvento.sPayloadRaw) <= 254, 'payload_raw <= 254');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_TopicoDesconhecido_bOkFalse" Id="{095d7cf4-4248-45f3-a50c-fee869b93e61}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_TopicoDesconhecido_bOkFalse
+VAR
+	fb  : FB_DfiPayloadParser;
+	cfg : ST_DfiConfig;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('TopicoDesconhecido_bOkFalse');
+cfg.sTopicEstoque := 'dataflow/estoque';
+cfg.sTopicEventos := 'dataflow/eventos';
+fb(bExecute := TRUE, sTopic := 'dataflow/sensores',
+   sPayload := '{"type":"estoque","pecaA":1,"pecaB":2,"pecaC":3}', stConfig := cfg);
+AssertFalse(fb.bOk, 'bOk FALSE');
+AssertEquals_STRING('topic', fb.sParseError, 'sParseError');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_StripSqlUnsafe_RemoveAspas" Id="{5629e90a-d966-41f4-9d25-2630aa1db9eb}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_StripSqlUnsafe_RemoveAspas
+VAR
+	sOut : STRING(254);
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('StripSqlUnsafe_RemoveAspas');
+// entrada: a ' b " c ; d \ e ` f <TAB> g  -> todos os perigosos/controle somem
+sOut := F_DfiStripSqlUnsafe('a$'b"c;d\e$60f$09g');
+AssertEquals_STRING('abcdefg', sOut, 'strip de aspas / ; / barra / crase / controle');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>
