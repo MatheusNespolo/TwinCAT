@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_DfiRow" Id="{6e08ef90-a1f9-49b0-8ed8-1ff3bbba2718}">
+    <Declaration><![CDATA[TYPE ST_DfiRow :
+STRUCT
+	eKind     : E_DfiRowKind;
+	sTsPlc    : STRING(23);   // 'YYYY-MM-DD HH:MM:SS.mmm', carimbado no Push
+	stEstoque : ST_EstoqueSnapshot;
+	stEvento  : ST_EventoDfi;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

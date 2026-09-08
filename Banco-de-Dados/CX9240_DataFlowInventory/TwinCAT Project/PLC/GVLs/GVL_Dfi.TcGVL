@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <GVL Name="GVL_Dfi" Id="{dcd93ea1-13ee-404c-8c64-f1267f889f40}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	gCfg  : ST_DfiConfig;
+	gDiag : ST_DfiDiag;
+END_VAR
+]]></Declaration>
+  </GVL>
+</TcPlcObject>

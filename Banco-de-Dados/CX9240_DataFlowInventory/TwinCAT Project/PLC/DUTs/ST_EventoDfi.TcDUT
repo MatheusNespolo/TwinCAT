@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_EventoDfi" Id="{37be0a89-30a9-4f40-b85a-91eaefe0fb92}">
+    <Declaration><![CDATA[TYPE ST_EventoDfi :
+STRUCT
+	sEvento     : STRING(23);   // coluna eventos_hist.evento VARCHAR(24)
+	sPeca       : STRING(1);    // 'A'|'B'|'C' ou '' (=> NULL)
+	sDetalhe    : STRING(63);   // coluna detalhe VARCHAR(64)
+	sPayloadRaw : STRING(254);  // coluna payload_raw VARCHAR(255)
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

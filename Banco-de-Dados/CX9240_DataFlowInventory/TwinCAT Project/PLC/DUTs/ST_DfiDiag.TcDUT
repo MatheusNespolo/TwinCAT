@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_DfiDiag" Id="{0e47140e-9d78-41d8-88cf-a68e1ce74cc4}">
+    <Declaration><![CDATA[TYPE ST_DfiDiag :
+STRUCT
+	bConfigOk         : BOOL;
+	bMqttConnected    : BOOL;
+	bDbConnected      : BOOL;
+	nReconnectCount   : UDINT;
+	nBufferCount      : UDINT;
+	nBufferHighWater  : UDINT;
+	nBufferDropped    : ULINT;
+	nRowsWritten      : ULINT;
+	nDbErrors         : ULINT;
+	nParseErrors      : ULINT;
+	sUltimoParseError : STRING(120);
+	sUltimoDbError    : STRING(255);
+	eWriterState      : E_DfiWriterState;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>
