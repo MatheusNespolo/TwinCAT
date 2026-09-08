@@ -28,6 +28,7 @@ VAR
 	k       : INT;
 	pTxt    : POINTER TO BYTE;
 	pLine   : POINTER TO BYTE;
+	stCfgDefaults : ST_DfiConfig;
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[// Máquina de estados: abre historian.conf, lê linha a linha para sText,
@@ -50,6 +51,7 @@ IF fbTrig.Q AND (nState = 0) THEN
 	hFile  := 0;
 	bAny   := FALSE;
 	nTextLen := 0;
+	stCfg  := stCfgDefaults;   // limpa saída: 2ª carga de um .conf que removeu uma chave não mantém o valor anterior
 	nState := 10;
 END_IF
 
