@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="F_DfiSanitizeText" Id="{49aa4eb1-2091-438a-b9d0-b6de743ddf53}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_DfiSanitizeText : BOOL
+VAR_INPUT
+	sIn     : STRING(254);
+	nMaxLen : INT;
+END_VAR
+VAR_OUTPUT
+	sOut : STRING(254);
+END_VAR
+VAR
+	i, n : INT;
+	c    : BYTE;
+	p    : POINTER TO BYTE;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[n := LEN(sIn);
+p := ADR(sIn);
+FOR i := 0 TO n - 1 DO
+	c := p[i];
+	IF NOT ( (c >= 65 AND c <= 90)  OR   // A-Z
+	         (c >= 97 AND c <= 122) OR   // a-z
+	         (c >= 48 AND c <= 57)  OR   // 0-9
+	         (c = 32) OR (c = 95) OR (c = 45) ) THEN  // space _ -
+		F_DfiSanitizeText := FALSE;
+		RETURN;
+	END_IF
+END_FOR
+IF n > nMaxLen THEN
+	sOut := LEFT(sIn, nMaxLen);
+ELSE
+	sOut := sIn;
+END_IF
+F_DfiSanitizeText := TRUE;
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

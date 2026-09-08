@@ -984,7 +984,7 @@ External Setpoint Generation:
 	</DataTypes>
 	<Project ProjectGUID="{7AAF94C8-5CA4-4AF9-A494-D42397F8A287}" TargetNetId="199.4.42.250.1.1" Target64Bit="true" ShowHideConfigurations="#x6">
 		<System>
-			<Settings MaxCpus="8" NonWinCpus="1"/>
+			<Settings MaxCpus="12" PCoreAffinity="15" ECoreAffinity="4080"/>
 			<Tasks>
 				<Task Id="3" Priority="20" CycleTime="100000" AmsPort="350" AdtTasks="true">
 					<Name>PlcTask</Name>
@@ -996,32 +996,28 @@ External Setpoint Generation:
 		</Motion>
 		<Plc>
 			<Project GUID="{FA270013-D154-4DB9-B095-309DA1866049}" Name="PLC" PrjFilePath="PLC\PLC.plcproj" TmcFilePath="PLC\PLC.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcHash="{E9509CF2-CEAA-EFE7-84C2-7571325D834C}" TmcPath="PLC\PLC.tmc">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcHash="{2AC9087E-E7FD-B6C2-67D5-3D8BF6D3EAC3}" TmcPath="PLC\PLC.tmc">
 					<Name>PLC Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="2" AreaNo="1">
 						<Name>PlcTask Outputs</Name>
 						<Var>
-							<Name>MAIN.bSinalizarFalha</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>Eixos.Eixo1.PlcToNc</Name>
+							<Name>Axes.Eixo1.PlcToNc</Name>
 							<Type GUID="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" Namespace="MC">PLCTONC_AXIS_REF</Type>
 						</Var>
 						<Var>
-							<Name>Eixos.Eixo2.PlcToNc</Name>
+							<Name>Axes.Eixo2.PlcToNc</Name>
 							<Type GUID="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" Namespace="MC">PLCTONC_AXIS_REF</Type>
 						</Var>
 					</Vars>
 					<Vars VarGrpType="1">
 						<Name>PlcTask Inputs</Name>
 						<Var>
-							<Name>Eixos.Eixo1.NcToPlc</Name>
+							<Name>Axes.Eixo1.NcToPlc</Name>
 							<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
 						</Var>
 						<Var>
-							<Name>Eixos.Eixo2.NcToPlc</Name>
+							<Name>Axes.Eixo2.NcToPlc</Name>
 							<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
 						</Var>
 					</Vars>
@@ -1049,12 +1045,12 @@ External Setpoint Generation:
 		<MappingInfo Identifier="{05000010-2001-0850-1000-040300205008}" Id="#x02030010" Watchdog="14000000040000000400000004000000"/>
 		<OwnerA Name="TIPC^PLC^PLC Instance">
 			<OwnerB Name="TINC^NC-Task 1 SAF^Axes^Eixo1">
-				<Link VarA="PlcTask Inputs^Eixos.Eixo1.NcToPlc" VarB="Outputs^ToPlc"/>
-				<Link VarA="PlcTask Outputs^Eixos.Eixo1.PlcToNc" VarB="Inputs^FromPlc"/>
+				<Link VarA="PlcTask Inputs^Axes.Eixo1.NcToPlc" VarB="Outputs^ToPlc"/>
+				<Link VarA="PlcTask Outputs^Axes.Eixo1.PlcToNc" VarB="Inputs^FromPlc"/>
 			</OwnerB>
 			<OwnerB Name="TINC^NC-Task 1 SAF^Axes^Eixo2">
-				<Link VarA="PlcTask Inputs^Eixos.Eixo2.NcToPlc" VarB="Outputs^ToPlc"/>
-				<Link VarA="PlcTask Outputs^Eixos.Eixo2.PlcToNc" VarB="Inputs^FromPlc"/>
+				<Link VarA="PlcTask Inputs^Axes.Eixo2.NcToPlc" VarB="Outputs^ToPlc"/>
+				<Link VarA="PlcTask Outputs^Axes.Eixo2.PlcToNc" VarB="Inputs^FromPlc"/>
 			</OwnerB>
 		</OwnerA>
 	</Mappings>

@@ -185,3 +185,7 @@ OOP/PLC-OOP-Basics-main/PLC-OOP-Basics-main/Extended/LightingController/Lighting
 OOP/PLC-OOP-Basics-main/PLC-OOP-Basics-main/Extended/LightingController/LightingController/_Config/PLC/PLC1.xti
 Pyads/TwinCAT Project1/TwinCAT Project1.sln
 Pyads/TwinCAT Project1/PLC/PLC.plcproj
+
+# CX9240 historian — local secrets, never commit
+historian.conf
+**/historian.conf

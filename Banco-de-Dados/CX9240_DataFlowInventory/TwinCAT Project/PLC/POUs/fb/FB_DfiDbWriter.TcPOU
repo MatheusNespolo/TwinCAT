@@ -1,0 +1,208 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_DfiDbWriter" Id="{eaabe034-cf4d-4db2-ae5e-024337bfba4c}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_DfiDbWriter
+VAR_INPUT
+	stConfig : ST_DfiConfig;
+END_VAR
+VAR_IN_OUT
+	fbBuffer : FB_DfiRowBuffer;
+END_VAR
+VAR_OUTPUT
+	eState               : E_DfiWriterState;
+	bDbConnected         : BOOL;
+	nRowsWritten         : ULINT;
+	nErrors              : ULINT;
+	sLastError           : STRING(255);
+	stUltimoGravado      : ST_EstoqueSnapshot;
+	bUltimoGravadoValido : BOOL;
+END_VAR
+VAR
+	fbDb      : Tc3_Database.FB_SQLDatabaseEvt;
+	fbCmd     : Tc3_Database.FB_SQLCommandEvt;
+	fbBuild   : FB_DfiSqlBuilder;
+	fbBackoff : TON;
+	tBackoff  : TIME := T#2S;
+	sCmd      : STRING(511);
+	nCmdLen   : UINT;
+	stRow     : ST_DfiRow;
+	stEvt     : Tc3_EventLogger.I_TcMessage;
+	nExecRes  : INT;      // ultimo retorno de DoExecute (0=ocupado, 1=ok, 2=erro)
+	nConnRes  : INT;      // ultimo retorno de DoConnect (0=ocupado, 1=ok, 2=erro)
+	bConnDone : BOOL;     // Connect ja concluiu; falta so ciclar CreateCmd
+	bErrCounted : BOOL;   // nErrors ja contabilizado nesta entrada em ERROR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Maquina de estados de gravacao no banco via TF6420 (spec 4.4).
+// Ordem obrigatoria por linha: Peek -> Build -> Execute -> Pop.
+// Pop acontece SOMENTE em COMMIT (INSERT sem erro) ou no descarte de uma
+// linha envenenada em BUILD (SQL impossivel de montar). Erro de banco,
+// timeout ou queda de conexao NUNCA removem a linha: ela fica no buffer.
+
+CASE eState OF
+
+E_DfiWriterState.IDLE:
+	IF fbBuffer.nCount > 0 THEN
+		IF bDbConnected THEN
+			eState := E_DfiWriterState.BUILD;
+		ELSE
+			eState := E_DfiWriterState.CONNECT;
+		END_IF
+	END_IF
+
+E_DfiWriterState.CONNECT:
+	// DoConnect e o segundo ponto de teste (PROTECTED, sobrescrito pelo fake).
+	nConnRes := DoConnect();
+	CASE nConnRes OF
+	0:
+		;   // aguarda: Connect/CreateCmd ainda ciclando
+	1:
+		bDbConnected := TRUE;
+		eState := E_DfiWriterState.BUILD;
+	2:
+		eState := E_DfiWriterState.ERROR;
+	END_CASE
+
+E_DfiWriterState.BUILD:
+	IF fbBuffer.Peek(stRow) THEN
+		IF fbBuild.Build(stRow := stRow, sCmd => sCmd, nCmdLen => nCmdLen) THEN
+			eState := E_DfiWriterState.EXECUTE;
+		ELSE
+			// linha envenenada: nunca vai gerar SQL valido. Descarta para nao
+			// travar a fila atras dela, mas contabiliza como erro.
+			sLastError := 'sql_build_failed';
+			nErrors := nErrors + 1;
+			fbBuffer.Pop();
+			IF fbBuffer.nCount = 0 THEN
+				eState := E_DfiWriterState.IDLE;
+			END_IF
+		END_IF
+	ELSE
+		eState := E_DfiWriterState.IDLE;
+	END_IF
+
+E_DfiWriterState.EXECUTE:
+	// DoExecute e o ponto de teste (PROTECTED, sobrescrito pelo fake nos testes).
+	nExecRes := DoExecute();
+	IF NOT bDbConnected THEN
+		// a conexao caiu durante o Execute: sai sem Pop, linha preservada
+		eState := E_DfiWriterState.DB_LOST;
+	ELSIF nExecRes = 1 THEN
+		eState := E_DfiWriterState.COMMIT;
+	ELSIF nExecRes = 2 THEN
+		stEvt := fbCmd.ipTcResult;
+		eState := E_DfiWriterState.ERROR;
+	END_IF
+	// nExecRes = 0 -> Execute ainda ciclando, permanece em EXECUTE
+
+E_DfiWriterState.COMMIT:
+	fbBuffer.Pop();
+	nRowsWritten := nRowsWritten + 1;
+	IF (stRow.eKind = E_DfiRowKind.ESTOQUE_MUDANCA) OR (stRow.eKind = E_DfiRowKind.ESTOQUE_PERIODICO) THEN
+		// baseline de dedupe so avanca depois que a linha esta gravada de fato
+		stUltimoGravado := stRow.stEstoque;
+		bUltimoGravadoValido := TRUE;
+	END_IF
+	tBackoff := T#2S;   // sucesso zera o backoff exponencial
+	sLastError := '';   // limpa texto de erro antigo apos gravacao bem sucedida
+	IF fbBuffer.nCount = 0 THEN
+		eState := E_DfiWriterState.IDLE;
+	ELSE
+		eState := E_DfiWriterState.BUILD;
+	END_IF
+
+E_DfiWriterState.ERROR:
+	// conta o erro uma unica vez por entrada no estado (nao a cada ciclo de backoff)
+	IF NOT bErrCounted THEN
+		nErrors := nErrors + 1;
+		bErrCounted := TRUE;
+	END_IF
+	// RequestEventText pode precisar de varios ciclos; stEvt pode ser NULL quando
+	// o erro nao veio do TF6420 (ex.: fake de teste) -> guarda obrigatoria.
+	IF stEvt <> 0 THEN
+		stEvt.RequestEventText(1033, sLastError, SIZEOF(sLastError));
+	END_IF
+	fbBackoff(IN := TRUE, PT := tBackoff);
+	IF fbBackoff.Q THEN
+		fbBackoff(IN := FALSE);
+		// SEL(G, IN0, IN1): G=FALSE -> IN0. Dobra o backoff e satura em 30s.
+		tBackoff := SEL((tBackoff + tBackoff) > T#30S, tBackoff + tBackoff, T#30S);
+		bErrCounted := FALSE;
+		// Qualquer erro do TF6420 pode ter deixado a sessao/comando invalidos.
+		// Derruba a conexao e limpa os flags para que IDLE -> CONNECT refaca
+		// Connect + CreateCmd do zero (fire-and-forget: CONNECT reestabelece tudo).
+		fbDb.Disconnect();
+		bDbConnected := FALSE;
+		bConnDone := FALSE;
+		eState := E_DfiWriterState.IDLE;
+	END_IF
+
+E_DfiWriterState.DB_LOST:
+	// buffer mantem todas as linhas; IDLE reabre a conexao no proximo ciclo
+	bDbConnected := FALSE;
+	bConnDone := FALSE;
+	eState := E_DfiWriterState.IDLE;
+
+ELSE
+	// estado invalido (nao deve ocorrer): volta ao repouso
+	eState := E_DfiWriterState.IDLE;
+
+END_CASE
+]]></ST>
+    </Implementation>
+    <Method Name="DoConnect" Id="{0fe99974-3021-407d-9cf8-b07bb6c33ea9}">
+      <Declaration><![CDATA[METHOD PROTECTED DoConnect : INT
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Seam de teste: retorna 0 = ocupado, 1 = conectado e comando criado, 2 = erro.
+// Duas fases cicladas (mesmo idioma de EscreverDB.TcPOU, estados 1 e 2):
+// Connect ate retornar TRUE, so entao CreateCmd ate retornar TRUE.
+// bConnDone evita re-chamar Connect enquanto CreateCmd ainda cicla.
+DoConnect := 0;
+
+IF NOT bConnDone THEN
+	IF fbDb.Connect(hDBID := stConfig.nDbId) THEN
+		IF fbDb.bError THEN
+			stEvt := fbDb.ipTcResult;
+			DoConnect := 2;
+		ELSE
+			bConnDone := TRUE;
+		END_IF
+	END_IF
+ELSE
+	IF fbDb.CreateCmd(ADR(fbCmd)) THEN
+		bConnDone := FALSE;
+		IF fbDb.bError THEN
+			stEvt := fbDb.ipTcResult;
+			DoConnect := 2;
+		ELSE
+			DoConnect := 1;
+		END_IF
+	END_IF
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="DoExecute" Id="{c129dbb0-49e9-4906-8f04-d74b407f48f0}">
+      <Declaration><![CDATA[METHOD PROTECTED DoExecute : INT
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Seam de teste: retorna 0 = ocupado, 1 = ok, 2 = erro.
+// FB_SQLCommandEvt.Execute e ciclico: retorna TRUE quando a operacao termina.
+// cbSQLCmd usa nCmdLen (comprimento real montado por FB_DfiSqlBuilder) e NAO
+// SIZEOF(sCmd): o buffer de 512 bytes e quase sempre maior que o comando.
+IF fbCmd.Execute(pSQLCmd := ADR(sCmd), cbSQLCmd := UINT_TO_UDINT(nCmdLen)) THEN
+	IF fbCmd.bError THEN
+		DoExecute := 2;
+	ELSE
+		DoExecute := 1;
+	END_IF
+ELSE
+	DoExecute := 0;
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

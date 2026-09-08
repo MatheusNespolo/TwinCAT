@@ -3,25 +3,28 @@
   <POU Name="MAIN" Id="{3bf0370f-8f08-460a-b5b6-c7e00346ad17}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM MAIN
 VAR
+	// Blocos MC2
 	HabilitaEixo1		: MC_Power;
-	bHabilitaEixo1		: BOOL;
 	MoveAbsoluteEixo1	: MC_MoveAbsolute;
-	bMoverAbsoluto		: BOOL;
 	MoveRelativeEixo1	: MC_MoveRelative;
-	bMoverRelativo		: BOOL;
 	HaltEixo1			: MC_Halt;
-	bParadaSuave		: BOOL;
 	StopEixo1			: MC_Stop;
+	HomeEixo1			: MC_Home;
+	// Variáveis de controle dos blocos
+	bHabilitaEixo1		: BOOL;
+	bMoverAbsoluto		: BOOL;
+	bMoverRelativo		: BOOL;
+	bParadaSuave		: BOOL;
 	bParadaTravada		: BOOL;
-	uEstadoEixo 		: UDINT;
+	// Variáveis de auxílio e feedback
 	bComandoConcluido	: BOOL;
 	bSensorHome 		: BOOL;
 	bBotaoReferencia	: BOOL;
-	HomeEixo1			: MC_Home;
 	bEixoReferenciado	: BOOL;
 	bPermiteIniciarCiclo: BOOL;
-	bEstadoHoming: BOOL;
-	bEixoHabilitado: BOOL;
+	bEstadoHoming		: BOOL;
+	bEixoHabilitado		: BOOL;
+	uEstadoEixo 		: UDINT;
 END_VAR
 ]]></Declaration>
     <Implementation>

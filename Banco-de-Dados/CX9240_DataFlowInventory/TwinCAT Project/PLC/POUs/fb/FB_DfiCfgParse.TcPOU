@@ -1,0 +1,259 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_DfiCfgParse" Id="{5a38ee93-725a-4658-8522-b49a2e1e2033}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_DfiCfgParse
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Sem lógica no corpo do FB: o parsing é feito pelos métodos ParseLine / ParseText.
+]]></ST>
+    </Implementation>
+    <Method Name="ParseLine" Id="{6b3ad38b-cccb-425b-9e3d-991b8e6c36cc}">
+      <Declaration><![CDATA[METHOD ParseLine : BOOL
+VAR_INPUT
+	sLine : STRING(255);
+END_VAR
+VAR_IN_OUT
+	stCfg : ST_DfiConfig;
+END_VAR
+VAR
+	sWork : STRING(255);
+	sKey  : STRING(255);
+	sVal  : STRING(255);
+	nEq   : INT;
+	nLen  : INT;
+	nBuf  : UDINT;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// --- normaliza: trim de espaços/tabs nas duas pontas ---
+sWork := THIS^.TrimBoth(sLine);
+nLen  := LEN(sWork);
+
+// --- linha vazia ou comentário => no-op com sucesso ---
+IF nLen = 0 THEN
+	ParseLine := TRUE;
+	RETURN;
+END_IF
+IF LEFT(sWork, 1) = '#' THEN
+	ParseLine := TRUE;
+	RETURN;
+END_IF
+
+// --- precisa ter '=' ---
+nEq := FIND(sWork, '=');
+IF nEq = 0 THEN
+	ParseLine := FALSE;
+	RETURN;
+END_IF
+
+// --- separa chave / valor e faz trim dos dois ---
+sKey := THIS^.TrimBoth(LEFT(sWork, nEq - 1));
+sVal := THIS^.TrimBoth(RIGHT(sWork, nLen - nEq));
+
+// --- CASE de string não é permitido em ST: cadeia de IF/ELSIF ---
+IF sKey = 'mqtt_host' THEN
+	stCfg.sMqttHost := sVal;
+
+ELSIF sKey = 'mqtt_port' THEN
+	IF NOT THIS^.AllDigits(sVal) THEN
+		ParseLine := FALSE;
+		RETURN;
+	END_IF
+	stCfg.nMqttPort := STRING_TO_UINT(sVal);
+
+ELSIF sKey = 'mqtt_use_tls' THEN
+	// aceita qualquer valor: '1' => TRUE, qualquer outra coisa => FALSE
+	stCfg.bUseTls := (sVal = '1');
+
+ELSIF sKey = 'mqtt_ca_cert_path' THEN
+	stCfg.sCaCertPath := sVal;
+
+ELSIF sKey = 'mqtt_user' THEN
+	stCfg.sMqttUser := sVal;
+
+ELSIF sKey = 'mqtt_pass' THEN
+	stCfg.sMqttPass := sVal;
+
+ELSIF sKey = 'topic_estoque' THEN
+	stCfg.sTopicEstoque := sVal;
+
+ELSIF sKey = 'topic_eventos' THEN
+	stCfg.sTopicEventos := sVal;
+
+ELSIF sKey = 'db_id' THEN
+	IF NOT THIS^.AllDigits(sVal) THEN
+		ParseLine := FALSE;
+		RETURN;
+	END_IF
+	stCfg.nDbId := STRING_TO_UDINT(sVal);
+
+ELSIF sKey = 'sample_period_s' THEN
+	IF NOT THIS^.AllDigits(sVal) THEN
+		ParseLine := FALSE;
+		RETURN;
+	END_IF
+	stCfg.tSamplePeriod := UDINT_TO_TIME(STRING_TO_UDINT(sVal) * 1000);
+
+ELSIF sKey = 'buffer_size' THEN
+	IF NOT THIS^.AllDigits(sVal) THEN
+		ParseLine := FALSE;
+		RETURN;
+	END_IF
+	nBuf := STRING_TO_UDINT(sVal);
+	IF nBuf < 1 THEN
+		nBuf := 1;
+	END_IF
+	IF nBuf > 512 THEN
+		nBuf := 512;
+	END_IF
+	stCfg.nBufferSize := nBuf;
+
+ELSIF sKey = 'estoque_max' THEN
+	IF NOT THIS^.AllDigits(sVal) THEN
+		ParseLine := FALSE;
+		RETURN;
+	END_IF
+	stCfg.nEstoqueMax := STRING_TO_INT(sVal);
+
+ELSE
+	// chave desconhecida
+	ParseLine := FALSE;
+	RETURN;
+END_IF
+
+ParseLine := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="ParseText" Id="{7a0af146-cec7-46a5-8779-df919512dd70}">
+      <Declaration><![CDATA[METHOD ParseText : BOOL
+VAR_INPUT
+	sText : STRING(4095);
+END_VAR
+VAR_IN_OUT
+	stCfg : ST_DfiConfig;
+END_VAR
+VAR
+	bAllOk : BOOL;
+	i      : INT;
+	j      : INT;
+	nEnd   : INT;
+	nStart : INT;
+	nCnt   : INT;
+	p      : POINTER TO BYTE;
+	pFrag  : POINTER TO BYTE;
+	sFrag  : STRING(255);
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Quebra sText em linhas por $N (LF, 16#0A) e $R (CR, 16#0D).
+// Trata $R$N, $N sozinho e $R sozinho; fragmentos vazios são ignorados.
+// Varredura por ponteiro de bytes (as funções string padrão do Tc2_Standard
+// operam em STRING(255) e truncariam sText, que é STRING(4095)).
+bAllOk := TRUE;
+p      := ADR(sText);
+pFrag  := ADR(sFrag);
+
+// comprimento real: varre até o NUL, com teto no tamanho do buffer
+nEnd := 0;
+WHILE (nEnd < 4095) AND (p[nEnd] <> 0) DO
+	nEnd := nEnd + 1;
+END_WHILE
+
+nStart := 0;
+FOR i := 0 TO nEnd DO
+	// i = nEnd força o flush do último fragmento (arquivo sem quebra no fim)
+	IF (i = nEnd) OR (p[i] = 16#0A) OR (p[i] = 16#0D) THEN
+		nCnt := i - nStart;
+		IF nCnt > 0 THEN
+			IF nCnt > 254 THEN
+				nCnt := 254;
+			END_IF
+			FOR j := 0 TO nCnt - 1 DO
+				pFrag[j] := p[nStart + j];
+			END_FOR
+			pFrag[nCnt] := 0;
+			IF NOT ParseLine(sFrag, stCfg) THEN
+				bAllOk := FALSE;
+			END_IF
+		END_IF
+		nStart := i + 1;
+	END_IF
+END_FOR
+
+stCfg.bValid := bAllOk AND (stCfg.sMqttHost <> '');
+ParseText := bAllOk;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="AllDigits" Id="{0d6e40c8-8a2e-410e-929c-04487d7ec82d}">
+      <Declaration><![CDATA[METHOD PRIVATE AllDigits : BOOL
+VAR_INPUT
+	sIn : STRING(255);
+END_VAR
+VAR
+	i    : INT;
+	nLen : INT;
+	c    : BYTE;
+	p    : POINTER TO BYTE;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// TRUE somente se sIn não estiver vazia e for composta apenas por '0'..'9'.
+nLen := LEN(sIn);
+IF nLen = 0 THEN
+	AllDigits := FALSE;
+	RETURN;
+END_IF
+p := ADR(sIn);
+FOR i := 0 TO nLen - 1 DO
+	c := p[i];
+	IF (c < 16#30) OR (c > 16#39) THEN
+		AllDigits := FALSE;
+		RETURN;
+	END_IF
+END_FOR
+AllDigits := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="TrimBoth" Id="{a9ed2148-abb3-4a08-96c2-3b4b13b9bc30}">
+      <Declaration><![CDATA[METHOD PRIVATE TrimBoth : STRING(255)
+VAR_INPUT
+	sIn : STRING(255);
+END_VAR
+VAR
+	nLen   : INT;
+	nStart : INT;
+	nEnd   : INT;
+	c      : BYTE;
+	p      : POINTER TO BYTE;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Remove espaços (16#20) e tabs (16#09) do início e do fim.
+nLen := LEN(sIn);
+IF nLen = 0 THEN
+	TrimBoth := '';
+	RETURN;
+END_IF
+p := ADR(sIn);
+
+nStart := 0;
+WHILE (nStart < nLen) AND ((p[nStart] = 16#20) OR (p[nStart] = 16#09)) DO
+	nStart := nStart + 1;
+END_WHILE
+IF nStart >= nLen THEN
+	TrimBoth := '';
+	RETURN;
+END_IF
+
+nEnd := nLen - 1;
+WHILE (nEnd > nStart) AND ((p[nEnd] = 16#20) OR (p[nEnd] = 16#09)) DO
+	nEnd := nEnd - 1;
+END_WHILE
+
+TrimBoth := MID(sIn, nEnd - nStart + 1, nStart + 1);
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

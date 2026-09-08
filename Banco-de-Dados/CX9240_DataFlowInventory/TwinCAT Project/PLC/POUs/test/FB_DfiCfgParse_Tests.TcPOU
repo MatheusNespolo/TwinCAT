@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_DfiCfgParse_Tests" Id="{c5381cba-6386-4b2b-99df-90cddb3e20ef}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_DfiCfgParse_Tests EXTENDS TcUnit.FB_TestSuite
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[Test_ParseLine_MapeiaChavesConhecidas();
+Test_ParseLine_ComentarioEBranco_NoOp();
+Test_ParseLine_ChaveDesconhecida_RetornaFalse();
+Test_ParseText_ExemploCompleto_ValidaEbValidTrue();
+Test_ParseText_SemHost_bValidFalse();
+]]></ST>
+    </Implementation>
+    <Method Name="Test_ParseLine_MapeiaChavesConhecidas" Id="{5adae317-105a-4ced-9afb-a94f8b407fff}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_ParseLine_MapeiaChavesConhecidas
+VAR
+	fb  : FB_DfiCfgParse;
+	cfg : ST_DfiConfig;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('ParseLine_MapeiaChavesConhecidas');
+fb.ParseLine('mqtt_host=10.0.0.5', cfg);
+fb.ParseLine('mqtt_port=8883', cfg);
+fb.ParseLine('mqtt_use_tls=1', cfg);
+fb.ParseLine('sample_period_s=30', cfg);
+fb.ParseLine('buffer_size=256', cfg);
+fb.ParseLine('estoque_max=50', cfg);
+AssertEquals_STRING(Expected := '10.0.0.5', Actual := cfg.sMqttHost, Message := 'host');
+AssertEquals_UINT(Expected := 8883, Actual := cfg.nMqttPort, Message := 'port');
+AssertTrue(cfg.bUseTls, 'tls');
+AssertTrue(cfg.tSamplePeriod = T#30S, 'periodo');
+AssertEquals_UDINT(Expected := 256, Actual := cfg.nBufferSize, Message := 'buffer');
+AssertEquals_INT(Expected := 50, Actual := cfg.nEstoqueMax, Message := 'estoque_max');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_ParseLine_ComentarioEBranco_NoOp" Id="{91a168b0-6292-4f56-917b-d92f3022b13f}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_ParseLine_ComentarioEBranco_NoOp
+VAR
+	fb  : FB_DfiCfgParse;
+	cfg : ST_DfiConfig;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('ParseLine_ComentarioEBranco_NoOp');
+AssertTrue(fb.ParseLine('# comentario', cfg), 'comentario ok');
+AssertTrue(fb.ParseLine('', cfg), 'linha vazia ok');
+AssertTrue(fb.ParseLine('   ', cfg), 'espacos ok');
+AssertEquals_STRING(Expected := '', Actual := cfg.sMqttHost, Message := 'nada mudou');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_ParseLine_ChaveDesconhecida_RetornaFalse" Id="{6ce6461c-6664-425f-b9c0-f385a64932cb}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_ParseLine_ChaveDesconhecida_RetornaFalse
+VAR
+	fb  : FB_DfiCfgParse;
+	cfg : ST_DfiConfig;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('ParseLine_ChaveDesconhecida_RetornaFalse');
+AssertFalse(fb.ParseLine('foo=bar', cfg), 'chave desconhecida => FALSE');
+AssertFalse(fb.ParseLine('mqtt_port=abc', cfg), 'valor nao-numerico => FALSE');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_ParseText_ExemploCompleto_ValidaEbValidTrue" Id="{7043fcc3-02ee-43e6-8b5c-c23bf5c3c460}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_ParseText_ExemploCompleto_ValidaEbValidTrue
+VAR
+	fb  : FB_DfiCfgParse;
+	cfg : ST_DfiConfig;
+	s   : STRING(4095);
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('ParseText_ExemploCompleto');
+s := CONCAT('mqtt_host=192.168.0.50$N', CONCAT('mqtt_port=1883$N', CONCAT('topic_estoque=dataflow/estoque$N', 'db_id=1$N')));
+AssertTrue(fb.ParseText(s, cfg), 'ParseText ok');
+AssertTrue(cfg.bValid, 'bValid TRUE com host preenchido');
+AssertEquals_STRING(Expected := 'dataflow/estoque', Actual := cfg.sTopicEstoque, Message := 'topico');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_ParseText_SemHost_bValidFalse" Id="{f88fe1d1-b56b-40c3-a33c-5ea6c874162c}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_ParseText_SemHost_bValidFalse
+VAR
+	fb  : FB_DfiCfgParse;
+	cfg : ST_DfiConfig;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('ParseText_SemHost_bValidFalse');
+fb.ParseText('mqtt_port=1883$Ndb_id=1', cfg);
+AssertFalse(cfg.bValid, 'sem host => invalido');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

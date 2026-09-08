@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_EstoqueSnapshot" Id="{951d7b35-af37-4295-876b-ab9d164883ac}">
+    <Declaration><![CDATA[TYPE ST_EstoqueSnapshot :
+STRUCT
+	nA : INT;
+	nB : INT;
+	nC : INT;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

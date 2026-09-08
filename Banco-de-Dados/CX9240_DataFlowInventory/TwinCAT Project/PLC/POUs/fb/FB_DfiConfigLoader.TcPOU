@@ -1,0 +1,165 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_DfiConfigLoader" Id="{4473dbd2-4a02-49aa-9f10-bf5755cb640d}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_DfiConfigLoader
+VAR_INPUT
+	bExecute : BOOL;
+	sPath    : STRING(255) := '/etc/dfi/historian.conf';
+END_VAR
+VAR_OUTPUT
+	bDone  : BOOL;
+	bError : BOOL;
+	stCfg  : ST_DfiConfig;
+	sError : STRING(120);
+END_VAR
+VAR
+	fbTrig  : R_TRIG;
+	fbParse : FB_DfiCfgParse;
+	fbOpen  : Tc2_System.FB_FileOpen;
+	fbGets  : Tc2_System.FB_FileGets;
+	fbClose : Tc2_System.FB_FileClose;
+	nState  : INT;
+	hFile   : UINT;
+	sText   : STRING(4095);
+	sLineBuf : STRING(255);
+	bAny    : BOOL;
+	nTextLen : INT;
+	nAdd    : INT;
+	k       : INT;
+	pTxt    : POINTER TO BYTE;
+	pLine   : POINTER TO BYTE;
+	stCfgDefaults : ST_DfiConfig;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Máquina de estados: abre historian.conf, lê linha a linha para sText,
+// fecha o arquivo e entrega o texto a FB_DfiCfgParse.ParseText.
+// O handle é sempre fechado (sucesso OU erro).
+//
+// Nota de API (Tc2_System): membros usados conforme documentação Beckhoff -
+//   FB_FileOpen : sPathName, nMode, bExecute, bBusy, bError, nErrId, hFile
+//   FB_FileGets : hFile, pBuffer, cbBuffer, bExecute, bBusy, bError, nErrId, bEOF
+//   FB_FileClose: hFile, bExecute, bBusy, bError, nErrId
+// FB_FileGets grava a linha (sem o terminador) no buffer apontado por pBuffer.
+
+fbTrig(CLK := bExecute);
+IF fbTrig.Q AND (nState = 0) THEN
+	bDone  := FALSE;
+	bError := FALSE;
+	sError := '';
+	sText  := '';
+	sLineBuf := '';
+	hFile  := 0;
+	bAny   := FALSE;
+	nTextLen := 0;
+	stCfg  := stCfgDefaults;   // limpa saída: 2ª carga de um .conf que removeu uma chave não mantém o valor anterior
+	nState := 10;
+END_IF
+
+CASE nState OF
+
+	0: // IDLE
+		;
+
+	10: // OPEN
+		fbOpen(
+			bExecute  := TRUE,
+			sPathName := sPath,
+			nMode     := Tc2_System.FOPEN_MODEREAD OR Tc2_System.FOPEN_MODETEXT);
+		IF NOT fbOpen.bBusy THEN
+			IF fbOpen.bError THEN
+				sError := 'open';
+				bError := TRUE;
+				nState := 90;
+			ELSE
+				hFile  := fbOpen.hFile;
+				nState := 20;
+			END_IF
+			fbOpen(bExecute := FALSE);
+		END_IF
+
+	20: // READ (uma linha por ciclo, acumula em sText separando por $N)
+		fbGets(
+			bExecute := TRUE,
+			hFile    := hFile,
+			pBuffer  := ADR(sLineBuf),
+			cbBuffer := SIZEOF(sLineBuf));
+		IF NOT fbGets.bBusy THEN
+			IF fbGets.bError THEN
+				sError := 'read';
+				bError := TRUE;
+				fbGets(bExecute := FALSE);
+				nState := 30;
+			ELSIF fbGets.bEOF THEN
+				fbGets(bExecute := FALSE);
+				nState := 30;
+			ELSE
+				// Acumula a linha em sText separando por $N, via cópia de bytes
+				// (CONCAT/LEN do Tc2_Standard operam em STRING(255) e truncariam
+				// sText, que é STRING(4095)).
+				pTxt  := ADR(sText);
+				pLine := ADR(sLineBuf);
+				nAdd  := 0;
+				WHILE (nAdd < 255) AND (pLine[nAdd] <> 0) DO
+					nAdd := nAdd + 1;
+				END_WHILE
+				IF bAny AND (nTextLen < 4094) THEN
+					pTxt[nTextLen] := 16#0A;   // $N
+					nTextLen := nTextLen + 1;
+				END_IF
+				FOR k := 0 TO nAdd - 1 DO
+					IF nTextLen < 4094 THEN
+						pTxt[nTextLen] := pLine[k];
+						nTextLen := nTextLen + 1;
+					END_IF
+				END_FOR
+				pTxt[nTextLen] := 0;           // NUL-termina sText
+				bAny  := TRUE;
+				fbGets(bExecute := FALSE);
+				IF nTextLen > 4000 THEN
+					sError := 'file too big';
+					bError := TRUE;
+					nState := 30;
+				END_IF
+				// senão permanece em 20 para ler a próxima linha
+			END_IF
+		END_IF
+
+	30: // CLOSE (caminho normal e caminho de erro passam por aqui)
+		fbClose(bExecute := TRUE, hFile := hFile);
+		IF NOT fbClose.bBusy THEN
+			fbClose(bExecute := FALSE);
+			hFile := 0;
+			IF bError THEN
+				nState := 90;
+			ELSE
+				nState := 40;
+			END_IF
+		END_IF
+
+	40: // PARSE
+		fbParse.ParseText(sText, stCfg);
+		IF NOT stCfg.bValid THEN
+			sError := 'parse/host';
+			bError := TRUE;
+		END_IF
+		bDone  := TRUE;
+		nState := 0;
+
+	90: // ERR - garante o arquivo fechado
+		IF hFile <> 0 THEN
+			fbClose(bExecute := TRUE, hFile := hFile);
+			IF NOT fbClose.bBusy THEN
+				fbClose(bExecute := FALSE);
+				hFile := 0;
+			END_IF
+		END_IF
+		IF hFile = 0 THEN
+			bDone  := TRUE;
+			nState := 0;
+		END_IF
+
+END_CASE
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_DfiConfig" Id="{7be9f36f-ed5a-4c92-8864-51c32431f1ef}">
+    <Declaration><![CDATA[TYPE ST_DfiConfig :
+STRUCT
+	sMqttHost     : STRING(120);
+	nMqttPort     : UINT  := 1883;
+	bUseTls       : BOOL  := FALSE;
+	sCaCertPath   : STRING(255) := '/etc/ssl/certs/ca-certificates.crt';
+	sMqttUser     : STRING(60);
+	sMqttPass     : STRING(60);
+	sTopicEstoque : STRING(120) := 'dataflow/estoque';
+	sTopicEventos : STRING(120) := 'dataflow/eventos';
+	nDbId         : UDINT := 1;
+	tSamplePeriod : TIME  := T#60S;
+	nBufferSize   : UDINT := 512;
+	nEstoqueMax   : INT   := 999;
+	bValid        : BOOL  := FALSE;   // TRUE após FB_DfiConfigLoader parsear o arquivo com sucesso
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

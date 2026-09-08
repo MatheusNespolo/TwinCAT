@@ -1,0 +1,78 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_DfiSampler_Tests" Id="{4074fc65-b857-4901-88f5-026b8161d296}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_DfiSampler_Tests EXTENDS TcUnit.FB_TestSuite
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[Test_NaoDispara_SemEstoqueValido();
+Test_Dispara_AposPeriodo_ComUltimoEstoque();
+Test_Rearma_ACadaPeriodo();
+]]></ST>
+    </Implementation>
+    <Method Name="Test_NaoDispara_SemEstoqueValido" Id="{d5ad92f7-151c-4554-9c6e-e740bd03af04}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_NaoDispara_SemEstoqueValido
+VAR
+	fbBuf : FB_DfiRowBuffer := (nCapacity := 8);
+	fbSut : FB_DfiSampler;
+	est   : ST_EstoqueSnapshot;
+	i     : INT;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('NaoDispara_SemEstoqueValido');
+FOR i := 1 TO 50 DO
+	fbSut(stUltimoEstoque := est, bValido := FALSE, tPeriodo := T#100MS, fbBuffer := fbBuf);
+END_FOR
+AssertEquals_UDINT(Expected := 0, Actual := fbBuf.nCount, Message := 'nada empurrado sem estoque valido');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_Dispara_AposPeriodo_ComUltimoEstoque" Id="{67ba8de7-00c2-4186-8e4a-d6e948ad34aa}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Dispara_AposPeriodo_ComUltimoEstoque
+VAR
+	fbBuf : FB_DfiRowBuffer := (nCapacity := 8);
+	fbSut : FB_DfiSampler;
+	est   : ST_EstoqueSnapshot;
+	out   : ST_DfiRow;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Dispara_AposPeriodo_ComUltimoEstoque');
+est.nA := 3; est.nB := 4; est.nC := 5;
+// simula passagem de tempo: TcUnit roda em ciclos; usa CycleCallCount + tPeriodo curto
+fbSut(stUltimoEstoque := est, bValido := TRUE, tPeriodo := T#20MS, fbBuffer := fbBuf);
+// esperar o TON: chamar o SUT em ciclos sucessivos até nCount = 1 ou timeout do teste
+// (TcUnit avança o tempo real entre ciclos da task de teste)
+IF fbBuf.nCount >= 1 THEN
+	fbBuf.Peek(out);
+	AssertEquals_INT(Expected := 3, Actual := out.stEstoque.nA, Message := 'snapshot A');
+	AssertTrue(out.eKind = E_DfiRowKind.ESTOQUE_PERIODICO, 'eKind periodico');
+	TEST_FINISHED();
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_Rearma_ACadaPeriodo" Id="{f08a2e7b-90e0-4e7a-9bd7-2b19cad513a0}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Rearma_ACadaPeriodo
+VAR
+	fbBuf : FB_DfiRowBuffer := (nCapacity := 8);
+	fbSut : FB_DfiSampler;
+	est   : ST_EstoqueSnapshot;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Rearma_ACadaPeriodo');
+est.nA := 1; est.nB := 2; est.nC := 3;
+// TcUnit re-roda este metodo a cada ciclo ate TEST_FINISHED(); o TON avanca com o tempo real.
+// Apos o 1o push o SUT rearma sozinho e continua empurrando a cada tPeriodo.
+fbSut(stUltimoEstoque := est, bValido := TRUE, tPeriodo := T#20MS, fbBuffer := fbBuf);
+IF fbBuf.nCount >= 2 THEN
+	AssertTrue(fbBuf.nCount >= 2, 'rearmou e empurrou pelo menos 2x');
+	AssertTrue(fbSut.nPushed = fbBuf.nCount, 'nPushed acompanha nCount (sem descartes)');
+	TEST_FINISHED();
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_DfiSampler" Id="{10f7946b-7044-4dfb-905f-29cd6e7ced4b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_DfiSampler
+VAR_INPUT
+	stUltimoEstoque : ST_EstoqueSnapshot;
+	bValido         : BOOL;
+	tPeriodo        : TIME;
+END_VAR
+VAR_IN_OUT
+	fbBuffer : FB_DfiRowBuffer;
+END_VAR
+VAR_OUTPUT
+	nPushed : ULINT;
+END_VAR
+VAR
+	fbTon : TON;
+	row   : ST_DfiRow;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fbTon(IN := bValido, PT := tPeriodo);
+IF fbTon.Q THEN
+	fbTon(IN := FALSE);           // rearma
+	row.eKind := E_DfiRowKind.ESTOQUE_PERIODICO;
+	row.stEstoque := stUltimoEstoque;
+	row.sTsPlc := F_DfiNowString();   // helper da Task 10, ver nota
+	fbBuffer.Push(row);
+	nPushed := nPushed + 1;
+END_IF
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

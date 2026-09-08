@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="F_DfiNowString" Id="{e78f4122-21c3-4f6e-9386-77b892d73e6e}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION F_DfiNowString : STRING(23)
+VAR_INPUT
+END_VAR
+VAR
+	fbGetSystemTime : Tc2_Utilities.GETSYSTEMTIME;
+	fbToSystemTime  : Tc2_Utilities.FILETIME_TO_SYSTEMTIME;
+	ft              : T_FILETIME;
+	st              : TIMESTRUCT;
+	nYear : INT;
+	nMon  : INT;
+	nDay  : INT;
+	nHour : INT;
+	nMin  : INT;
+	nSec  : INT;
+	nMs   : INT;
+	sYear : STRING(4);
+	sMon  : STRING(2);
+	sDay  : STRING(2);
+	sHour : STRING(2);
+	sMin  : STRING(2);
+	sSec  : STRING(2);
+	sMs   : STRING(3);
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Retorna o instante atual como 'YYYY-MM-DD HH:MM:SS.mmm' (23 chars). Fonte: Tc2_Utilities.GETSYSTEMTIME + FILETIME_TO_SYSTEMTIME (UTC).
+// TODO: local timezone conversion (RT Linux timedatectl sets TZ; verify UTC vs local at bench)
+fbGetSystemTime(timeLoDW => ft.dwLowDateTime, timeHiDW => ft.dwHighDateTime);
+fbToSystemTime(fileTime := ft, systemTime => st);
+
+nYear := TO_INT(st.wYear);
+nMon  := TO_INT(st.wMonth);
+nDay  := TO_INT(st.wDay);
+nHour := TO_INT(st.wHour);
+nMin  := TO_INT(st.wMinute);
+nSec  := TO_INT(st.wSecond);
+nMs   := TO_INT(st.wMilliseconds);
+
+sYear := INT_TO_STRING(nYear);
+
+IF nMon < 10 THEN sMon := CONCAT('0', INT_TO_STRING(nMon)); ELSE sMon := INT_TO_STRING(nMon); END_IF
+IF nDay < 10 THEN sDay := CONCAT('0', INT_TO_STRING(nDay)); ELSE sDay := INT_TO_STRING(nDay); END_IF
+IF nHour < 10 THEN sHour := CONCAT('0', INT_TO_STRING(nHour)); ELSE sHour := INT_TO_STRING(nHour); END_IF
+IF nMin < 10 THEN sMin := CONCAT('0', INT_TO_STRING(nMin)); ELSE sMin := INT_TO_STRING(nMin); END_IF
+IF nSec < 10 THEN sSec := CONCAT('0', INT_TO_STRING(nSec)); ELSE sSec := INT_TO_STRING(nSec); END_IF
+
+IF nMs < 10 THEN
+	sMs := CONCAT('00', INT_TO_STRING(nMs));
+ELSIF nMs < 100 THEN
+	sMs := CONCAT('0', INT_TO_STRING(nMs));
+ELSE
+	sMs := INT_TO_STRING(nMs);
+END_IF
+
+F_DfiNowString := CONCAT(sYear, '-');
+F_DfiNowString := CONCAT(F_DfiNowString, sMon);
+F_DfiNowString := CONCAT(F_DfiNowString, '-');
+F_DfiNowString := CONCAT(F_DfiNowString, sDay);
+F_DfiNowString := CONCAT(F_DfiNowString, ' ');
+F_DfiNowString := CONCAT(F_DfiNowString, sHour);
+F_DfiNowString := CONCAT(F_DfiNowString, ':');
+F_DfiNowString := CONCAT(F_DfiNowString, sMin);
+F_DfiNowString := CONCAT(F_DfiNowString, ':');
+F_DfiNowString := CONCAT(F_DfiNowString, sSec);
+F_DfiNowString := CONCAT(F_DfiNowString, '.');
+F_DfiNowString := CONCAT(F_DfiNowString, sMs);
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

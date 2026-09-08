@@ -3,42 +3,45 @@
   <POU Name="MAIN" Id="{3bf0370f-8f08-460a-b5b6-c7e00346ad17}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM MAIN
 VAR
+	// Blocos MC2 - Eixo 1
 	HabilitaEixo1			: MC_Power;
-	bHabilitaEixo1			: BOOL;
-	HabilitaEixo2			: MC_Power;
-	bHabilitaEixo2			: BOOL;
 	MoveAbsoluteEixo1		: MC_MoveAbsolute;
-	bMoverAbsoluto			: BOOL;
 	MoveRelativeEixo1		: MC_MoveRelative;
-	bMoverRelativo			: BOOL;
 	HaltEixo1				: MC_Halt;
-	bParadaSuave			: BOOL;
 	StopEixo1				: MC_Stop;
+	HomeEixo1				: MC_Home;
+	ResetEixo1				: MC_Reset;
+	// Blocos MC2 - Eixo 2
+	HabilitaEixo2			: MC_Power;
+	MoveModuloEixo2			: MC_MoveModulo;
+	ResetEixo2				: MC_Reset;
+	// Variáveis de controle
+	bHabilitaEixo1			: BOOL;
+	bHabilitaEixo2			: BOOL;
+	bMoverAbsoluto			: BOOL;
+	bMoverRelativo			: BOOL;
+	bParadaSuave			: BOOL;
 	bParadaTravada			: BOOL;
-	uEstadoEixo 			: UDINT;
+	bIndexarMesa			: BOOL;
+	bBotaoReset				: BOOL;
+	bLigarCiclo				: BOOL;
+	bDesligarCiclo			: BOOL;
+	// Variáveis de auxílio e feedback
 	bComandoConcluido		: BOOL;
 	bSensorHome 			: BOOL;
 	bBotaoReferencia		: BOOL;
-	HomeEixo1				: MC_Home;
 	bEixoReferenciado		: BOOL;
 	bPermiteIniciarCiclo	: BOOL;
 	bEstadoHoming			: BOOL;
-	bEixoHabilitado			: BOOL;
+	bFalhaEixos				: BOOL;
+	bSinalizarFalha AT %Q*	: BOOL;
+	bPedidoParada			: BOOL;
+	bCicloLigado			: BOOL;
 	lrPosicaoAtual			: LREAL;
 	lrProximaPosicao		: LREAL;
-	MoveModuloEixo2			: MC_MoveModulo;
-	bIndexarMesa			: BOOL;
-	bBotaoReset				: BOOL;
-	bFalhaEixos				: BOOL;
-	ResetEixo1				: MC_Reset;
-	ResetEixo2				: MC_Reset;
-	bSinalizarFalha AT %Q*	: BOOL;
-	bLigarCiclo				: BOOL;
-	bDesligarCiclo			: BOOL;
-	iEstado					: INT;
-	bPedidoParada			: BOOL;
 	tonAguarda				: TON;
-	bCicloLigado			: BOOL;
+	iEstado					: INT;
+	uEstadoEixo 			: UDINT;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -59,7 +62,7 @@ END_IF
 // Home Eixo 1
 HomeEixo1(
 	Axis:= Eixos.Eixo1, 
-	Execute:= bBotaoReferencia AND bEixoHabilitado, 
+	Execute:= bBotaoReferencia, 
 	Position:= 0.0, 
 	HomingMode:= , 
 	BufferMode:= , 
@@ -91,8 +94,6 @@ HabilitaEixo2(
 	Enable_Negative:= bHabilitaEixo2, 
 	Override:= 100)
 ;
-// Confirma eixo habilitado
-bEixoHabilitado:= Eixos.Eixo1.Status.Operational;
 // Move Relative Eixo 1
 MoveRelativeEixo1(
 	Axis:= Eixos.Eixo1, 

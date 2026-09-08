@@ -1,0 +1,158 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_DfiSqlBuilder_Tests" Id="{caf7e750-da54-4775-94fd-d9568edef82a}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_DfiSqlBuilder_Tests EXTENDS TcUnit.FB_TestSuite
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[Test_Build_EstoqueMudanca();
+Test_Build_EstoquePeriodico_OrigemPeriodico();
+Test_Build_Evento_ComPecaEDetalhe();
+Test_Build_Evento_SemPeca_SemDetalhe_UsaNULL();
+Test_Build_Evento_PayloadLongo_NaoTrunca();
+]]></ST>
+    </Implementation>
+    <Method Name="Test_Build_EstoqueMudanca" Id="{f7d6aaa8-2293-4eee-a3a1-b89ece66ecf8}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Build_EstoqueMudanca
+VAR
+	fb : FB_DfiSqlBuilder;
+	r : ST_DfiRow;
+	s : STRING(511);
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Build_EstoqueMudanca');
+r.eKind := E_DfiRowKind.ESTOQUE_MUDANCA;
+r.sTsPlc := '2026-09-08 10:11:12.345';
+r.stEstoque.nA := 4; r.stEstoque.nB := 5; r.stEstoque.nC := 6;
+fb.Build(r, s);
+AssertEquals_STRING(
+  Expected := 'INSERT INTO estoque_hist (ts_plc,estoque_a,estoque_b,estoque_c,origem) VALUES ($'2026-09-08 10:11:12.345$',4,5,6,$'mudanca$');',
+  Actual := s, Message := 'SQL estoque mudanca');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_Build_EstoquePeriodico_OrigemPeriodico" Id="{419e7162-6958-45a3-b2fc-2d516c33bae5}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Build_EstoquePeriodico_OrigemPeriodico
+VAR
+	fb : FB_DfiSqlBuilder;
+	r : ST_DfiRow;
+	s : STRING(511);
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Build_EstoquePeriodico');
+r.eKind := E_DfiRowKind.ESTOQUE_PERIODICO;
+r.sTsPlc := '2026-09-08 10:12:12.000';
+r.stEstoque.nA := 0; r.stEstoque.nB := 1; r.stEstoque.nC := 2;
+fb.Build(r, s);
+AssertEquals_STRING(
+  Expected := 'INSERT INTO estoque_hist (ts_plc,estoque_a,estoque_b,estoque_c,origem) VALUES ($'2026-09-08 10:12:12.000$',0,1,2,$'periodico$');',
+  Actual := s, Message := 'SQL estoque periodico');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_Build_Evento_ComPecaEDetalhe" Id="{426b96ac-22e1-490c-a4c6-398cf02b20f2}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Build_Evento_ComPecaEDetalhe
+VAR
+	fb : FB_DfiSqlBuilder;
+	r : ST_DfiRow;
+	s : STRING(511);
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Build_Evento_ComPecaEDetalhe');
+r.eKind := E_DfiRowKind.EVENTO;
+r.sTsPlc := '2026-09-08 10:13:00.000';
+r.stEvento.sEvento := 'erro'; r.stEvento.sPeca := 'B'; r.stEvento.sDetalhe := 'timeout';
+r.stEvento.sPayloadRaw := '{type:evento,evento:erro}';
+fb.Build(r, s);
+AssertEquals_STRING(
+  Expected := 'INSERT INTO eventos_hist (ts_plc,evento,peca,detalhe,payload_raw) VALUES ($'2026-09-08 10:13:00.000$',$'erro$',$'B$',$'timeout$',$'{type:evento,evento:erro}$');',
+  Actual := s, Message := 'SQL evento completo');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_Build_Evento_SemPeca_SemDetalhe_UsaNULL" Id="{94cc0887-639f-4958-8610-44ab1b3190c0}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Build_Evento_SemPeca_SemDetalhe_UsaNULL
+VAR
+	fb : FB_DfiSqlBuilder;
+	r : ST_DfiRow;
+	s : STRING(511);
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Build_Evento_SemPeca_UsaNULL');
+r.eKind := E_DfiRowKind.EVENTO;
+r.sTsPlc := '2026-09-08 10:14:00.000';
+r.stEvento.sEvento := 'inicializacao'; r.stEvento.sPeca := ''; r.stEvento.sDetalhe := '';
+r.stEvento.sPayloadRaw := '';
+fb.Build(r, s);
+AssertEquals_STRING(
+  Expected := 'INSERT INTO eventos_hist (ts_plc,evento,peca,detalhe,payload_raw) VALUES ($'2026-09-08 10:14:00.000$',$'inicializacao$',NULL,NULL,$'$');',
+  Actual := s, Message := 'peca/detalhe NULL, payload_raw string vazia');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_Build_Evento_PayloadLongo_NaoTrunca" Id="{12b31033-c069-44e2-b4cb-5e829047e77f}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Build_Evento_PayloadLongo_NaoTrunca
+VAR
+	fb    : FB_DfiSqlBuilder;
+	r     : ST_DfiRow;
+	s     : STRING(511);
+	sBig  : STRING(254);
+	sDet  : STRING(63);
+	nLen  : UINT;
+	bRet  : BOOL;
+	pB    : POINTER TO BYTE;
+	i     : INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Build_Evento_PayloadLongo_NaoTrunca');
+
+// payload_raw no limite: 254 'x' (STRING(254)); 254 < 255 -> CONCAT ok aqui
+sBig := '';
+FOR i := 1 TO 254 DO
+	sBig := CONCAT(sBig, 'x');
+END_FOR
+
+// detalhe no limite: 63 'y' (STRING(63))
+sDet := '';
+FOR i := 1 TO 63 DO
+	sDet := CONCAT(sDet, 'y');
+END_FOR
+
+r.eKind := E_DfiRowKind.EVENTO;
+r.sTsPlc := '2026-09-08 10:15:00.000';
+r.stEvento.sEvento := 'entrega';
+r.stEvento.sPeca := 'C';
+r.stEvento.sDetalhe := sDet;
+r.stEvento.sPayloadRaw := sBig;
+
+bRet := fb.Build(stRow := r, sCmd => s, nCmdLen => nLen);
+
+// prefixo decodificado = "INSERT INTO eventos_hist (ts_plc,evento,peca,detalhe,payload_raw) VALUES (
+//   '2026-09-08 10:15:00.000','entrega','C','<63 y>','"  -> 181 bytes
+// + payload 254 + "');" 3  -> 438 bytes (sem terminador)
+AssertTrue(bRet, 'Build retornou TRUE para payload longo');
+AssertEquals_UINT(Expected := 438, Actual := nLen, Message := 'comprimento total sem truncar');
+
+// cauda intacta: ...x  '  )  ;
+pB := ADR(s);
+AssertTrue(pB[nLen - 1] = 16#3B, 'ultimo byte = ; (0x3B)');
+AssertTrue(pB[nLen - 2] = 16#29, 'penultimo byte = ) (0x29)');
+AssertTrue(pB[nLen - 3] = 16#27, 'antepenultimo byte = aspa (0x27)');
+AssertTrue(pB[nLen - 4] = 16#78, 'ultimo char do payload = x (0x78)');
+
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

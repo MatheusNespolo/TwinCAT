@@ -1,0 +1,150 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_DfiSqlBuilder" Id="{cab44ba6-a52a-4cd1-b142-900903384ddc}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_DfiSqlBuilder
+VAR
+	fbFmt   : Tc2_Utilities.FB_FormatString;
+	sOrigem : STRING(80);
+	sPeca   : STRING(80);
+	sDet    : STRING(80);
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Sem logica no corpo: a construcao do INSERT e feita pelo metodo Build.
+]]></ST>
+    </Implementation>
+    <Method Name="Build" Id="{b0208d7e-fbac-40b1-a7f6-3ea33ea499c2}">
+      <Declaration><![CDATA[METHOD Build : BOOL
+VAR_INPUT
+	stRow : ST_DfiRow;
+END_VAR
+VAR_OUTPUT
+	sCmd    : STRING(511);
+	nCmdLen : UINT;         // comprimento em bytes de sCmd (sem o terminador), setado em todo caminho
+END_VAR
+VAR
+	sPrefix : STRING(255);  // prefixo fixo+curto do INSERT de eventos (pior caso ~200 bytes)
+	pDst    : POINTER TO BYTE;
+	pPre    : POINTER TO BYTE;
+	pPay    : POINTER TO BYTE;
+	nP      : DINT;
+	nPay    : DINT;
+	i       : DINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Gera o comando INSERT exato para o tipo de linha (stRow.eKind).
+// Escape de aspa simples em literal ST do TwinCAT: $'  (nao '').
+// eventos: o statement de pior caso (~454 bytes) NAO cabe em STRING(255).
+// FB_FormatString/CONCAT/LEFT/... sao todos limitados a T_MaxString, entao o
+// payload nunca passa por eles: FB_FormatString monta so o prefixo curto e o
+// restante e montado por ponteiro de bytes direto em sCmd (STRING(511)),
+// no estilo de F_DfiStripSqlUnsafe.
+sCmd    := '';
+nCmdLen := 0;
+
+CASE stRow.eKind OF
+
+	E_DfiRowKind.ESTOQUE_MUDANCA, E_DfiRowKind.ESTOQUE_PERIODICO:
+		// SEL(G, IN0, IN1): G=FALSE -> IN0 ; G=TRUE -> IN1
+		// eKind = ESTOQUE_MUDANCA   -> 'mudanca'
+		// eKind = ESTOQUE_PERIODICO -> 'periodico'
+		sOrigem := SEL(stRow.eKind = E_DfiRowKind.ESTOQUE_MUDANCA, 'periodico', 'mudanca');
+		fbFmt(
+			sFormat := 'INSERT INTO estoque_hist (ts_plc,estoque_a,estoque_b,estoque_c,origem) VALUES ($'%s$',%d,%d,%d,$'%s$');',
+			arg1 := Tc2_Utilities.F_String(stRow.sTsPlc),
+			arg2 := Tc2_Utilities.F_INT(stRow.stEstoque.nA),
+			arg3 := Tc2_Utilities.F_INT(stRow.stEstoque.nB),
+			arg4 := Tc2_Utilities.F_INT(stRow.stEstoque.nC),
+			arg5 := Tc2_Utilities.F_String(sOrigem),
+			sOut => sCmd);
+		// comprimento em bytes de sCmd (stdlib nao mede > 255): varre ate o 0
+		pPre := ADR(sCmd);
+		nP := 0;
+		WHILE (nP < 511) AND (pPre[nP] <> 0) DO
+			nP := nP + 1;
+		END_WHILE
+		nCmdLen := DINT_TO_UINT(nP);
+		Build := NOT fbFmt.bError;
+
+	E_DfiRowKind.EVENTO:
+		// peca / detalhe: string entre aspas quando presente, senao literal NULL
+		IF stRow.stEvento.sPeca = '' THEN
+			sPeca := 'NULL';
+		ELSE
+			sPeca := CONCAT('$'', CONCAT(stRow.stEvento.sPeca, '$''));
+		END_IF
+
+		IF stRow.stEvento.sDetalhe = '' THEN
+			sDet := 'NULL';
+		ELSE
+			sDet := CONCAT('$'', CONCAT(stRow.stEvento.sDetalhe, '$''));
+		END_IF
+
+		// prefixo fixo+curto: termina com a aspa de abertura de payload_raw
+		// e NADA depois (o proprio payload e o fecho vem por ponteiro).
+		fbFmt(
+			sFormat := 'INSERT INTO eventos_hist (ts_plc,evento,peca,detalhe,payload_raw) VALUES ($'%s$',$'%s$',%s,%s,$'',
+			arg1 := Tc2_Utilities.F_String(stRow.sTsPlc),
+			arg2 := Tc2_Utilities.F_String(stRow.stEvento.sEvento),
+			arg3 := Tc2_Utilities.F_String(sPeca),
+			arg4 := Tc2_Utilities.F_String(sDet),
+			sOut => sPrefix);
+
+		IF fbFmt.bError THEN
+			Build := FALSE;
+			RETURN;
+		END_IF
+
+		// comprimento do prefixo (varre ADR(sPrefix) ate o 0)
+		pPre := ADR(sPrefix);
+		nP := 0;
+		WHILE (nP < 255) AND (pPre[nP] <> 0) DO
+			nP := nP + 1;
+		END_WHILE
+
+		// comprimento do payload bruto (varre ate o 0, teto 254)
+		pPay := ADR(stRow.stEvento.sPayloadRaw);
+		nPay := 0;
+		WHILE (nPay < 254) AND (pPay[nPay] <> 0) DO
+			nPay := nPay + 1;
+		END_WHILE
+
+		// guarda de buffer: sCmd e STRING(511) -> no maximo 510 bytes de dados
+		IF (nP + nPay + 3) > 510 THEN
+			sCmd    := '';
+			nCmdLen := 0;
+			Build   := FALSE;
+			RETURN;
+		END_IF
+
+		// montagem por ponteiro: prefixo + payload + fecha aspa/paren/;  + NUL
+		pDst := ADR(sCmd);
+
+		FOR i := 0 TO nP - 1 DO
+			pDst[i] := pPre[i];
+		END_FOR
+
+		FOR i := 0 TO nPay - 1 DO
+			pDst[nP + i] := pPay[i];
+		END_FOR
+
+		pDst[nP + nPay + 0] := 16#27;   // aspa simples '
+		pDst[nP + nPay + 1] := 16#29;   // parentese )
+		pDst[nP + nPay + 2] := 16#3B;   // ponto-e-virgula ;
+		pDst[nP + nPay + 3] := 0;       // terminador NUL
+
+		nCmdLen := DINT_TO_UINT(nP + nPay + 3);
+		Build   := TRUE;
+
+ELSE
+	sCmd    := '';
+	nCmdLen := 0;
+	Build   := FALSE;
+
+END_CASE
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>
