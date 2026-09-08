@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="MAIN" Id="{34154070-d696-46ff-9128-cc1ffe67f4c4}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Orquestracao preenchida na Task 14.
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>
