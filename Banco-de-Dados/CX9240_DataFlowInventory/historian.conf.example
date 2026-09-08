@@ -1,0 +1,20 @@
+# /etc/dfi/historian.conf  —  copy to the CX9240, chmod 600, fill real values.
+# Lines starting with # and blank lines are ignored. Format: key=value (no quotes, no spaces around =).
+
+# --- MQTT broker ---
+mqtt_host=192.168.0.50
+mqtt_port=1883
+mqtt_use_tls=0                     # 0 = plain (Mosquitto local) | 1 = TLS (HiveMQ Cloud 8883)
+mqtt_ca_cert_path=/etc/ssl/certs/ca-certificates.crt
+mqtt_user=
+mqtt_pass=
+topic_estoque=dataflow/estoque
+topic_eventos=dataflow/eventos
+
+# --- Database (local MariaDB) ---
+db_id=1                            # hDBID of the DfiDb connection in the TwinCAT Database Server project
+
+# --- Historian ---
+sample_period_s=60                # periodic stock snapshot interval, seconds
+buffer_size=512                   # in-memory FIFO capacity (rows)
+estoque_max=999                   # reject stock values outside 0..estoque_max
