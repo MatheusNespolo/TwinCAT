@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="F_DfiNowString_Tests" Id="{a1c8f2e4-7b36-4d9a-8e15-0f62b4c3d7a9}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK F_DfiNowString_Tests EXTENDS TcUnit.FB_TestSuite
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[Test_Formato_23Chars_ComSeparadores();
+]]></ST>
+    </Implementation>
+    <Method Name="Test_Formato_23Chars_ComSeparadores" Id="{d4e91b07-2c58-4a63-9f81-6b3e0d47c25f}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Formato_23Chars_ComSeparadores
+VAR
+	s       : STRING(23);
+	i       : INT;
+	c       : STRING(1);
+	bDigito : BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Formato_23Chars');
+s := F_DfiNowString();
+AssertEquals_INT(23, LEN(s), 'comprimento 23');
+AssertEquals_STRING('-', MID(s, 1, 5), 'traco em pos 5');
+AssertEquals_STRING('-', MID(s, 1, 8), 'traco em pos 8');
+AssertEquals_STRING(' ', MID(s, 1, 11), 'espaco em pos 11');
+AssertEquals_STRING(':', MID(s, 1, 14), 'dois-pontos pos 14');
+AssertEquals_STRING('.', MID(s, 1, 20), 'ponto pos 20');
+// separador extra de minutos e checagem de digitos nas posicoes numericas
+AssertEquals_STRING(':', MID(s, 1, 17), 'dois-pontos pos 17');
+bDigito := TRUE;
+FOR i := 1 TO 23 DO
+	IF i <> 5 AND i <> 8 AND i <> 11 AND i <> 14 AND i <> 17 AND i <> 20 THEN
+		c := MID(s, 1, i);
+		IF (c < '0') OR (c > '9') THEN
+			bDigito := FALSE;
+		END_IF
+	END_IF
+END_FOR
+AssertTrue(bDigito, 'campos numericos sao digitos 0-9');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

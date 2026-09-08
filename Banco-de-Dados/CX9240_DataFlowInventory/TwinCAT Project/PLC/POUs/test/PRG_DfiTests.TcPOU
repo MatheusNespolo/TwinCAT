@@ -9,6 +9,7 @@ VAR
 	fbCfgParseTests  : FB_DfiCfgParse_Tests;
 	fbParserTests    : FB_DfiPayloadParser_Tests;
 	fbSqlBuilderTests: FB_DfiSqlBuilder_Tests;
+	fbNowStringTests : F_DfiNowString_Tests;
 END_VAR
 ]]></Declaration>
     <Implementation>
