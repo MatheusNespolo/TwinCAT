@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_DfiSqlBuilder_Tests" Id="{caf7e750-da54-4775-94fd-d9568edef82a}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_DfiSqlBuilder_Tests EXTENDS TcUnit.FB_TestSuite
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[Test_Build_EstoqueMudanca();
+Test_Build_EstoquePeriodico_OrigemPeriodico();
+Test_Build_Evento_ComPecaEDetalhe();
+Test_Build_Evento_SemPeca_SemDetalhe_UsaNULL();
+]]></ST>
+    </Implementation>
+    <Method Name="Test_Build_EstoqueMudanca" Id="{f7d6aaa8-2293-4eee-a3a1-b89ece66ecf8}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Build_EstoqueMudanca
+VAR
+	fb : FB_DfiSqlBuilder;
+	r : ST_DfiRow;
+	s : STRING(511);
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Build_EstoqueMudanca');
+r.eKind := E_DfiRowKind.ESTOQUE_MUDANCA;
+r.sTsPlc := '2026-09-08 10:11:12.345';
+r.stEstoque.nA := 4; r.stEstoque.nB := 5; r.stEstoque.nC := 6;
+fb.Build(r, s);
+AssertEquals_STRING(
+  Expected := 'INSERT INTO estoque_hist (ts_plc,estoque_a,estoque_b,estoque_c,origem) VALUES ($'2026-09-08 10:11:12.345$',4,5,6,$'mudanca$');',
+  Actual := s, Message := 'SQL estoque mudanca');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_Build_EstoquePeriodico_OrigemPeriodico" Id="{419e7162-6958-45a3-b2fc-2d516c33bae5}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Build_EstoquePeriodico_OrigemPeriodico
+VAR
+	fb : FB_DfiSqlBuilder;
+	r : ST_DfiRow;
+	s : STRING(511);
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Build_EstoquePeriodico');
+r.eKind := E_DfiRowKind.ESTOQUE_PERIODICO;
+r.sTsPlc := '2026-09-08 10:12:12.000';
+r.stEstoque.nA := 0; r.stEstoque.nB := 1; r.stEstoque.nC := 2;
+fb.Build(r, s);
+AssertEquals_STRING(
+  Expected := 'INSERT INTO estoque_hist (ts_plc,estoque_a,estoque_b,estoque_c,origem) VALUES ($'2026-09-08 10:12:12.000$',0,1,2,$'periodico$');',
+  Actual := s, Message := 'SQL estoque periodico');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_Build_Evento_ComPecaEDetalhe" Id="{426b96ac-22e1-490c-a4c6-398cf02b20f2}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Build_Evento_ComPecaEDetalhe
+VAR
+	fb : FB_DfiSqlBuilder;
+	r : ST_DfiRow;
+	s : STRING(511);
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Build_Evento_ComPecaEDetalhe');
+r.eKind := E_DfiRowKind.EVENTO;
+r.sTsPlc := '2026-09-08 10:13:00.000';
+r.stEvento.sEvento := 'erro'; r.stEvento.sPeca := 'B'; r.stEvento.sDetalhe := 'timeout';
+r.stEvento.sPayloadRaw := '{type:evento,evento:erro}';
+fb.Build(r, s);
+AssertEquals_STRING(
+  Expected := 'INSERT INTO eventos_hist (ts_plc,evento,peca,detalhe,payload_raw) VALUES ($'2026-09-08 10:13:00.000$',$'erro$',$'B$',$'timeout$',$'{type:evento,evento:erro}$');',
+  Actual := s, Message := 'SQL evento completo');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_Build_Evento_SemPeca_SemDetalhe_UsaNULL" Id="{94cc0887-639f-4958-8610-44ab1b3190c0}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Build_Evento_SemPeca_SemDetalhe_UsaNULL
+VAR
+	fb : FB_DfiSqlBuilder;
+	r : ST_DfiRow;
+	s : STRING(511);
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Build_Evento_SemPeca_UsaNULL');
+r.eKind := E_DfiRowKind.EVENTO;
+r.sTsPlc := '2026-09-08 10:14:00.000';
+r.stEvento.sEvento := 'inicializacao'; r.stEvento.sPeca := ''; r.stEvento.sDetalhe := '';
+r.stEvento.sPayloadRaw := '';
+fb.Build(r, s);
+AssertEquals_STRING(
+  Expected := 'INSERT INTO eventos_hist (ts_plc,evento,peca,detalhe,payload_raw) VALUES ($'2026-09-08 10:14:00.000$',$'inicializacao$',NULL,NULL,$'$');',
+  Actual := s, Message := 'peca/detalhe NULL, payload_raw string vazia');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

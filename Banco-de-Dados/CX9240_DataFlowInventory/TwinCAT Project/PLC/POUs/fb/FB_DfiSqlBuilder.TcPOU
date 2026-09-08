@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_DfiSqlBuilder" Id="{cab44ba6-a52a-4cd1-b142-900903384ddc}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_DfiSqlBuilder
+VAR
+	fbFmt   : Tc2_Utilities.FB_FormatString;
+	sOrigem : STRING(80);
+	sPeca   : STRING(80);
+	sDet    : STRING(80);
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Sem logica no corpo: a construcao do INSERT e feita pelo metodo Build.
+]]></ST>
+    </Implementation>
+    <Method Name="Build" Id="{b0208d7e-fbac-40b1-a7f6-3ea33ea499c2}">
+      <Declaration><![CDATA[METHOD Build : BOOL
+VAR_INPUT
+	stRow : ST_DfiRow;
+END_VAR
+VAR_OUTPUT
+	sCmd : STRING(511);
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Gera o comando INSERT exato para o tipo de linha (stRow.eKind).
+// Escape de aspa simples em literal ST do TwinCAT: $'  (nao '').
+sCmd := '';
+
+CASE stRow.eKind OF
+
+	E_DfiRowKind.ESTOQUE_MUDANCA, E_DfiRowKind.ESTOQUE_PERIODICO:
+		// SEL(G, IN0, IN1): G=FALSE -> IN0 ; G=TRUE -> IN1
+		// eKind = ESTOQUE_MUDANCA   -> 'mudanca'
+		// eKind = ESTOQUE_PERIODICO -> 'periodico'
+		sOrigem := SEL(stRow.eKind = E_DfiRowKind.ESTOQUE_MUDANCA, 'periodico', 'mudanca');
+		fbFmt(
+			sFormat := 'INSERT INTO estoque_hist (ts_plc,estoque_a,estoque_b,estoque_c,origem) VALUES ($'%s$',%d,%d,%d,$'%s$');',
+			arg1 := Tc2_Utilities.F_String(stRow.sTsPlc),
+			arg2 := Tc2_Utilities.F_INT(stRow.stEstoque.nA),
+			arg3 := Tc2_Utilities.F_INT(stRow.stEstoque.nB),
+			arg4 := Tc2_Utilities.F_INT(stRow.stEstoque.nC),
+			arg5 := Tc2_Utilities.F_String(sOrigem),
+			sOut => sCmd);
+
+	E_DfiRowKind.EVENTO:
+		// peca / detalhe: string entre aspas quando presente, senao literal NULL
+		IF stRow.stEvento.sPeca = '' THEN
+			sPeca := 'NULL';
+		ELSE
+			sPeca := CONCAT('$'', CONCAT(stRow.stEvento.sPeca, '$''));
+		END_IF
+
+		IF stRow.stEvento.sDetalhe = '' THEN
+			sDet := 'NULL';
+		ELSE
+			sDet := CONCAT('$'', CONCAT(stRow.stEvento.sDetalhe, '$''));
+		END_IF
+
+		fbFmt(
+			sFormat := 'INSERT INTO eventos_hist (ts_plc,evento,peca,detalhe,payload_raw) VALUES ($'%s$',$'%s$',%s,%s,$'%s$');',
+			arg1 := Tc2_Utilities.F_String(stRow.sTsPlc),
+			arg2 := Tc2_Utilities.F_String(stRow.stEvento.sEvento),
+			arg3 := Tc2_Utilities.F_String(sPeca),
+			arg4 := Tc2_Utilities.F_String(sDet),
+			arg5 := Tc2_Utilities.F_String(stRow.stEvento.sPayloadRaw),
+			sOut => sCmd);
+
+END_CASE
+
+Build := NOT fbFmt.bError;
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

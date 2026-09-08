@@ -8,7 +8,7 @@ VAR
 	fbSamplerTests   : FB_DfiSampler_Tests;
 	fbCfgParseTests  : FB_DfiCfgParse_Tests;
 	fbParserTests    : FB_DfiPayloadParser_Tests;
-	// fbSqlBuilderTests: FB_DfiSqlBuilder_Tests;
+	fbSqlBuilderTests: FB_DfiSqlBuilder_Tests;
 END_VAR
 ]]></Declaration>
     <Implementation>
