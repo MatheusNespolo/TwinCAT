@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_DfiRowBuffer_Tests" Id="{2dd17784-ad36-4a7c-8c2d-0436733ca817}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_DfiRowBuffer_Tests EXTENDS TcUnit.FB_TestSuite
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[Test_PushPop_PreservaOrdemFIFO();
+Test_Peek_NaoRemove();
+Test_PopVazio_RetornaFalse();
+Test_Overflow_DescartaMaisAntigo_IncrementaDropped();
+Test_HighWater_AcompanhaPico();
+]]></ST>
+    </Implementation>
+    <Method Name="Test_PushPop_PreservaOrdemFIFO" Id="{c6737db6-7be0-4092-8883-39827cdca670}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_PushPop_PreservaOrdemFIFO
+VAR
+	fb : FB_DfiRowBuffer := (nCapacity := 4);
+	a, b, out : ST_DfiRow;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('PushPop_PreservaOrdemFIFO');
+a.eKind := E_DfiRowKind.EVENTO; a.stEvento.sEvento := 'entrega';
+b.eKind := E_DfiRowKind.EVENTO; b.stEvento.sEvento := 'erro';
+fb.Push(a); fb.Push(b);
+AssertEquals_UDINT(Expected := 2, Actual := fb.nCount, Message := 'nCount apos 2 Push');
+fb.Peek(out); fb.Pop();
+AssertEquals_STRING(Expected := 'entrega', Actual := out.stEvento.sEvento, Message := '1o a sair');
+fb.Peek(out); fb.Pop();
+AssertEquals_STRING(Expected := 'erro', Actual := out.stEvento.sEvento, Message := '2o a sair');
+AssertEquals_UDINT(Expected := 0, Actual := fb.nCount, Message := 'vazio ao final');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_Peek_NaoRemove" Id="{fa39293a-e4bd-4502-b044-17adb2d75557}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Peek_NaoRemove
+VAR
+	fb : FB_DfiRowBuffer := (nCapacity := 4);
+	a, out : ST_DfiRow;
+	ok : BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Peek_NaoRemove');
+a.eKind := E_DfiRowKind.ESTOQUE_MUDANCA; a.stEstoque.nA := 7;
+fb.Push(a);
+ok := fb.Peek(out);
+AssertTrue(ok, 'Peek TRUE com 1 item');
+AssertEquals_INT(Expected := 7, Actual := out.stEstoque.nA, Message := 'valor via Peek');
+AssertEquals_UDINT(Expected := 1, Actual := fb.nCount, Message := 'Peek nao remove');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_PopVazio_RetornaFalse" Id="{d605b0b8-ba67-4e88-8328-672a53722467}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_PopVazio_RetornaFalse
+VAR
+	fb : FB_DfiRowBuffer := (nCapacity := 4);
+	out : ST_DfiRow;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('PopVazio_RetornaFalse');
+AssertFalse(fb.Peek(out), 'Peek FALSE vazio');
+AssertFalse(fb.Pop(), 'Pop FALSE vazio');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_Overflow_DescartaMaisAntigo_IncrementaDropped" Id="{1d825809-b9ae-4c78-a541-ad238aa601ae}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Overflow_DescartaMaisAntigo_IncrementaDropped
+VAR
+	fb : FB_DfiRowBuffer := (nCapacity := 3);
+	r, out : ST_DfiRow;
+	i : INT;
+	okPush : BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Overflow_DescartaMaisAntigo_IncrementaDropped');
+FOR i := 1 TO 3 DO
+	r.stEstoque.nA := i; fb.Push(r);
+END_FOR
+r.stEstoque.nA := 4;
+okPush := fb.Push(r);                       // capacidade estourada
+AssertFalse(okPush, 'Push retorna FALSE ao descartar');
+AssertEquals_ULINT(Expected := 1, Actual := fb.nDropped, Message := 'nDropped incrementa');
+AssertEquals_UDINT(Expected := 3, Actual := fb.nCount, Message := 'nCount fica no teto');
+fb.Peek(out);
+AssertEquals_INT(Expected := 2, Actual := out.stEstoque.nA, Message := 'frente agora eh o 2o (1o descartado)');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_HighWater_AcompanhaPico" Id="{2acb574c-ce13-4484-8340-db3ab415604e}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_HighWater_AcompanhaPico
+VAR
+	fb : FB_DfiRowBuffer := (nCapacity := 8);
+	r : ST_DfiRow;
+	i : INT;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('HighWater_AcompanhaPico');
+FOR i := 1 TO 5 DO fb.Push(r); END_FOR
+fb.Pop(); fb.Pop();
+AssertEquals_UDINT(Expected := 3, Actual := fb.nCount, Message := 'nCount 3 apos 2 Pop');
+AssertEquals_UDINT(Expected := 5, Actual := fb.nHighWater, Message := 'highwater guarda o pico 5');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

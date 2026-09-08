@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="FB_DfiRowBuffer" Id="{8de346ca-0da4-453d-92d4-158325fe403c}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_DfiRowBuffer
+VAR_INPUT
+	nCapacity : UDINT := 512;
+END_VAR
+VAR_OUTPUT
+	nCount     : UDINT;
+	nHighWater : UDINT;
+	nDropped   : ULINT;
+END_VAR
+VAR CONSTANT
+	MAX_ROWS : UDINT := 512;   // teto físico do array; nCapacity <= MAX_ROWS
+END_VAR
+VAR
+	aRows  : ARRAY[0..MAX_ROWS-1] OF ST_DfiRow;
+	nHead  : UDINT;            // índice de leitura (frente)
+	nTail  : UDINT;            // índice de escrita (próxima posição livre)
+	nCap   : UDINT;            // capacidade efetiva (clamp de nCapacity)
+	bInit  : BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT bInit THEN
+	nCap := LIMIT(1, nCapacity, MAX_ROWS);
+	bInit := TRUE;
+END_IF
+// nCount é mantido pelos métodos; corpo do FB é no-op.
+]]></ST>
+    </Implementation>
+    <Method Name="Push" Id="{d97dcfb9-ee4d-40d4-b898-b12e110a01cf}">
+      <Declaration><![CDATA[METHOD Push : BOOL
+VAR_INPUT
+	stRow : ST_DfiRow;
+END_VAR
+VAR
+	bClean : BOOL;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT bInit THEN nCap := LIMIT(1, nCapacity, MAX_ROWS); bInit := TRUE; END_IF
+bClean := TRUE;
+IF nCount >= nCap THEN
+	// buffer cheio: descarta o mais antigo
+	nHead := (nHead + 1) MOD nCap;
+	nCount := nCount - 1;
+	nDropped := nDropped + 1;
+	bClean := FALSE;
+END_IF
+aRows[nTail] := stRow;
+nTail := (nTail + 1) MOD nCap;
+nCount := nCount + 1;
+IF nCount > nHighWater THEN nHighWater := nCount; END_IF
+Push := bClean;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Peek" Id="{be3c6607-730d-49d0-808b-b5faf43fd5b4}">
+      <Declaration><![CDATA[METHOD Peek : BOOL
+VAR_OUTPUT
+	stRow : ST_DfiRow;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF nCount = 0 THEN
+	Peek := FALSE;
+	RETURN;
+END_IF
+stRow := aRows[nHead];
+Peek := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Pop" Id="{b5ecab48-84a1-4f5f-b0e2-2716f529891d}">
+      <Declaration><![CDATA[METHOD Pop : BOOL]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF nCount = 0 THEN
+	Pop := FALSE;
+	RETURN;
+END_IF
+nHead := (nHead + 1) MOD nCap;
+nCount := nCount - 1;
+Pop := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

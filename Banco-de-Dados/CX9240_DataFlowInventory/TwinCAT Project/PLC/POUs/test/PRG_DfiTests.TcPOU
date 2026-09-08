@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="PRG_DfiTests" Id="{ff38dd96-2125-4871-9332-917290e0a8c5}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM PRG_DfiTests
+VAR
+	fbRowBufferTests : FB_DfiRowBuffer_Tests;
+	// suites added by later tasks:
+	// fbSamplerTests   : FB_DfiSampler_Tests;
+	// fbCfgParseTests  : FB_DfiCfgParse_Tests;
+	// fbParserTests    : FB_DfiPayloadParser_Tests;
+	// fbSqlBuilderTests: FB_DfiSqlBuilder_Tests;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[TcUnit.RUN();
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>
