@@ -57,6 +57,9 @@
     <Compile Include="POUs\fb\FB_DfiDbWriter.TcPOU">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="POUs\fb\FB_DfiMqttSubscriber.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="POUs\test\PRG_DfiTests.TcPOU">
       <SubType>Code</SubType>
     </Compile>
