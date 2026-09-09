@@ -3,7 +3,7 @@
   <POU Name="FB_DfiRowBuffer" Id="{8de346ca-0da4-453d-92d4-158325fe403c}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_DfiRowBuffer
 VAR_INPUT
-	nCapacity : UDINT := 512;
+	nCapacity : UDINT := 128;
 END_VAR
 VAR_OUTPUT
 	nCount     : UDINT;
@@ -11,7 +11,11 @@ VAR_OUTPUT
 	nDropped   : ULINT;
 END_VAR
 VAR CONSTANT
-	MAX_ROWS : UDINT := 512;   // teto físico do array; nCapacity <= MAX_ROWS
+	// Teto fisico do array. ST_DfiRow ~380 bytes -> 128 linhas ~= 49 KB.
+	// Nao aumentar sem necessidade: as suites TcUnit declaram FB_DfiRowBuffer
+	// como local de metodo (vai para a pilha da task) e 512 linhas (~195 KB)
+	// estouram a pilha da TestTask. 128 linhas = ~2 min de store-and-forward.
+	MAX_ROWS : UDINT := 128;   // nCapacity <= MAX_ROWS
 END_VAR
 VAR
 	aRows  : ARRAY[0..MAX_ROWS-1] OF ST_DfiRow;

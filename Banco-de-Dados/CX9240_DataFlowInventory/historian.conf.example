@@ -16,5 +16,5 @@ db_id=1                            # hDBID of the DfiDb connection in the TwinCA
 
 # --- Historian ---
 sample_period_s=60                # periodic stock snapshot interval, seconds
-buffer_size=512                   # in-memory FIFO capacity (rows)
+buffer_size=128                   # in-memory FIFO capacity (rows); max = FB_DfiRowBuffer.MAX_ROWS
 estoque_max=999                   # reject stock values outside 0..estoque_max

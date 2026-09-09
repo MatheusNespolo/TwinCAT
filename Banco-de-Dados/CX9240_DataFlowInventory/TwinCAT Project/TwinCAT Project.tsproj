@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4026.26">
-	<Project ProjectGUID="{0E71E408-FC82-4AB4-9EFE-848E6F00594D}" Target64Bit="true" ShowHideConfigurations="#x3c7">
+	<Project ProjectGUID="{0E71E408-FC82-4AB4-9EFE-848E6F00594D}" TargetNetId="199.4.42.250.1.1" Target64Bit="true" ShowHideConfigurations="#x3c7">
 		<System>
-			<Settings MaxCpus="4"/>
+			<Settings MaxCpus="64" NonWinCpus="53"/>
 			<Licenses>
 				<Target>
 					<ManualSelect>{92583661-35AE-45CE-BD4F-C35BFE16F07E}</ManualSelect>
@@ -10,10 +10,10 @@
 				</Target>
 			</Licenses>
 			<Tasks>
-				<Task Id="3" Priority="20" CycleTime="1000000" AmsPort="350" AdtTasks="true">
+				<Task Id="3" Priority="20" CycleTime="20000000" AmsPort="350" AdtTasks="true">
 					<Name>PlcTask</Name>
 				</Task>
-				<Task Id="4" Priority="21" CycleTime="1000000" AmsPort="351" AdtTasks="true">
+				<Task Id="4" Priority="21" CycleTime="20000000" AmsPort="351" AdtTasks="true">
 					<Name>TestTask</Name>
 				</Task>
 			</Tasks>

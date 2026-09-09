@@ -135,8 +135,8 @@ ELSIF sKey = 'buffer_size' THEN
 	IF nBuf < 1 THEN
 		nBuf := 1;
 	END_IF
-	IF nBuf > 512 THEN
-		nBuf := 512;
+	IF nBuf > 128 THEN
+		nBuf := 128;   // teto = FB_DfiRowBuffer.MAX_ROWS
 	END_IF
 	stCfg.nBufferSize := nBuf;
 

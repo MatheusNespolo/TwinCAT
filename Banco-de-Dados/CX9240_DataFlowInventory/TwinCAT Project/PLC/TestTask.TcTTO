@@ -2,7 +2,7 @@
 <TcPlcObject Version="1.1.0.1">
   <Task Name="TestTask" Id="{6913447b-0398-4c55-84d1-5877a15ed8b0}">
     <!--CycleTime in micro seconds.-->
-    <CycleTime>100000</CycleTime>
+    <CycleTime>10000</CycleTime>
     <Priority>21</Priority>
     <PouCall>
       <Name>PRG_DfiTests</Name>
@@ -12,6 +12,5 @@
     <Fb_exit>{145f354a-6b45-4b3b-99a7-ab01c88f398c}</Fb_exit>
     <CycleUpdate>{d494b05e-d9b0-459e-9d99-ecbb9ff37e7e}</CycleUpdate>
     <PostCycleUpdate>{c784ca77-cfc0-4acd-bb44-a848ca20ac73}</PostCycleUpdate>
-    <ObjectProperties />
   </Task>
 </TcPlcObject>

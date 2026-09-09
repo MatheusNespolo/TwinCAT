@@ -55,13 +55,13 @@ fb.ParseLine('mqtt_host=10.0.0.5', cfg);
 fb.ParseLine('mqtt_port=8883', cfg);
 fb.ParseLine('mqtt_use_tls=1', cfg);
 fb.ParseLine('sample_period_s=30', cfg);
-fb.ParseLine('buffer_size=256', cfg);
+fb.ParseLine('buffer_size=100', cfg);
 fb.ParseLine('estoque_max=50', cfg);
 AssertEquals_STRING(Expected := '10.0.0.5', Actual := cfg.sMqttHost, Message := 'host');
 AssertEquals_UINT(Expected := 8883, Actual := cfg.nMqttPort, Message := 'port');
 AssertTrue(cfg.bUseTls, 'tls');
 AssertTrue(cfg.tSamplePeriod = T#30S, 'periodo');
-AssertEquals_UDINT(Expected := 256, Actual := cfg.nBufferSize, Message := 'buffer');
+AssertEquals_UDINT(Expected := 100, Actual := cfg.nBufferSize, Message := 'buffer');
 AssertEquals_INT(Expected := 50, Actual := cfg.nEstoqueMax, Message := 'estoque_max');
 TEST_FINISHED();
 ]]></ST>

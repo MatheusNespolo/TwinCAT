@@ -13,7 +13,7 @@ STRUCT
 	sTopicEventos : STRING(120) := 'dataflow/eventos';
 	nDbId         : UDINT := 1;
 	tSamplePeriod : TIME  := T#60S;
-	nBufferSize   : UDINT := 512;
+	nBufferSize   : UDINT := 128;   // teto = FB_DfiRowBuffer.MAX_ROWS
 	nEstoqueMax   : INT   := 999;
 	bValid        : BOOL  := FALSE;   // TRUE após FB_DfiConfigLoader parsear o arquivo com sucesso
 END_STRUCT

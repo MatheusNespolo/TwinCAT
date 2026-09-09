@@ -1,17 +1,17 @@
 <Node>
-  <Title>TwinCAT Connectivity Project1</Title>
+  <Title>TwinCAT Connectivity Project</Title>
   <Expanded>False</Expanded>
   <FileName></FileName>
   <Children>
     <Node>
       <Title>TcDatabaseServer1</Title>
       <Expanded>True</Expanded>
-      <FileName>C:\Users\matheusn\Documents\Aplicações teste\Linux\CX9240\DatabaseServer1\TwinCAT Connectivity Project1\TcDatabaseServer1.tcdbsrv</FileName>
+      <FileName>C:\Users\matheusn\Documents\GitHub\TwinCAT\Banco-de-Dados\CX9240_DataFlowInventory\TwinCAT Connectivity Project\TcDatabaseServer1.tcdbsrv</FileName>
       <Children>
         <Node>
-          <Title>DB1</Title>
+          <Title>DfiDb</Title>
           <Expanded>False</Expanded>
-          <FileName>C:\Users\matheusn\Documents\Aplicações teste\Linux\CX9240\DatabaseServer1\TwinCAT Connectivity Project1\TcDatabaseServer1\DB1\DB1.tcdbsrvdb</FileName>
+          <FileName>C:\Users\matheusn\Documents\GitHub\TwinCAT\Banco-de-Dados\CX9240_DataFlowInventory\TwinCAT Connectivity Project\TcDatabaseServer1\DfiDb\DfiDb.tcdbsrvdb</FileName>
           <Children />
         </Node>
       </Children>
