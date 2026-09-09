@@ -5,9 +5,7 @@
 VAR_INPUT
 END_VAR
 VAR
-	fbGetSystemTime : Tc2_Utilities.GETSYSTEMTIME;
-	ft              : T_FILETIME;
-	tmst            : TIMESTRUCT;
+	tmst  : TIMESTRUCT;
 	nYear : INT;
 	nMon  : INT;
 	nDay  : INT;
@@ -25,14 +23,11 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[// Retorna o instante atual como 'YYYY-MM-DD HH:MM:SS.mmm' (23 chars). Fonte: Tc2_Utilities.GETSYSTEMTIME + FILETIME_TO_SYSTEMTIME (UTC).
-// TODO: local timezone conversion (RT Linux timedatectl sets TZ; verify UTC vs local at bench)
-fbGetSystemTime(timeLoDW => ft.dwLowDateTime, timeHiDW => ft.dwHighDateTime);
-// FILETIME_TO_SYSTEMTIME e FUNCTION: a saida precisa ser capturada (=> tmst),
-// senao tmst fica zerado e o timestamp vira '0000-00-00 00:00:00.000'.
-// Confirmar no XAE (F2) o nome do parametro de saida: 'systemTime' ou 'pSystemTime'
-// (se for POINTER TO TIMESTRUCT, usar: FILETIME_TO_SYSTEMTIME(fileTime := ft, pSystemTime := ADR(tmst));).
-FILETIME_TO_SYSTEMTIME(fileTime := ft, systemTime => tmst);
+      <ST><![CDATA[// Retorna o instante atual como 'YYYY-MM-DD HH:MM:SS.mmm' (23 chars).
+// Fonte: GVL_Dfi.fbNow (Tc2_Utilities.FB_LocalSystemTime, HORA LOCAL do RT Linux),
+// ticado por MAIN todo ciclo. Enquanto fbNow.bValid = FALSE (primeiros ciclos)
+// os campos vem zerados -> as primeiras linhas podem ter timestamp '0000-...'.
+tmst := GVL_Dfi.fbNow.systemTime;
 
 nYear := TO_INT(tmst.wYear);
 nMon  := TO_INT(tmst.wMonth);

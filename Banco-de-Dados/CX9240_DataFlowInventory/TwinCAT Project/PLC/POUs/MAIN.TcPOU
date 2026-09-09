@@ -16,6 +16,10 @@ END_VAR
 //   Config -> MQTT -> Parser -> Buffer -> Sampler -> DbWriter -> Diagnostico
 // ---------------------------------------------------------------
 
+// Relogio de parede local: ticado todo ciclo (independe da config) para que
+// F_DfiNowString() tenha um TIMESTRUCT valido. Leva alguns ciclos ate bValid.
+GVL_Dfi.fbNow(bEnable := TRUE);
+
 // 0. Config (uma vez no arranque; retenta se falhar)
 IF bBoot THEN
 	GVL_Dfi.fbLoader(bExecute := TRUE, sPath := '/etc/dfi/historian.conf');

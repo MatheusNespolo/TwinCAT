@@ -5,6 +5,8 @@
 VAR_GLOBAL
 	gCfg  : ST_DfiConfig;
 	gDiag : ST_DfiDiag;
+	// relogio de parede local (fonte do ts_plc; MAIN chama fbNow(bEnable := TRUE) todo ciclo)
+	fbNow : Tc2_Utilities.FB_LocalSystemTime;
 	// pipeline
 	fbLoader  : FB_DfiConfigLoader;
 	fbSub     : FB_DfiMqttSubscriber;

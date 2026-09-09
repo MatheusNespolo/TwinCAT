@@ -78,15 +78,14 @@ CASE nState OF
 		END_IF
 
 	20: // READ (uma linha por ciclo, acumula em sText separando por $N)
-		// FB_FileGets PRECISA do buffer destino: sem pBuffer/cbBuffer ele nao
-		// le nada -> sLineBuf fica vazio -> gCfg.bValid = FALSE -> historiador
-		// nunca sai do repouso. Confirmar os nomes dos parametros no XAE (F2):
-		// versoes de Tc2_System usam pBuffer/cbBuffer; algumas usam sLine/pStrBuffer/nBufferSize.
+		// Esta versao do Tc2_System.FB_FileGets entrega a linha lida na SAIDA
+		// fbGets.sLine (nao ha buffer de entrada). Copiamos para sLineBuf para
+		// nao mexer no restante da acumulacao por ponteiro.
+		// Se o compilador reclamar de 'sLine', ver o nome real no XAE (F2):
+		// pode ser 'strData' / 'sData' conforme a versao da lib.
 		fbGets(
 			bExecute := TRUE,
-			hFile    := hFile,
-			pBuffer  := ADR(sLineBuf),
-			cbBuffer := SIZEOF(sLineBuf));
+			hFile    := hFile);
 		IF NOT fbGets.bBusy THEN
 			IF fbGets.bError THEN
 				sError := 'read';
@@ -97,6 +96,7 @@ CASE nState OF
 				fbGets(bExecute := FALSE);
 				nState := 30;
 			ELSE
+				sLineBuf := fbGets.sLine;
 				// Acumula a linha em sText separando por $N, via cópia de bytes
 				// (CONCAT/LEN do Tc2_Standard operam em STRING(255) e truncariam
 				// sText, que é STRING(4095)).
