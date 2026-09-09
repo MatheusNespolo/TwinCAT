@@ -74,7 +74,7 @@ IF jsonRoot = 0 THEN
 END_IF
 
 // 4) campo 'type'
-sType := THIS^.GetStr(jsonRoot, 'type');
+sType := THIS^.GetStr(dom := jsonRoot, sName := 'type', bFound => bFound);
 IF (NOT bFound) OR (sType = '') THEN
 	sParseError := 'type';
 	bDone := TRUE;
@@ -94,19 +94,19 @@ END_IF
 // 5) ramo ESTOQUE
 IF bEstoque THEN
 	nMax := stConfig.nEstoqueMax;
-	nA := THIS^.GetInt(jsonRoot, 'pecaA');
+	nA := THIS^.GetInt(dom := jsonRoot, sName := 'pecaA', bValid => bV);
 	IF NOT bV THEN
 		sParseError := 'campo';
 		bDone := TRUE;
 		RETURN;
 	END_IF
-	nB := THIS^.GetInt(jsonRoot, 'pecaB');
+	nB := THIS^.GetInt(dom := jsonRoot, sName := 'pecaB', bValid => bV);
 	IF NOT bV THEN
 		sParseError := 'campo';
 		bDone := TRUE;
 		RETURN;
 	END_IF
-	nC := THIS^.GetInt(jsonRoot, 'pecaC');
+	nC := THIS^.GetInt(dom := jsonRoot, sName := 'pecaC', bValid => bV);
 	IF NOT bV THEN
 		sParseError := 'campo';
 		bDone := TRUE;
@@ -129,13 +129,13 @@ IF bEstoque THEN
 END_IF
 
 // 6) ramo EVENTO
-sEv := THIS^.GetStr(jsonRoot, 'evento');
+sEv := THIS^.GetStr(dom := jsonRoot, sName := 'evento', bFound => bFound);
 IF (NOT bFound) OR (sEv = '') THEN
 	sParseError := 'campo';
 	bDone := TRUE;
 	RETURN;
 END_IF
-IF NOT F_DfiSanitizeText(sEv, 23) THEN
+IF NOT F_DfiSanitizeText(sEntrada := sEv, nMaxLen := 23, sOut => sEvClean) THEN
 	sParseError := 'sanit';
 	bDone := TRUE;
 	RETURN;
@@ -143,7 +143,7 @@ END_IF
 
 // peca: se presente precisa ser 'A' | 'B' | 'C'; se ausente => ''
 IF THIS^.HasKey(jsonRoot, 'peca') THEN
-	sPeca := THIS^.GetStr(jsonRoot, 'peca');
+	sPeca := THIS^.GetStr(dom := jsonRoot, sName := 'peca', bFound => bFound);
 	IF (sPeca <> 'A') AND (sPeca <> 'B') AND (sPeca <> 'C') THEN
 		sParseError := 'peca';
 		bDone := TRUE;
@@ -156,8 +156,8 @@ END_IF
 
 // tipo -> detalhe: se presente sanitiza (63); se ausente => ''
 IF THIS^.HasKey(jsonRoot, 'tipo') THEN
-	sTipo := THIS^.GetStr(jsonRoot, 'tipo');
-	IF NOT F_DfiSanitizeText(sTipo, 63) THEN
+	sTipo := THIS^.GetStr(dom := jsonRoot, sName := 'tipo', bFound => bFound);
+	IF NOT F_DfiSanitizeText(sEntrada := sTipo, nMaxLen := 63, sOut => sDetClean) THEN
 		sParseError := 'sanit';
 		bDone := TRUE;
 		RETURN;

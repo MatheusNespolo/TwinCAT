@@ -78,9 +78,15 @@ CASE nState OF
 		END_IF
 
 	20: // READ (uma linha por ciclo, acumula em sText separando por $N)
+		// FB_FileGets PRECISA do buffer destino: sem pBuffer/cbBuffer ele nao
+		// le nada -> sLineBuf fica vazio -> gCfg.bValid = FALSE -> historiador
+		// nunca sai do repouso. Confirmar os nomes dos parametros no XAE (F2):
+		// versoes de Tc2_System usam pBuffer/cbBuffer; algumas usam sLine/pStrBuffer/nBufferSize.
 		fbGets(
 			bExecute := TRUE,
-			hFile    := hFile);
+			hFile    := hFile,
+			pBuffer  := ADR(sLineBuf),
+			cbBuffer := SIZEOF(sLineBuf));
 		IF NOT fbGets.bBusy THEN
 			IF fbGets.bError THEN
 				sError := 'read';

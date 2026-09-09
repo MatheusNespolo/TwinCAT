@@ -19,6 +19,7 @@ VAR
 	fb : FB_DfiSqlBuilder;
 	linha : ST_DfiRow;
 	conjunto : STRING(511);
+	nLen : UINT;
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -26,7 +27,7 @@ END_VAR
 linha.eKind := E_DfiRowKind.ESTOQUE_MUDANCA;
 linha.sTsPlc := '2026-09-08 10:11:12.345';
 linha.stEstoque.nA := 4; linha.stEstoque.nB := 5; linha.stEstoque.nC := 6;
-fb.Build(linha);
+fb.Build(stRow := linha, sCmd => conjunto, nCmdLen => nLen);
 AssertEquals_STRING(
   Expected := 'INSERT INTO estoque_hist (ts_plc,estoque_a,estoque_b,estoque_c,origem) VALUES ($'2026-09-08 10:11:12.345$',4,5,6,$'mudanca$');',
   Actual := conjunto, Message := 'SQL estoque mudanca');
@@ -40,6 +41,7 @@ VAR
 	fb : FB_DfiSqlBuilder;
 	linha : ST_DfiRow;
 	conjunto : STRING(511);
+	nLen : UINT;
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -47,7 +49,7 @@ END_VAR
 linha.eKind := E_DfiRowKind.ESTOQUE_PERIODICO;
 linha.sTsPlc := '2026-09-08 10:12:12.000';
 linha.stEstoque.nA := 0; linha.stEstoque.nB := 1; linha.stEstoque.nC := 2;
-fb.Build(linha);
+fb.Build(stRow := linha, sCmd => conjunto, nCmdLen => nLen);
 AssertEquals_STRING(
   Expected := 'INSERT INTO estoque_hist (ts_plc,estoque_a,estoque_b,estoque_c,origem) VALUES ($'2026-09-08 10:12:12.000$',0,1,2,$'periodico$');',
   Actual := conjunto, Message := 'SQL estoque periodico');
@@ -61,6 +63,7 @@ VAR
 	fb : FB_DfiSqlBuilder;
 	linha : ST_DfiRow;
 	conjunto : STRING(511);
+	nLen : UINT;
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -69,7 +72,7 @@ linha.eKind := E_DfiRowKind.EVENTO;
 linha.sTsPlc := '2026-09-08 10:13:00.000';
 linha.stEvento.sEvento := 'erro'; linha.stEvento.sPeca := 'B'; linha.stEvento.sDetalhe := 'timeout';
 linha.stEvento.sPayloadRaw := '{type:evento,evento:erro}';
-fb.Build(linha);
+fb.Build(stRow := linha, sCmd => conjunto, nCmdLen => nLen);
 AssertEquals_STRING(
   Expected := 'INSERT INTO eventos_hist (ts_plc,evento,peca,detalhe,payload_raw) VALUES ($'2026-09-08 10:13:00.000$',$'erro$',$'B$',$'timeout$',$'{type:evento,evento:erro}$');',
   Actual := conjunto, Message := 'SQL evento completo');
@@ -138,6 +141,7 @@ VAR
 	fb : FB_DfiSqlBuilder;
 	linha : ST_DfiRow;
 	conjunto : STRING(511);
+	nLen : UINT;
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -146,7 +150,7 @@ linha.eKind := E_DfiRowKind.EVENTO;
 linha.sTsPlc := '2026-09-08 10:14:00.000';
 linha.stEvento.sEvento := 'inicializacao'; linha.stEvento.sPeca := ''; linha.stEvento.sDetalhe := '';
 linha.stEvento.sPayloadRaw := '';
-fb.Build(linha);
+fb.Build(stRow := linha, sCmd => conjunto, nCmdLen => nLen);
 AssertEquals_STRING(
   Expected := 'INSERT INTO eventos_hist (ts_plc,evento,peca,detalhe,payload_raw) VALUES ($'2026-09-08 10:14:00.000$',$'inicializacao$',NULL,NULL,$'$');',
   Actual := conjunto, Message := 'peca/detalhe NULL, payload_raw string vazia');

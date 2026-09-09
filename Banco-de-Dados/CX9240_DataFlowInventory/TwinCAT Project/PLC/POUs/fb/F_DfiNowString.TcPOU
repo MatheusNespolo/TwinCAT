@@ -28,7 +28,11 @@ END_VAR
       <ST><![CDATA[// Retorna o instante atual como 'YYYY-MM-DD HH:MM:SS.mmm' (23 chars). Fonte: Tc2_Utilities.GETSYSTEMTIME + FILETIME_TO_SYSTEMTIME (UTC).
 // TODO: local timezone conversion (RT Linux timedatectl sets TZ; verify UTC vs local at bench)
 fbGetSystemTime(timeLoDW => ft.dwLowDateTime, timeHiDW => ft.dwHighDateTime);
-FILETIME_TO_SYSTEMTIME(fileTime := ft);
+// FILETIME_TO_SYSTEMTIME e FUNCTION: a saida precisa ser capturada (=> tmst),
+// senao tmst fica zerado e o timestamp vira '0000-00-00 00:00:00.000'.
+// Confirmar no XAE (F2) o nome do parametro de saida: 'systemTime' ou 'pSystemTime'
+// (se for POINTER TO TIMESTRUCT, usar: FILETIME_TO_SYSTEMTIME(fileTime := ft, pSystemTime := ADR(tmst));).
+FILETIME_TO_SYSTEMTIME(fileTime := ft, systemTime => tmst);
 
 nYear := TO_INT(tmst.wYear);
 nMon  := TO_INT(tmst.wMonth);

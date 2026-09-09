@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1">
   <POU Name="FB_DfiDbWriter" Id="{eaabe034-cf4d-4db2-ae5e-024337bfba4c}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_DfiDbWriter
@@ -18,8 +18,10 @@ VAR_OUTPUT
 	bUltimoGravadoValido : BOOL;
 END_VAR
 VAR
-	fbDb      : FB_SQLDatabaseEvt;
-	fbCmd     : FB_SQLCommandEvt;
+	// FB_SQLDatabaseEvt / FB_SQLCommandEvt tem FB_init obrigatorio (sNetID, tTimeout).
+	// sNetID vazio = runtime local (o Database Server roda no proprio CX9240).
+	fbDb      : FB_SQLDatabaseEvt(sNetID := '', tTimeout := T#5S);
+	fbCmd     : FB_SQLCommandEvt(sNetID := '', tTimeout := T#5S);
 	fbBuild   : FB_DfiSqlBuilder;
 	fbBackoff : TON;
 	tBackoff  : TIME := T#2S;
@@ -34,7 +36,18 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[// Maquina de estados de gravacao no banco via TF6420 (spec 4.4).
+      <ST><![CDATA[// A maquina de estados vive no metodo Cycle (chamado tambem pelo dublê de
+// teste FB_DfiDbWriter_Fake). Corpos de FB nao sao encadeados por EXTENDS no
+// TwinCAT e VAR_IN_OUT nao pode ser religado num SUPER^(); um metodo sem
+// parametros contorna as duas coisas.
+Cycle();
+]]></ST>
+    </Implementation>
+    <Method Name="Cycle" Id="{7a1c4e02-9b3d-4f68-a1e5-2c9d0f4b8e37}">
+      <Declaration><![CDATA[METHOD Cycle
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Maquina de estados de gravacao no banco via TF6420 (spec 4.4).
 // Ordem obrigatoria por linha: Peek -> Build -> Execute -> Pop.
 // Pop acontece SOMENTE em COMMIT (INSERT sem erro) ou no descarte de uma
 // linha envenenada em BUILD (SQL impossivel de montar). Erro de banco,
@@ -65,7 +78,7 @@ E_DfiWriterState.CONNECT:
 	END_CASE
 
 E_DfiWriterState.BUILD:
-	IF fbBuffer.Peek() THEN
+	IF fbBuffer.Peek(stRow => stRow) THEN
 		IF fbBuild.Build(stRow := stRow, sCmd => sCmd, nCmdLen => nCmdLen) THEN
 			eState := E_DfiWriterState.EXECUTE;
 		ELSE
@@ -150,7 +163,8 @@ ELSE
 
 END_CASE
 ]]></ST>
-    </Implementation>
+      </Implementation>
+    </Method>
     <Method Name="DoConnect" Id="{0fe99974-3021-407d-9cf8-b07bb6c33ea9}">
       <Declaration><![CDATA[METHOD PROTECTED DoConnect : INT
 ]]></Declaration>

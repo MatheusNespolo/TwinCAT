@@ -27,7 +27,7 @@ fbSut(stUltimoEstoque := est, bValido := TRUE, tPeriodo := T#20MS, fbBuffer := f
 // esperar o TON: chamar o SUT em ciclos sucessivos até nCount = 1 ou timeout do teste
 // (TcUnit avança o tempo real entre ciclos da task de teste)
 IF fbBuf.nCount >= 1 THEN
-	fbBuf.Peek();
+	fbBuf.Peek(stRow => out);
 	AssertEquals_INT(Expected := 3, Actual := out.stEstoque.nA, Message := 'snapshot A');
 	AssertTrue(out.eKind = E_DfiRowKind.ESTOQUE_PERIODICO, 'eKind periodico');
 	TEST_FINISHED();

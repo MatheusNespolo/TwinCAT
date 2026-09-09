@@ -4,9 +4,14 @@
     <Declaration><![CDATA[FUNCTION_BLOCK FB_DfiSqlBuilder
 VAR
 	fbFmt   : Tc2_Utilities.FB_FormatString;
-	sOrigem : STRING(80);
-	sPeca   : STRING(80);
-	sDet    : STRING(80);
+	// Tc2_Utilities.F_String exige um VAR_IN_OUT STRING(255): os valores curtos
+	// (STRING(23) do ts, STRING(1) da peca, etc.) sao copiados para estes buffers
+	// antes de passar por F_String. O SQL gerado e byte-a-byte identico.
+	sOrigem : STRING(255);
+	sPeca   : STRING(255);
+	sDet    : STRING(255);
+	sArgTs  : STRING(255);
+	sArgEv  : STRING(255);
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -50,9 +55,10 @@ CASE stRow.eKind OF
 		// eKind = ESTOQUE_MUDANCA   -> 'mudanca'
 		// eKind = ESTOQUE_PERIODICO -> 'periodico'
 		sOrigem := SEL(stRow.eKind = E_DfiRowKind.ESTOQUE_MUDANCA, 'periodico', 'mudanca');
+		sArgTs := stRow.sTsPlc;
 		fbFmt(
 			sFormat := 'INSERT INTO estoque_hist (ts_plc,estoque_a,estoque_b,estoque_c,origem) VALUES ($'%s$',%d,%d,%d,$'%s$');',
-			arg1 := Tc2_Utilities.F_String(stRow.sTsPlc),
+			arg1 := Tc2_Utilities.F_String(sArgTs),
 			arg2 := Tc2_Utilities.F_INT(stRow.stEstoque.nA),
 			arg3 := Tc2_Utilities.F_INT(stRow.stEstoque.nB),
 			arg4 := Tc2_Utilities.F_INT(stRow.stEstoque.nC),
@@ -83,10 +89,12 @@ CASE stRow.eKind OF
 
 		// prefixo fixo+curto: termina com a aspa de abertura de payload_raw
 		// e NADA depois (o proprio payload e o fecho vem por ponteiro).
+		sArgTs := stRow.sTsPlc;
+		sArgEv := stRow.stEvento.sEvento;
 		fbFmt(
 			sFormat := 'INSERT INTO eventos_hist (ts_plc,evento,peca,detalhe,payload_raw) VALUES ($'%s$',$'%s$',%s,%s,$'',
-			arg1 := F_String(stRow.sTsPlc),
-			arg2 := F_String(stRow.stEvento.sEvento),
+			arg1 := F_String(sArgTs),
+			arg2 := F_String(sArgEv),
 			arg3 := F_String(sPeca),
 			arg4 := F_String(sDet),
 			sOut => sPrefix);

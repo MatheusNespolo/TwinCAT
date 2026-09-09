@@ -48,7 +48,7 @@ okPush := fb.Push(linha);                       // capacidade estourada
 AssertFalse(okPush, 'Push retorna FALSE ao descartar');
 AssertEquals_ULINT(Expected := 1, Actual := fb.nDropped, Message := 'nDropped incrementa');
 AssertEquals_UDINT(Expected := 3, Actual := fb.nCount, Message := 'nCount fica no teto');
-fb.Peek();
+fb.Peek(stRow => out);
 AssertEquals_INT(Expected := 2, Actual := out.stEstoque.nA, Message := 'frente agora eh o 2o (1o descartado)');
 TEST_FINISHED();
 ]]></ST>
@@ -65,7 +65,7 @@ END_VAR]]></Declaration>
         <ST><![CDATA[TEST('Peek_NaoRemove');
 a.eKind := E_DfiRowKind.ESTOQUE_MUDANCA; a.stEstoque.nA := 7;
 fb.Push(a);
-ok := fb.Peek();
+ok := fb.Peek(stRow => out);
 AssertTrue(ok, 'Peek TRUE com 1 item');
 AssertEquals_INT(Expected := 7, Actual := out.stEstoque.nA, Message := 'valor via Peek');
 AssertEquals_UDINT(Expected := 1, Actual := fb.nCount, Message := 'Peek nao remove');
@@ -81,7 +81,7 @@ VAR
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[TEST('PopVazio_RetornaFalse');
-AssertFalse(fb.Peek(), 'Peek FALSE vazio');
+AssertFalse(fb.Peek(stRow => out), 'Peek FALSE vazio');
 AssertFalse(fb.Pop(), 'Pop FALSE vazio');
 TEST_FINISHED();
 ]]></ST>
@@ -99,9 +99,9 @@ a.eKind := E_DfiRowKind.EVENTO; a.stEvento.sEvento := 'entrega';
 b.eKind := E_DfiRowKind.EVENTO; b.stEvento.sEvento := 'erro';
 fb.Push(a); fb.Push(b);
 AssertEquals_UDINT(Expected := 2, Actual := fb.nCount, Message := 'nCount apos 2 Push');
-fb.Peek(); fb.Pop();
+fb.Peek(stRow => out); fb.Pop();
 AssertEquals_STRING(Expected := 'entrega', Actual := out.stEvento.sEvento, Message := '1o a sair');
-fb.Peek(); fb.Pop();
+fb.Peek(stRow => out); fb.Pop();
 AssertEquals_STRING(Expected := 'erro', Actual := out.stEvento.sEvento, Message := '2o a sair');
 AssertEquals_UDINT(Expected := 0, Actual := fb.nCount, Message := 'vazio ao final');
 TEST_FINISHED();
