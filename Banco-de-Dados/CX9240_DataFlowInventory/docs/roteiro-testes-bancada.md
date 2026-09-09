@@ -1,4 +1,7 @@
-# Roteiro de testes de bancada — CX9240 Historiador MQTT → MariaDB
+# Roteiro de testes de bancada — CX9240 Historiador MQTT → SQLite
+
+> Banco: **SQLite** (`/var/lib/dfi/historian.db`) — ver `comissionamento-rt-linux.md`. Consultas
+> de verificação: `sqlite3 /var/lib/dfi/historian.db "SELECT * FROM estoque_hist ORDER BY id DESC LIMIT 10;"`
 
 Cópia navegável da **§7.2** do design: [`2026-09-08-cx9240-mqtt-historian-design.md`](2026-09-08-cx9240-mqtt-historian-design.md). Em caso de divergência, o design é a fonte de verdade.
 
@@ -11,7 +14,7 @@ Para o comissionamento do CX9240 antes de rodar este roteiro, ver [`comissioname
 - [ ] **CX9240 comissionado** — apt, licenças, NTP, nftables, `historian.conf`, rota ADS, Database Server e deploy do PLC concluídos (ver [`comissionamento-rt-linux.md`](comissionamento-rt-linux.md)).
 - [ ] **Broker Mosquitto na bancada** — Mosquitto local na porta `1883` (padrão de bancada), alcançável pelo CX9240 no host/porta de `historian.conf`.
 - [ ] **Publicador de teste** — simulador do `DataFlowInventory` **OU** `mosquitto_pub` (pacote `mosquitto-clients`) para injetar payloads nos tópicos.
-- [ ] **MariaDB com `dfi_historian`** — servidor MariaDB local no CX9240 com o schema aplicado (`mysql -u root -p < docs/schema.sql`), tabelas `estoque_hist` e `eventos_hist` presentes.
+- [ ] **Banco SQLite** — `/var/lib/dfi/historian.db` criado com o schema aplicado (`sqlite3 /var/lib/dfi/historian.db < docs/schema_sqlite.sql`), tabelas `estoque_hist` e `eventos_hist` presentes (`.tables`), diretório `/var/lib/dfi` gravável pelo runtime.
 - [ ] **Licenças TF ativas** — TF6701, TF6020, TF6420, TC1200 (trial de 7 dias ou definitivas) ativadas no target.
 - [ ] **Observabilidade** — `GVL_Dfi.gDiag` acessível via ADS/HMI para conferir `nParseErrors`, `nDropped`, `nHighWater`, `nRowsWritten`, `eWriterState`.
 
@@ -38,8 +41,11 @@ Para o comissionamento do CX9240 antes de rodar este roteiro, ver [`comissioname
    - notas: ____
 
 4. **Store-and-forward — banco fora do ar não perde nem embaralha linhas**
-   `systemctl stop mariadb`; publicar 10 mudanças distintas; `systemctl start mariadb`
-   → as 10 linhas aparecem **em ordem**; `nDropped = 0`; `nHighWater ≈ 10`.
+   Simular indisponibilidade do arquivo SQLite: `chmod 000 /var/lib/dfi/historian.db` (ou renomear
+   o `.db`); publicar 10 mudanças distintas; restaurar (`chmod 664` / renomear de volta).
+   → as 10 linhas aparecem **em ordem**; `nDropped = 0`; `nHighWater ≈ 10`; `nDbErrors` subiu
+   durante o bloqueio e parou depois.
+   *(Com MariaDB o teste seria `systemctl stop/start mariadb` — ver Apêndice A do comissionamento.)*
    - [ ] resultado: ____
    - notas: ____
 

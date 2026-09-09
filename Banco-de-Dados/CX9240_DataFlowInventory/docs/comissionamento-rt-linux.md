@@ -1,8 +1,17 @@
-# Comissionamento do CX9240 (Beckhoff RT Linux) — Historiador MQTT → MariaDB
+# Comissionamento do CX9240 (Beckhoff RT Linux) — Historiador MQTT → SQLite
 
-Passo a passo de deploy do nó historiador: pacotes `apt`, banco MariaDB, NTP, firewall `nftables`,
+Passo a passo de deploy do nó historiador: pacotes `apt`, banco **SQLite**, NTP, firewall `nftables`,
 arquivo de configuração, licenças TwinCAT, rota ADS, TwinCAT Database Server, deploy do PLC e
 verificação.
+
+> **Por que SQLite e não MariaDB.** Pela matriz de compatibilidade da TF6420, o RT Linux
+> **ARM64** suporta **local**: MySQL, Oracle, **SQLite**, ASCII, XML, ODBC, InfluxDB — mas **não**
+> PostgreSQL nem MS SQL locais. O provedor MySQL nativo, na prática, se mostrou instável neste
+> target (o configurador oferecia só `NET_MySQL`, que é .NET/Windows, e o `Check` falhava com
+> `SQLState_08S01`). **SQLite** roda sem servidor, sem rede, sem usuário/senha — `08S01` deixa de
+> ser possível. O código PLC **não muda**: `FB_DfiSqlBuilder` gera `INSERT INTO ... VALUES (...)`
+> padrão, válido no SQLite. Só mudam este comissionamento, `docs/schema_sqlite.sql` e a config do
+> `DfiDb` (Database Type = SQLite). Para usar MariaDB/MySQL mesmo assim, ver o Apêndice A.
 
 Design: [`2026-09-08-cx9240-mqtt-historian-design.md`](2026-09-08-cx9240-mqtt-historian-design.md) ·
 Plano: [`2026-09-08-cx9240-mqtt-historian-plan.md`](2026-09-08-cx9240-mqtt-historian-plan.md).
@@ -22,7 +31,7 @@ Plano: [`2026-09-08-cx9240-mqtt-historian-plan.md`](2026-09-08-cx9240-mqtt-histo
   TC3 disponível (o próprio CX9240 como target).
 - **Conta myBeckhoff** válida (para o Beckhoff Package Server e para ativação de licenças).
 - Cópia local deste repositório (`Banco-de-Dados/CX9240_DataFlowInventory/`), incluindo
-  `docs/schema.sql` e `historian.conf.example`.
+  `docs/schema_sqlite.sql` e `historian.conf.example`.
 
 ---
 
@@ -51,52 +60,51 @@ Plano: [`2026-09-08-cx9240-mqtt-historian-plan.md`](2026-09-08-cx9240-mqtt-histo
    sudo apt install tc31-xar-um
    ```
 
-4. Functions e servidor de banco:
+4. Functions e cliente SQLite:
 
    ```bash
-   sudo apt install tf6701-iot-communication tf6420-database-server mariadb-server
+   sudo apt install tf6701-iot-communication tf6420-database-server sqlite3
    ```
 
    > ⚠️ **Confirmar os nomes exatos dos pacotes no Beckhoff Package Server para `arm64` /
    > `bookworm`** — podem diferir (sufixos de versão, `tf6020-*` empacotado junto da TF6701 ou
-   > separado, etc.). Listar com `apt search tf67` / `apt search tf64` no target.
-
-5. Habilitar e iniciar o MariaDB:
-
-   ```bash
-   sudo systemctl enable --now mariadb
-   ```
+   > separado, etc.). Listar com `apt search tf67` / `apt search tf64` no target. O `sqlite3` é só
+   > para criar/inspecionar o banco pela linha de comando; o cliente SQLite em si já vem embutido
+   > na TF6420. **Não instalar `mariadb-server`.**
 
 ---
 
-## 3. Banco de dados
+## 3. Banco de dados (SQLite)
 
-1. Endurecer a instalação:
-
-   ```bash
-   sudo mysql_secure_installation
-   ```
-
-   (definir senha de `root`, remover usuários anônimos, remover o banco `test`, recarregar
-   privilégios).
-
-2. Criar o usuário da aplicação com privilégio mínimo (só `INSERT`/`SELECT` no `dfi_historian`):
-
-   ```sql
-   CREATE USER 'dfi'@'localhost' IDENTIFIED BY '<senha>';
-   GRANT INSERT, SELECT ON dfi_historian.* TO 'dfi'@'localhost';
-   FLUSH PRIVILEGES;
-   ```
-
-3. Aplicar o schema (idempotente). Copiar `docs/schema.sql` para o CX9240 e rodar:
+1. Criar o diretório do banco e dar permissão de escrita ao runtime TwinCAT:
 
    ```bash
-   mysql -u root -p < docs/schema.sql
+   sudo mkdir -p /var/lib/dfi
+   sudo chmod 777 /var/lib/dfi        # protótipo; ou: sudo chown <usuario-do-runtime> /var/lib/dfi
    ```
 
-   Conferir: `SHOW TABLES IN dfi_historian;` lista `estoque_hist` e `eventos_hist`;
-   `DESCRIBE estoque_hist;` mostra `ts_plc` como `datetime(3)` e `origem` como
-   `enum('mudanca','periodico')`.
+   O WAL cria arquivos irmãos `historian.db-wal` / `historian.db-shm` no mesmo diretório — por
+   isso a permissão é no **diretório**, não só no arquivo.
+
+2. Aplicar o schema (idempotente). Copiar `docs/schema_sqlite.sql` para o CX9240 e rodar:
+
+   ```bash
+   sqlite3 /var/lib/dfi/historian.db < schema_sqlite.sql
+   ```
+
+   Conferir:
+
+   ```bash
+   sqlite3 /var/lib/dfi/historian.db ".tables"          # -> estoque_hist  eventos_hist
+   sqlite3 /var/lib/dfi/historian.db ".schema estoque_hist"
+   ```
+
+   > Alternativa sem `sqlite3` no target: a própria TF6420 cria o arquivo `.db` ao conectar; as
+   > tabelas podem ser criadas depois pelo **SQL Query Editor** do XAE colando o conteúdo de
+   > `schema_sqlite.sql`.
+
+3. Não há usuário/senha nem porta — SQLite é um arquivo local. Backup = copiar o `.db` (pode
+   copiar a quente com `sqlite3 ... ".backup '/caminho/copia.db'"`).
 
 ---
 
@@ -129,8 +137,10 @@ Plano: [`2026-09-08-cx9240-mqtt-historian-plan.md`](2026-09-08-cx9240-mqtt-histo
 > - Se **local**: `F_DfiNowString` precisa de conversão de fuso (offset de `America/Sao_Paulo`,
 >   com horário de verão se aplicável) antes de formatar a string.
 >
-> Em qualquer caso, `ts_db` (default do MariaDB) segue o fuso do servidor; a query de auditoria
-> `ABS(ts_db - ts_plc)` só é válida depois que essa decisão estiver fechada.
+> **Com SQLite:** `F_DfiNowString` agora usa `Tc2_Utilities.FB_LocalSystemTime` → já grava
+> `ts_plc` em **hora local** (o `// TODO` de fuso foi resolvido). O `ts_db` do schema SQLite usa
+> `strftime(... ,'localtime')`, também local — logo `ts_plc` e `ts_db` ficam no mesmo fuso e a
+> auditoria de deriva de relógio (`ts_db` vs `ts_plc`) é direta.
 
 ---
 
@@ -153,8 +163,8 @@ Plano: [`2026-09-08-cx9240-mqtt-historian-plan.md`](2026-09-08-cx9240-mqtt-histo
    sudo systemctl reload nftables
    ```
 
-3. **MariaDB (3306)** permanece em `127.0.0.1` (loopback) — **sem regra de firewall** e sem
-   exposição na rede.
+3. **SQLite** é um arquivo local (`/var/lib/dfi/historian.db`) — **sem porta, sem regra de
+   firewall, sem exposição na rede**.
 
 4. **Saída 8883** (broker MQTT TLS, HiveMQ Cloud) só é necessária quando `mqtt_use_tls=1` em
    `historian.conf`. Na bancada com Mosquitto local (`1883`, sem TLS) não há regra de saída
@@ -218,14 +228,23 @@ projeto do Database Server (§9).
 ## 9. TwinCAT Database Server
 
 1. Abrir a solução; menu `TwinCAT → Database Server` (Configurator).
-2. `Target NetId` = `AmsNetId` do CX9240.
-3. Na conexão **`DfiDb`** (MariaDB, `127.0.0.1:3306`, `hDBID = 1`): preencher o usuário `dfi` e a
-   senha criada na §3.
-4. Botão **Check** → conexão **verde**. Se falhar: conferir `mariadb` ativo, `GRANT` do usuário
-   `dfi`, e se o conector MariaDB nativo da TF6420 está presente no runtime ARM.
+2. **`Target NetId` = `AmsNetId` do CX9240 PRIMEIRO** — a lista de *Database Type* disponíveis
+   depende do target. Com o target no PC de engenharia (Windows) o configurador só oferece
+   provedores .NET (`NET_MySQL`); com o target no CX9240 aparecem os provedores do RT Linux.
+3. Na conexão **`DfiDb`** (`hDBID = 1`):
+   - **Database Type** = `SQLite`
+   - **Database** (caminho do arquivo) = `/var/lib/dfi/historian.db`
+   - sem Server / Port / User / Password
+4. `Activate` o projeto de conectividade; botão **Check** → conexão **verde**.
+   - Se o arquivo `.db` já existir (criado na §3), o Check abre e fecha a conexão.
+   - Se não existir e a permissão do diretório estiver ok, a TF6420 cria o arquivo (vazio) —
+     mas as tabelas ainda precisam vir do `schema_sqlite.sql` (§3).
+5. Ajuste no repositório: `DfiDb.tcdbsrvdb` foi gerado com `<DBType>NET_MySQL</DBType>` — o
+   configurador reescreve para `SQLite` ao salvar; commitar o arquivo atualizado.
 
-> **Confirmar o enum `DBType`** da conexão — o projeto usa `NET_MySQL`. Se a TF6420 no RT Linux
-> expuser um valor diferente para MariaDB, ajustar `DfiDb.tcdbsrvdb`.
+> **Erro `SQLState_08S01 Communication link failure`** = falha de socket (host/porta/servidor).
+> Não ocorre com SQLite (sem rede). Se aparecer, o `DBType` ainda está num provedor de rede —
+> refazer o passo 2 (Target NetId) e o passo 3.
 
 ---
 
@@ -258,6 +277,24 @@ O código foi escrito **sem uma toolchain TwinCAT** disponível. Os itens abaixo
 verificados na primeira abertura em XAE, contra as bibliotecas realmente instaladas no CX9240.
 Correções ficam localizadas nos helpers indicados.
 
+> **Estado atual (após o primeiro build/run no CX9240):** compila com **0 erros** e roda sem
+> exceção. Já resolvidos, com nomes de membro da lib instalada:
+> - `F_DfiNowString` → passou a usar `GVL_Dfi.fbNow` (`Tc2_Utilities.FB_LocalSystemTime`, hora
+>   **local**; `MAIN` chama `fbNow(bEnable := TRUE)` todo ciclo) — `GETSYSTEMTIME`/
+>   `FILETIME_TO_SYSTEMTIME` removidos.
+> - `FB_DfiConfigLoader` → `FB_FileGets` sem `pBuffer`/`cbBuffer`; lê a linha da saída
+>   `fbGets.sLine`.
+> - `FB_DfiSqlBuilder` → buffers de `Tc2_Utilities.F_String` ampliados para `STRING(255)`.
+> - `FB_DfiDbWriter` → `fbDb`/`fbCmd` com `FB_init(sNetID := '', tTimeout := T#5S)`; máquina de
+>   estados movida para `METHOD Cycle` (o fake chama `Cycle()` em vez de `SUPER^()`).
+> - Saídas de método (`Peek`, `Build`, `GetStr`/`GetInt`, `F_DfiSanitizeText`) religadas com `=>`.
+> - `FB_DfiRowBuffer.MAX_ROWS` 512 → **128** (o array de 512 linhas ~195 KB estourava a pilha da
+>   `TestTask` — as suítes TcUnit declaram o buffer como local de método).
+> - Banco: **SQLite** no lugar de MariaDB (ver §3 e a nota no topo).
+>
+> Ainda a verificar no XAE/bancada: `Tc3_JsonXml`, `Tc3_IotBase` (MQTT), TcUnit verde, `Tc3_Database`
+> com o provedor **SQLite** (`FB_SQLCommandEvt.Execute` / `cbSQLCmd`), boot project sem `POUs\test`.
+
 - [ ] **Build da solução** — `TwinCAT Project.sln` compila com **0 erros**; as 8+ libs resolvem
   (`Tc2_Standard`, `Tc2_System`, `Tc2_Utilities`, `Tc3_JsonXml`, `Tc3_IotBase`, `Tc3_Database`,
   `Tc3_EventLogger`, `TcUnit`). Instalar os pacotes TF que faltarem.
@@ -278,12 +315,13 @@ Correções ficam localizadas nos helpers indicados.
 - [ ] **`Tc2_Utilities`** — `F_DfiNowString`: confirmar `GETSYSTEMTIME` / `FILETIME_TO_SYSTEMTIME`
   (nomes de membro `timeLoDW` / `dwLowDateTime` / `systemTime` / `w*`); `FB_DfiSqlBuilder`:
   confirmar `FB_FormatString` (`%d`, `sOut =>`, binding de `arg1..argN`) e `F_String` / `F_INT`.
-- [ ] **`Tc3_Database` (TF6420)** — `FB_SQLDatabaseEvt.Connect(hDBID)` / `CreateCmd(ADR(...))` /
+- [ ] **`Tc3_Database` (TF6420) com provedor SQLite** — `DfiDb` Database Type = `SQLite`, arquivo
+  `/var/lib/dfi/historian.db` (§9); `FB_SQLDatabaseEvt.Connect(hDBID:=1)` / `CreateCmd(ADR(...))` /
   `Disconnect()` / `.bError` / `.ipTcResult`; `FB_SQLCommandEvt.Execute(pSQLCmd, cbSQLCmd)` — o
   writer passa `cbSQLCmd := UINT_TO_UDINT(nCmdLen)` (comprimento real, sem terminador); se a TF6420
   tratar `cbSQLCmd` como tamanho de buffer e não comprimento, testar `nCmdLen + 1` (corta o `;`
-  final). Confirmar que `Disconnect()` fire-and-forget na transição de erro não vaza handle de
-  sessão.
+  final). Confirmar que `Disconnect()` fire-and-forget na transição de erro não trava o arquivo
+  (lock SQLite) — com WAL não deveria; observar `gDiag.nDbErrors`.
 - [ ] **`Tc3_IotBase` (TF6701)** — `FB_DfiMqttSubscriber`: confirmar `stMQTT.sUserName` (vs
   `sUsername`), `stTLS.sCA`, `Subscribe(sTopic, eQoS)` + `TcIotMqttQos.AtLeastOnceDelivery`, e a
   API de fila `ipMessageQueue` / `nQueuedMessages` / `Dequeue` / `GetTopic` / `GetPayload`;
@@ -294,3 +332,29 @@ Correções ficam localizadas nos helpers indicados.
   `FB_DfiDbWriter_Fake` resolve para o fake (late-binding).
 - [ ] **Boot project de produção** — `POUs\test` excluída; `PlcTask` cycle 100 ms / prioridade 20;
   `AutoStart` do boot project habilitado.
+
+---
+
+## Apêndice A — usar MariaDB/MySQL em vez de SQLite
+
+Só se você conseguir o provedor MySQL nativo funcionando no CX9240 (não foi o caso na primeira
+tentativa — `Check` falhava com `SQLState_08S01`). Passos:
+
+1. `sudo apt install mariadb-server` + `sudo systemctl enable --now mariadb`.
+2. `sudo mariadb < schema.sql` (o `docs/schema.sql`, dialeto MySQL — não o `_sqlite`).
+3. Usuário para conexão **TCP** (o `@'localhost'` não casa com `127.0.0.1`):
+   ```sql
+   CREATE USER IF NOT EXISTS 'dfi'@'127.0.0.1' IDENTIFIED BY '<senha>';
+   GRANT INSERT, SELECT ON dfi_historian.* TO 'dfi'@'127.0.0.1';
+   FLUSH PRIVILEGES;
+   ```
+4. MariaDB ouvindo TCP: `sudo ss -ltnp | grep 3306` deve mostrar `127.0.0.1:3306 LISTEN`
+   (em `/etc/mysql/mariadb.conf.d/50-server.cnf`: `bind-address = 127.0.0.1`, sem `skip-networking`).
+5. No configurador, **com `Target NetId` = CX9240**: `DfiDb` → Database Type = **`MySQL`** (não
+   existe entrada "MariaDB"; o provedor MySQL fala com MariaDB), Server `127.0.0.1`, Port `3306`,
+   Database `dfi_historian`, User `dfi` + senha. `DfiDb.tcdbsrvdb` não deve ficar com
+   `<DBType>NET_MySQL</DBType>` (esse é o provedor .NET/Windows).
+6. `ts_db` no schema MySQL usa o default do servidor (`CURRENT_TIMESTAMP(3)`) — confirmar que o
+   fuso do MariaDB é o mesmo (`America/Sao_Paulo`) para a auditoria `ts_db` vs `ts_plc` bater.
+
+Firewall: 3306 permanece em loopback, sem regra.

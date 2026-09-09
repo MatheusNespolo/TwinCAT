@@ -1,9 +1,15 @@
-# CX9240_DataFlowInventory — Historiador local MQTT → MariaDB
+# CX9240_DataFlowInventory — Historiador local MQTT → SQLite
 
 Nó historiador para o protótipo [Data Flow Inventory](https://github.com/MatheusNespolo/DataFlowInventory).
 Um Beckhoff **CX9240** com **RT Linux** assina os tópicos MQTT `dataflow/estoque` e
-`dataflow/eventos` (via TF6701) e grava o histórico num **MariaDB local** (via TF6420,
+`dataflow/eventos` (via TF6701) e grava o histórico num **banco local** (via TF6420,
 SQL Expert Mode).
+
+> **Banco:** projetado para MariaDB, mas o RT Linux ARM64 não deu um provedor MySQL estável na
+> TF6420 (`Check` falhava com `SQLState_08S01`). O deploy usa **SQLite**
+> (`/var/lib/dfi/historian.db`) — sem servidor, sem rede. O código PLC é o mesmo (`INSERT`
+> padrão); só mudam o schema e a config da conexão. MariaDB continua possível — ver o
+> Apêndice A de `docs/comissionamento-rt-linux.md`.
 
 Arduino, ESP32, servidor Node e dashboard do outro projeto **não mudam** — este nó é um
 assinante passivo em paralelo.
@@ -14,8 +20,9 @@ assinante passivo em paralelo.
 |---|---|
 | `docs/2026-09-08-cx9240-mqtt-historian-design.md` | Spec de design |
 | `docs/2026-09-08-cx9240-mqtt-historian-plan.md` | Plano de implementação |
-| `docs/schema.sql` | DDL do banco `dfi_historian` |
-| `docs/comissionamento-rt-linux.md` | Passo a passo de deploy (apt, licenças, nftables, NTP, ADS) |
+| `docs/schema_sqlite.sql` | DDL SQLite (usado no CX9240) — `sqlite3 /var/lib/dfi/historian.db < …` |
+| `docs/schema.sql` | DDL MySQL/MariaDB (alternativa — ver Apêndice A do comissionamento) |
+| `docs/comissionamento-rt-linux.md` | Passo a passo de deploy (apt, SQLite, licenças, nftables, NTP, ADS) |
 | `docs/necessidades-integracao.md` | Necessidades que a integração ocasiona |
 | `docs/roteiro-testes-bancada.md` | Roteiro de testes de integração |
 | `historian.conf.example` | Modelo do arquivo de configuração (copiar para `/etc/dfi/historian.conf`) |
