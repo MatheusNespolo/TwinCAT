@@ -3,7 +3,7 @@
   <POU Name="F_DfiSanitizeText" Id="{49aa4eb1-2091-438a-b9d0-b6de743ddf53}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION F_DfiSanitizeText : BOOL
 VAR_INPUT
-	sIn     : STRING(254);
+	sEntrada     : STRING(254);
 	nMaxLen : INT;
 END_VAR
 VAR_OUTPUT
@@ -16,8 +16,8 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[n := LEN(sIn);
-p := ADR(sIn);
+      <ST><![CDATA[n := LEN(sEntrada);
+p := ADR(sEntrada);
 FOR i := 0 TO n - 1 DO
 	c := p[i];
 	IF NOT ( (c >= 65 AND c <= 90)  OR   // A-Z
@@ -29,9 +29,9 @@ FOR i := 0 TO n - 1 DO
 	END_IF
 END_FOR
 IF n > nMaxLen THEN
-	sOut := LEFT(sIn, nMaxLen);
+	sOut := LEFT(sEntrada, nMaxLen);
 ELSE
-	sOut := sIn;
+	sOut := sEntrada;
 END_IF
 F_DfiSanitizeText := TRUE;
 ]]></ST>

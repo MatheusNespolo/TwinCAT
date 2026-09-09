@@ -85,10 +85,10 @@ CASE stRow.eKind OF
 		// e NADA depois (o proprio payload e o fecho vem por ponteiro).
 		fbFmt(
 			sFormat := 'INSERT INTO eventos_hist (ts_plc,evento,peca,detalhe,payload_raw) VALUES ($'%s$',$'%s$',%s,%s,$'',
-			arg1 := Tc2_Utilities.F_String(stRow.sTsPlc),
-			arg2 := Tc2_Utilities.F_String(stRow.stEvento.sEvento),
-			arg3 := Tc2_Utilities.F_String(sPeca),
-			arg4 := Tc2_Utilities.F_String(sDet),
+			arg1 := F_String(stRow.sTsPlc),
+			arg2 := F_String(stRow.stEvento.sEvento),
+			arg3 := F_String(sPeca),
+			arg4 := F_String(sDet),
 			sOut => sPrefix);
 
 		IF fbFmt.bError THEN

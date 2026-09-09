@@ -18,8 +18,8 @@ VAR_OUTPUT
 	bUltimoGravadoValido : BOOL;
 END_VAR
 VAR
-	fbDb      : Tc3_Database.FB_SQLDatabaseEvt;
-	fbCmd     : Tc3_Database.FB_SQLCommandEvt;
+	fbDb      : FB_SQLDatabaseEvt;
+	fbCmd     : FB_SQLCommandEvt;
 	fbBuild   : FB_DfiSqlBuilder;
 	fbBackoff : TON;
 	tBackoff  : TIME := T#2S;
@@ -65,7 +65,7 @@ E_DfiWriterState.CONNECT:
 	END_CASE
 
 E_DfiWriterState.BUILD:
-	IF fbBuffer.Peek(stRow) THEN
+	IF fbBuffer.Peek() THEN
 		IF fbBuild.Build(stRow := stRow, sCmd => sCmd, nCmdLen => nCmdLen) THEN
 			eState := E_DfiWriterState.EXECUTE;
 		ELSE

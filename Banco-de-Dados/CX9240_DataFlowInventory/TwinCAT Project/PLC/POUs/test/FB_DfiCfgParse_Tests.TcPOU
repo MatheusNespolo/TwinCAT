@@ -13,6 +13,36 @@ Test_ParseText_ExemploCompleto_ValidaEbValidTrue();
 Test_ParseText_SemHost_bValidFalse();
 ]]></ST>
     </Implementation>
+    <Method Name="Test_ParseLine_ChaveDesconhecida_RetornaFalse" Id="{6ce6461c-6664-425f-b9c0-f385a64932cb}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_ParseLine_ChaveDesconhecida_RetornaFalse
+VAR
+	fb  : FB_DfiCfgParse;
+	cfg : ST_DfiConfig;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('ParseLine_ChaveDesconhecida_RetornaFalse');
+AssertFalse(fb.ParseLine('foo=bar', cfg), 'chave desconhecida => FALSE');
+AssertFalse(fb.ParseLine('mqtt_port=abc', cfg), 'valor nao-numerico => FALSE');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_ParseLine_ComentarioEBranco_NoOp" Id="{91a168b0-6292-4f56-917b-d92f3022b13f}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_ParseLine_ComentarioEBranco_NoOp
+VAR
+	fb  : FB_DfiCfgParse;
+	cfg : ST_DfiConfig;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('ParseLine_ComentarioEBranco_NoOp');
+AssertTrue(fb.ParseLine('# comentario', cfg), 'comentario ok');
+AssertTrue(fb.ParseLine('', cfg), 'linha vazia ok');
+AssertTrue(fb.ParseLine('   ', cfg), 'espacos ok');
+AssertEquals_STRING(Expected := '', Actual := cfg.sMqttHost, Message := 'nada mudou');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="Test_ParseLine_MapeiaChavesConhecidas" Id="{5adae317-105a-4ced-9afb-a94f8b407fff}">
       <Declaration><![CDATA[METHOD PRIVATE Test_ParseLine_MapeiaChavesConhecidas
 VAR
@@ -37,47 +67,17 @@ TEST_FINISHED();
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="Test_ParseLine_ComentarioEBranco_NoOp" Id="{91a168b0-6292-4f56-917b-d92f3022b13f}">
-      <Declaration><![CDATA[METHOD PRIVATE Test_ParseLine_ComentarioEBranco_NoOp
-VAR
-	fb  : FB_DfiCfgParse;
-	cfg : ST_DfiConfig;
-END_VAR]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[TEST('ParseLine_ComentarioEBranco_NoOp');
-AssertTrue(fb.ParseLine('# comentario', cfg), 'comentario ok');
-AssertTrue(fb.ParseLine('', cfg), 'linha vazia ok');
-AssertTrue(fb.ParseLine('   ', cfg), 'espacos ok');
-AssertEquals_STRING(Expected := '', Actual := cfg.sMqttHost, Message := 'nada mudou');
-TEST_FINISHED();
-]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="Test_ParseLine_ChaveDesconhecida_RetornaFalse" Id="{6ce6461c-6664-425f-b9c0-f385a64932cb}">
-      <Declaration><![CDATA[METHOD PRIVATE Test_ParseLine_ChaveDesconhecida_RetornaFalse
-VAR
-	fb  : FB_DfiCfgParse;
-	cfg : ST_DfiConfig;
-END_VAR]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[TEST('ParseLine_ChaveDesconhecida_RetornaFalse');
-AssertFalse(fb.ParseLine('foo=bar', cfg), 'chave desconhecida => FALSE');
-AssertFalse(fb.ParseLine('mqtt_port=abc', cfg), 'valor nao-numerico => FALSE');
-TEST_FINISHED();
-]]></ST>
-      </Implementation>
-    </Method>
     <Method Name="Test_ParseText_ExemploCompleto_ValidaEbValidTrue" Id="{7043fcc3-02ee-43e6-8b5c-c23bf5c3c460}">
       <Declaration><![CDATA[METHOD PRIVATE Test_ParseText_ExemploCompleto_ValidaEbValidTrue
 VAR
 	fb  : FB_DfiCfgParse;
 	cfg : ST_DfiConfig;
-	s   : STRING(4095);
+	conjunto   : STRING(4095);
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[TEST('ParseText_ExemploCompleto');
-s := CONCAT('mqtt_host=192.168.0.50$N', CONCAT('mqtt_port=1883$N', CONCAT('topic_estoque=dataflow/estoque$N', 'db_id=1$N')));
-AssertTrue(fb.ParseText(s, cfg), 'ParseText ok');
+conjunto := CONCAT('mqtt_host=192.168.0.50$N', CONCAT('mqtt_port=1883$N', CONCAT('topic_estoque=dataflow/estoque$N', 'db_id=1$N')));
+AssertTrue(fb.ParseText(conjunto, cfg), 'ParseText ok');
 AssertTrue(cfg.bValid, 'bValid TRUE com host preenchido');
 AssertEquals_STRING(Expected := 'dataflow/estoque', Actual := cfg.sTopicEstoque, Message := 'topico');
 TEST_FINISHED();

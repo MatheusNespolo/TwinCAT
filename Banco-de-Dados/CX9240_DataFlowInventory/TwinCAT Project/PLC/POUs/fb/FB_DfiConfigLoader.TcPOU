@@ -80,9 +80,7 @@ CASE nState OF
 	20: // READ (uma linha por ciclo, acumula em sText separando por $N)
 		fbGets(
 			bExecute := TRUE,
-			hFile    := hFile,
-			pBuffer  := ADR(sLineBuf),
-			cbBuffer := SIZEOF(sLineBuf));
+			hFile    := hFile);
 		IF NOT fbGets.bBusy THEN
 			IF fbGets.bError THEN
 				sError := 'read';

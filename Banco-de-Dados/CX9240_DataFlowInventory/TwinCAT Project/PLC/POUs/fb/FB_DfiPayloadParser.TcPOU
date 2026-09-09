@@ -74,7 +74,7 @@ IF jsonRoot = 0 THEN
 END_IF
 
 // 4) campo 'type'
-sType := THIS^.GetStr(jsonRoot, 'type', bFound);
+sType := THIS^.GetStr(jsonRoot, 'type');
 IF (NOT bFound) OR (sType = '') THEN
 	sParseError := 'type';
 	bDone := TRUE;
@@ -94,19 +94,19 @@ END_IF
 // 5) ramo ESTOQUE
 IF bEstoque THEN
 	nMax := stConfig.nEstoqueMax;
-	nA := THIS^.GetInt(jsonRoot, 'pecaA', bV);
+	nA := THIS^.GetInt(jsonRoot, 'pecaA');
 	IF NOT bV THEN
 		sParseError := 'campo';
 		bDone := TRUE;
 		RETURN;
 	END_IF
-	nB := THIS^.GetInt(jsonRoot, 'pecaB', bV);
+	nB := THIS^.GetInt(jsonRoot, 'pecaB');
 	IF NOT bV THEN
 		sParseError := 'campo';
 		bDone := TRUE;
 		RETURN;
 	END_IF
-	nC := THIS^.GetInt(jsonRoot, 'pecaC', bV);
+	nC := THIS^.GetInt(jsonRoot, 'pecaC');
 	IF NOT bV THEN
 		sParseError := 'campo';
 		bDone := TRUE;
@@ -129,13 +129,13 @@ IF bEstoque THEN
 END_IF
 
 // 6) ramo EVENTO
-sEv := THIS^.GetStr(jsonRoot, 'evento', bFound);
+sEv := THIS^.GetStr(jsonRoot, 'evento');
 IF (NOT bFound) OR (sEv = '') THEN
 	sParseError := 'campo';
 	bDone := TRUE;
 	RETURN;
 END_IF
-IF NOT F_DfiSanitizeText(sEv, 23, sEvClean) THEN
+IF NOT F_DfiSanitizeText(sEv, 23) THEN
 	sParseError := 'sanit';
 	bDone := TRUE;
 	RETURN;
@@ -143,7 +143,7 @@ END_IF
 
 // peca: se presente precisa ser 'A' | 'B' | 'C'; se ausente => ''
 IF THIS^.HasKey(jsonRoot, 'peca') THEN
-	sPeca := THIS^.GetStr(jsonRoot, 'peca', bFound);
+	sPeca := THIS^.GetStr(jsonRoot, 'peca');
 	IF (sPeca <> 'A') AND (sPeca <> 'B') AND (sPeca <> 'C') THEN
 		sParseError := 'peca';
 		bDone := TRUE;
@@ -156,8 +156,8 @@ END_IF
 
 // tipo -> detalhe: se presente sanitiza (63); se ausente => ''
 IF THIS^.HasKey(jsonRoot, 'tipo') THEN
-	sTipo := THIS^.GetStr(jsonRoot, 'tipo', bFound);
-	IF NOT F_DfiSanitizeText(sTipo, 63, sDetClean) THEN
+	sTipo := THIS^.GetStr(jsonRoot, 'tipo');
+	IF NOT F_DfiSanitizeText(sTipo, 63) THEN
 		sParseError := 'sanit';
 		bDone := TRUE;
 		RETURN;
@@ -175,16 +175,38 @@ bOk   := TRUE;
 bDone := TRUE;
 ]]></ST>
     </Implementation>
-    <Method Name="HasKey" Id="{1c7daaaa-d199-400a-9e50-2fa2c6bc33c3}">
-      <Declaration><![CDATA[METHOD PRIVATE HasKey : BOOL
+    <Method Name="GetInt" Id="{d3e52742-5c1d-4c80-8599-366f2e09b769}">
+      <Declaration><![CDATA[METHOD PRIVATE GetInt : DINT
 VAR_INPUT
 	dom   : Tc3_JsonXml.SJsonValue;
 	sName : STRING(80);
 END_VAR
+VAR_OUTPUT
+	bValid : BOOL;
+END_VAR
+VAR
+	j    : Tc3_JsonXml.SJsonValue;
+	lVal : LINT;
+END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[// Wrapper isolado sobre a API Tc3_JsonXml (um unico ponto a corrigir no checkpoint).
-HasKey := fbJson.HasMember(dom, sName);
+        <ST><![CDATA[// Wrapper isolado sobre a API Tc3_JsonXml.
+// bValid = TRUE somente se a chave existe E o valor e um inteiro.
+bValid := FALSE;
+GetInt := 0;
+IF NOT fbJson.HasMember(dom, sName) THEN
+	RETURN;
+END_IF
+j := fbJson.FindMember(dom, sName);
+IF j = 0 THEN
+	RETURN;
+END_IF
+IF NOT fbJson.IsInt(j) THEN
+	RETURN;
+END_IF
+lVal := fbJson.GetInt(j);
+GetInt := LINT_TO_DINT(lVal);
+bValid := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
@@ -221,38 +243,16 @@ bFound := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="GetInt" Id="{d3e52742-5c1d-4c80-8599-366f2e09b769}">
-      <Declaration><![CDATA[METHOD PRIVATE GetInt : DINT
+    <Method Name="HasKey" Id="{1c7daaaa-d199-400a-9e50-2fa2c6bc33c3}">
+      <Declaration><![CDATA[METHOD PRIVATE HasKey : BOOL
 VAR_INPUT
 	dom   : Tc3_JsonXml.SJsonValue;
 	sName : STRING(80);
 END_VAR
-VAR_OUTPUT
-	bValid : BOOL;
-END_VAR
-VAR
-	j    : Tc3_JsonXml.SJsonValue;
-	lVal : LINT;
-END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[// Wrapper isolado sobre a API Tc3_JsonXml.
-// bValid = TRUE somente se a chave existe E o valor e um inteiro.
-bValid := FALSE;
-GetInt := 0;
-IF NOT fbJson.HasMember(dom, sName) THEN
-	RETURN;
-END_IF
-j := fbJson.FindMember(dom, sName);
-IF j = 0 THEN
-	RETURN;
-END_IF
-IF NOT fbJson.IsInt(j) THEN
-	RETURN;
-END_IF
-lVal := fbJson.GetInt(j);
-GetInt := LINT_TO_DINT(lVal);
-bValid := TRUE;
+        <ST><![CDATA[// Wrapper isolado sobre a API Tc3_JsonXml (um unico ponto a corrigir no checkpoint).
+HasKey := fbJson.HasMember(dom, sName);
 ]]></ST>
       </Implementation>
     </Method>
