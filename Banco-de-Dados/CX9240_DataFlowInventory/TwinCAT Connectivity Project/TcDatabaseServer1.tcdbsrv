@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <ServerSettings>
-  <TargetNetID>10.199.162.212.1.1</TargetNetID>
+  <TargetNetID>5.162.186.144.1.1</TargetNetID>
   <LogMode>0</LogMode>
   <LogPath />
   <LogMaxLength>10</LogMaxLength>
