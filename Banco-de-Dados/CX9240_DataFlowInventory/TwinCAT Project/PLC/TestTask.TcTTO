@@ -3,7 +3,7 @@
   <Task Name="TestTask" Id="{6913447b-0398-4c55-84d1-5877a15ed8b0}">
     <!--CycleTime in micro seconds.-->
     <CycleTime>10000</CycleTime>
-    <Priority>21</Priority>
+    <Priority>2</Priority>
     <PouCall>
       <Name>PRG_DfiTests</Name>
     </PouCall>

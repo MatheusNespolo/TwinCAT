@@ -2,12 +2,12 @@
 <Database>
   <ID>1</ID>
   <Name>DfiDb</Name>
-  <ServerName>127.0.0.1</ServerName>
+  <ServerName>169.254.13.14</ServerName>
   <DatabaseName>dfi_historian</DatabaseName>
   <TableName />
   <Authentication>True</Authentication>
   <UserID>dfi</UserID>
-  <Password />
+  <Password>VERCATRFVXQGR3J9EdMmjJ6i0us=</Password>
   <Driver />
   <Provider />
   <Port>3306</Port>
