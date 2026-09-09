@@ -189,4 +189,3 @@ Pyads/TwinCAT Project1/PLC/PLC.plcproj
 # CX9240 historian — local secrets, never commit
 historian.conf
 **/historian.conf
-Banco-de-Dados/CX9240_DataFlowInventory/TwinCAT Project/TwinCAT Project.sln
