@@ -9,6 +9,37 @@ END_VAR
       <ST><![CDATA[// Sem lógica no corpo do FB: o parsing é feito pelos métodos ParseLine / ParseText.
 ]]></ST>
     </Implementation>
+    <Method Name="AllDigits" Id="{0d6e40c8-8a2e-410e-929c-04487d7ec82d}">
+      <Declaration><![CDATA[METHOD PRIVATE AllDigits : BOOL
+VAR_INPUT
+	sEntrada : STRING(255);
+END_VAR
+VAR
+	i    : INT;
+	nLen : INT;
+	c    : BYTE;
+	p    : POINTER TO BYTE;
+	Sinal: STRING;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// TRUE somente se sIn não estiver vazia e for composta apenas por '0'..'9'.
+nLen := LEN(sEntrada);
+IF nLen = 0 THEN
+	AllDigits := FALSE;
+	RETURN;
+END_IF
+p := ADR(sEntrada);
+FOR i := 0 TO nLen - 1 DO
+	c := p[i];
+	IF (c < 16#30) OR (c > 16#39) THEN
+		AllDigits := FALSE;
+		RETURN;
+	END_IF
+END_FOR
+AllDigits := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="ParseLine" Id="{6b3ad38b-cccb-425b-9e3d-991b8e6c36cc}">
       <Declaration><![CDATA[METHOD ParseLine : BOOL
 VAR_INPUT
@@ -24,6 +55,7 @@ VAR
 	nEq   : INT;
 	nLen  : INT;
 	nBuf  : UDINT;
+	nHash : INT;
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[// --- normaliza: trim de espaços/tabs nas duas pontas ---
@@ -50,6 +82,17 @@ END_IF
 // --- separa chave / valor e faz trim dos dois ---
 sKey := THIS^.TrimBoth(LEFT(sWork, nEq - 1));
 sVal := THIS^.TrimBoth(RIGHT(sWork, nLen - nEq));
+
+// --- remove comentário inline no valor: ' #...' ou <tab>'#...' ---
+// (o '#' só conta como comentário se vier depois de espaço/tab; assim uma
+//  senha ou caminho com '#' colado no texto é preservada)
+nHash := FIND(sVal, ' #');
+IF nHash = 0 THEN
+	nHash := FIND(sVal, '$09#');
+END_IF
+IF nHash > 0 THEN
+	sVal := THIS^.TrimBoth(LEFT(sVal, nHash - 1));
+END_IF
 
 // --- CASE de string não é permitido em ST: cadeia de IF/ELSIF ---
 IF sKey = 'mqtt_host' THEN
@@ -104,8 +147,8 @@ ELSIF sKey = 'buffer_size' THEN
 	IF nBuf < 1 THEN
 		nBuf := 1;
 	END_IF
-	IF nBuf > 512 THEN
-		nBuf := 512;
+	IF nBuf > 128 THEN
+		nBuf := 128;   // teto = FB_DfiRowBuffer.MAX_ROWS
 	END_IF
 	stCfg.nBufferSize := nBuf;
 
@@ -186,40 +229,10 @@ ParseText := bAllOk;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="AllDigits" Id="{0d6e40c8-8a2e-410e-929c-04487d7ec82d}">
-      <Declaration><![CDATA[METHOD PRIVATE AllDigits : BOOL
-VAR_INPUT
-	sIn : STRING(255);
-END_VAR
-VAR
-	i    : INT;
-	nLen : INT;
-	c    : BYTE;
-	p    : POINTER TO BYTE;
-END_VAR]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[// TRUE somente se sIn não estiver vazia e for composta apenas por '0'..'9'.
-nLen := LEN(sIn);
-IF nLen = 0 THEN
-	AllDigits := FALSE;
-	RETURN;
-END_IF
-p := ADR(sIn);
-FOR i := 0 TO nLen - 1 DO
-	c := p[i];
-	IF (c < 16#30) OR (c > 16#39) THEN
-		AllDigits := FALSE;
-		RETURN;
-	END_IF
-END_FOR
-AllDigits := TRUE;
-]]></ST>
-      </Implementation>
-    </Method>
     <Method Name="TrimBoth" Id="{a9ed2148-abb3-4a08-96c2-3b4b13b9bc30}">
       <Declaration><![CDATA[METHOD PRIVATE TrimBoth : STRING(255)
 VAR_INPUT
-	sIn : STRING(255);
+	sEntrada : STRING(255);
 END_VAR
 VAR
 	nLen   : INT;
@@ -230,12 +243,12 @@ VAR
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[// Remove espaços (16#20) e tabs (16#09) do início e do fim.
-nLen := LEN(sIn);
+nLen := LEN(sEntrada);
 IF nLen = 0 THEN
 	TrimBoth := '';
 	RETURN;
 END_IF
-p := ADR(sIn);
+p := ADR(sEntrada);
 
 nStart := 0;
 WHILE (nStart < nLen) AND ((p[nStart] = 16#20) OR (p[nStart] = 16#09)) DO
@@ -251,7 +264,7 @@ WHILE (nEnd > nStart) AND ((p[nEnd] = 16#20) OR (p[nEnd] = 16#09)) DO
 	nEnd := nEnd - 1;
 END_WHILE
 
-TrimBoth := MID(sIn, nEnd - nStart + 1, nStart + 1);
+TrimBoth := MID(sEntrada, nEnd - nStart + 1, nStart + 1);
 ]]></ST>
       </Implementation>
     </Method>

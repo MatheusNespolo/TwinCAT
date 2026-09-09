@@ -9,30 +9,41 @@ END_VAR
       <ST><![CDATA[Test_ParseLine_MapeiaChavesConhecidas();
 Test_ParseLine_ComentarioEBranco_NoOp();
 Test_ParseLine_ChaveDesconhecida_RetornaFalse();
+Test_ParseLine_ComentarioInline_EhIgnorado();
 Test_ParseText_ExemploCompleto_ValidaEbValidTrue();
 Test_ParseText_SemHost_bValidFalse();
 ]]></ST>
     </Implementation>
-    <Method Name="Test_ParseLine_MapeiaChavesConhecidas" Id="{5adae317-105a-4ced-9afb-a94f8b407fff}">
-      <Declaration><![CDATA[METHOD PRIVATE Test_ParseLine_MapeiaChavesConhecidas
+    <Method Name="Test_ParseLine_ChaveDesconhecida_RetornaFalse" Id="{6ce6461c-6664-425f-b9c0-f385a64932cb}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_ParseLine_ChaveDesconhecida_RetornaFalse
 VAR
 	fb  : FB_DfiCfgParse;
 	cfg : ST_DfiConfig;
 END_VAR]]></Declaration>
       <Implementation>
-        <ST><![CDATA[TEST('ParseLine_MapeiaChavesConhecidas');
-fb.ParseLine('mqtt_host=10.0.0.5', cfg);
-fb.ParseLine('mqtt_port=8883', cfg);
-fb.ParseLine('mqtt_use_tls=1', cfg);
-fb.ParseLine('sample_period_s=30', cfg);
-fb.ParseLine('buffer_size=256', cfg);
-fb.ParseLine('estoque_max=50', cfg);
-AssertEquals_STRING(Expected := '10.0.0.5', Actual := cfg.sMqttHost, Message := 'host');
-AssertEquals_UINT(Expected := 8883, Actual := cfg.nMqttPort, Message := 'port');
-AssertTrue(cfg.bUseTls, 'tls');
-AssertTrue(cfg.tSamplePeriod = T#30S, 'periodo');
-AssertEquals_UDINT(Expected := 256, Actual := cfg.nBufferSize, Message := 'buffer');
-AssertEquals_INT(Expected := 50, Actual := cfg.nEstoqueMax, Message := 'estoque_max');
+        <ST><![CDATA[TEST('ParseLine_ChaveDesconhecida_RetornaFalse');
+AssertFalse(fb.ParseLine('foo=bar', cfg), 'chave desconhecida => FALSE');
+AssertFalse(fb.ParseLine('mqtt_port=abc', cfg), 'valor nao-numerico => FALSE');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_ParseLine_ComentarioInline_EhIgnorado" Id="{2f4b9c1a-7d63-4e08-9a52-6c1e0b8f34d7}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_ParseLine_ComentarioInline_EhIgnorado
+VAR
+	fb  : FB_DfiCfgParse;
+	cfg : ST_DfiConfig;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('ParseLine_ComentarioInline_EhIgnorado');
+// ' #...' depois do valor e comentario -> deve ser removido antes de validar/converter
+AssertTrue(fb.ParseLine('db_id=1                  # hDBID da conexao DfiDb', cfg), 'db_id com comentario inline => TRUE');
+AssertEquals_UDINT(Expected := 1, Actual := cfg.nDbId, Message := 'db_id = 1 (comentario descartado)');
+AssertTrue(fb.ParseLine('mqtt_host=127.0.0.1   # broker local', cfg), 'host com comentario inline => TRUE');
+AssertEquals_STRING(Expected := '127.0.0.1', Actual := cfg.sMqttHost, Message := 'host sem o comentario');
+// '#' colado no valor (sem espaco antes) NAO e comentario
+AssertTrue(fb.ParseLine('mqtt_pass=P#ass', cfg), 'senha com # colado => TRUE');
+AssertEquals_STRING(Expected := 'P#ass', Actual := cfg.sMqttPass, Message := 'senha preserva o #');
 TEST_FINISHED();
 ]]></ST>
       </Implementation>
@@ -53,16 +64,26 @@ TEST_FINISHED();
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="Test_ParseLine_ChaveDesconhecida_RetornaFalse" Id="{6ce6461c-6664-425f-b9c0-f385a64932cb}">
-      <Declaration><![CDATA[METHOD PRIVATE Test_ParseLine_ChaveDesconhecida_RetornaFalse
+    <Method Name="Test_ParseLine_MapeiaChavesConhecidas" Id="{5adae317-105a-4ced-9afb-a94f8b407fff}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_ParseLine_MapeiaChavesConhecidas
 VAR
 	fb  : FB_DfiCfgParse;
 	cfg : ST_DfiConfig;
 END_VAR]]></Declaration>
       <Implementation>
-        <ST><![CDATA[TEST('ParseLine_ChaveDesconhecida_RetornaFalse');
-AssertFalse(fb.ParseLine('foo=bar', cfg), 'chave desconhecida => FALSE');
-AssertFalse(fb.ParseLine('mqtt_port=abc', cfg), 'valor nao-numerico => FALSE');
+        <ST><![CDATA[TEST('ParseLine_MapeiaChavesConhecidas');
+fb.ParseLine('mqtt_host=10.0.0.5', cfg);
+fb.ParseLine('mqtt_port=8883', cfg);
+fb.ParseLine('mqtt_use_tls=1', cfg);
+fb.ParseLine('sample_period_s=30', cfg);
+fb.ParseLine('buffer_size=100', cfg);
+fb.ParseLine('estoque_max=50', cfg);
+AssertEquals_STRING(Expected := '10.0.0.5', Actual := cfg.sMqttHost, Message := 'host');
+AssertEquals_UINT(Expected := 8883, Actual := cfg.nMqttPort, Message := 'port');
+AssertTrue(cfg.bUseTls, 'tls');
+AssertTrue(cfg.tSamplePeriod = T#30S, 'periodo');
+AssertEquals_UDINT(Expected := 100, Actual := cfg.nBufferSize, Message := 'buffer');
+AssertEquals_INT(Expected := 50, Actual := cfg.nEstoqueMax, Message := 'estoque_max');
 TEST_FINISHED();
 ]]></ST>
       </Implementation>
@@ -72,12 +93,12 @@ TEST_FINISHED();
 VAR
 	fb  : FB_DfiCfgParse;
 	cfg : ST_DfiConfig;
-	s   : STRING(4095);
+	conjunto   : STRING(4095);
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[TEST('ParseText_ExemploCompleto');
-s := CONCAT('mqtt_host=192.168.0.50$N', CONCAT('mqtt_port=1883$N', CONCAT('topic_estoque=dataflow/estoque$N', 'db_id=1$N')));
-AssertTrue(fb.ParseText(s, cfg), 'ParseText ok');
+conjunto := CONCAT('mqtt_host=192.168.0.50$N', CONCAT('mqtt_port=1883$N', CONCAT('topic_estoque=dataflow/estoque$N', 'db_id=1$N')));
+AssertTrue(fb.ParseText(conjunto, cfg), 'ParseText ok');
 AssertTrue(cfg.bValid, 'bValid TRUE com host preenchido');
 AssertEquals_STRING(Expected := 'dataflow/estoque', Actual := cfg.sTopicEstoque, Message := 'topico');
 TEST_FINISHED();

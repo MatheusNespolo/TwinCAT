@@ -5,10 +5,7 @@
 VAR_INPUT
 END_VAR
 VAR
-	fbGetSystemTime : Tc2_Utilities.GETSYSTEMTIME;
-	fbToSystemTime  : Tc2_Utilities.FILETIME_TO_SYSTEMTIME;
-	ft              : T_FILETIME;
-	st              : TIMESTRUCT;
+	tmst  : TIMESTRUCT;
 	nYear : INT;
 	nMon  : INT;
 	nDay  : INT;
@@ -26,18 +23,19 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[// Retorna o instante atual como 'YYYY-MM-DD HH:MM:SS.mmm' (23 chars). Fonte: Tc2_Utilities.GETSYSTEMTIME + FILETIME_TO_SYSTEMTIME (UTC).
-// TODO: local timezone conversion (RT Linux timedatectl sets TZ; verify UTC vs local at bench)
-fbGetSystemTime(timeLoDW => ft.dwLowDateTime, timeHiDW => ft.dwHighDateTime);
-fbToSystemTime(fileTime := ft, systemTime => st);
+      <ST><![CDATA[// Retorna o instante atual como 'YYYY-MM-DD HH:MM:SS.mmm' (23 chars).
+// Fonte: GVL_Dfi.fbNow (Tc2_Utilities.FB_LocalSystemTime, HORA LOCAL do RT Linux),
+// ticado por MAIN todo ciclo. Enquanto fbNow.bValid = FALSE (primeiros ciclos)
+// os campos vem zerados -> as primeiras linhas podem ter timestamp '0000-...'.
+tmst := GVL_Dfi.fbNow.systemTime;
 
-nYear := TO_INT(st.wYear);
-nMon  := TO_INT(st.wMonth);
-nDay  := TO_INT(st.wDay);
-nHour := TO_INT(st.wHour);
-nMin  := TO_INT(st.wMinute);
-nSec  := TO_INT(st.wSecond);
-nMs   := TO_INT(st.wMilliseconds);
+nYear := TO_INT(tmst.wYear);
+nMon  := TO_INT(tmst.wMonth);
+nDay  := TO_INT(tmst.wDay);
+nHour := TO_INT(tmst.wHour);
+nMin  := TO_INT(tmst.wMinute);
+nSec  := TO_INT(tmst.wSecond);
+nMs   := TO_INT(tmst.wMilliseconds);
 
 sYear := INT_TO_STRING(nYear);
 

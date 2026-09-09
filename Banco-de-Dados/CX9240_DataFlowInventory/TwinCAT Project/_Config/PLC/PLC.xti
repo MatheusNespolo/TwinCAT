@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
-<TcSmItem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4026.21" ClassName="CNestedPlcProjDef">
+<TcSmItem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4026.26" ClassName="CNestedPlcProjDef">
 	<Project GUID="{0EC62E52-A097-410E-92DE-6B81D7138E76}" Name="PLC" PrjFilePath="..\..\PLC\PLC.plcproj" TmcFilePath="..\..\PLC\PLC.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" CopyTmcToTarget="true" CopyTpyToTarget="false" SymbolicMapping="true">
-		<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcHash="{5C0DA7FF-E546-CD4A-E081-5290B65CF040}" TmcPath="PLC\PLC.tmc">
+		<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcHash="{A4E9D09A-6213-9BF9-23D8-5D96888BEFFB}" TmcPath="PLC\PLC.tmc">
 			<Name>PLC Instance</Name>
 			<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 			<Contexts>
@@ -11,8 +11,8 @@
 					<ManualConfig>
 						<OTCID>#x02010030</OTCID>
 					</ManualConfig>
-					<Priority>20</Priority>
-					<CycleTime>100000000</CycleTime>
+					<Priority>1</Priority>
+					<CycleTime>10000000</CycleTime>
 				</Context>
 				<Context>
 					<Id>1</Id>
@@ -20,13 +20,14 @@
 					<ManualConfig>
 						<OTCID>#x02010040</OTCID>
 					</ManualConfig>
-					<Priority>21</Priority>
-					<CycleTime>100000000</CycleTime>
+					<Priority>2</Priority>
+					<CycleTime>10000000</CycleTime>
 				</Context>
 			</Contexts>
+			<JsonDynPous><![CDATA[null]]></JsonDynPous>
 			<TaskPouOids>
-				<TaskPouOid Prio="20" OTCID="#x08502001"/>
-				<TaskPouOid Prio="21" OTCID="#x08502002"/>
+				<TaskPouOid Prio="1" OTCID="#x08502002"/>
+				<TaskPouOid Prio="2" OTCID="#x08502001"/>
 			</TaskPouOids>
 		</Instance>
 	</Project>

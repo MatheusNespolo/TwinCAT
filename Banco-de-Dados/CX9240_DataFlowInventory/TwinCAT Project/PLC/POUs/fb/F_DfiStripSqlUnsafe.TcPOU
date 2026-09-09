@@ -3,7 +3,7 @@
   <POU Name="F_DfiStripSqlUnsafe" Id="{8a95ef6f-da91-4efd-b6a5-652729a3e38e}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION F_DfiStripSqlUnsafe : STRING(254)
 VAR_INPUT
-	sIn : STRING(254);
+	sEntrada : STRING(254);
 END_VAR
 VAR
 	i, n, k : INT;
@@ -18,8 +18,8 @@ END_VAR
 // os bytes  39 (')  34 (")  59 (;)  92 (\)  96 (`)  e qualquer byte < 16#20.
 // Mantem todo o resto (chaves, dois-pontos, virgulas...). Teto em 254 chars.
 // Varredura por ponteiro de bytes, no estilo de F_DfiSanitizeText.
-n    := LEN(sIn);
-pIn  := ADR(sIn);
+n    := LEN(sEntrada);
+pIn  := ADR(sEntrada);
 pOut := ADR(sRes);
 k    := 0;
 FOR i := 0 TO n - 1 DO

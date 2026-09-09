@@ -19,26 +19,22 @@ Test_DbLost_DuranteExecute_VoltaIdle_SemPerder();
 Test_PeriodicoTambemAtualizaBaseline();
 ]]></ST>
     </Implementation>
-    <Method Name="Test_Sucesso_PopEContagem" Id="{12474c00-025f-45fa-bc16-a874fc2797b8}">
-      <Declaration><![CDATA[METHOD PRIVATE Test_Sucesso_PopEContagem
+    <Method Name="Test_DbLost_DuranteExecute_VoltaIdle_SemPerder" Id="{4b9e809f-efbd-44b7-b1cd-e0fdefe1e856}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_DbLost_DuranteExecute_VoltaIdle_SemPerder
 VAR
 	fbBuf : FB_DfiRowBuffer := (nCapacity := 8);
-	sut   : FB_DfiDbWriter_Fake;   // DoExecute sempre retorna 1 (ok) apos 1 ciclo "busy"
+	sut   : FB_DfiDbWriter_Fake;
 	cfg   : ST_DfiConfig;
-	r     : ST_DfiRow;
+	linha     : ST_DfiRow;
 	i     : INT;
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[TEST('Sucesso_PopEContagem');
-sut.SetScript(SCRIPT_OK);      // helper do fake
-r.eKind := E_DfiRowKind.ESTOQUE_MUDANCA; r.stEstoque.nA := 9;
-fbBuf.Push(r);
+        <ST><![CDATA[TEST('DbLost_SemPerder');
+sut.SetScript(SCRIPT_DB_LOST);
+fbBuf.Push(linha);
 FOR i := 1 TO 20 DO sut(stConfig := cfg, fbBuffer := fbBuf); END_FOR
-AssertEquals_UDINT(0, fbBuf.nCount, 'linha removida apos sucesso');
-AssertEquals_ULINT(1, sut.nRowsWritten, 'nRowsWritten=1');
-AssertTrue(sut.bUltimoGravadoValido, 'dedupe baseline valido');
-AssertEquals_INT(9, sut.stUltimoGravado.nA, 'dedupe baseline = ultima linha de estoque');
+AssertEquals_UDINT(1, fbBuf.nCount, 'linha preservada em DB_LOST');
 TEST_FINISHED();
 ]]></ST>
       </Implementation>
@@ -49,38 +45,18 @@ VAR
 	fbBuf : FB_DfiRowBuffer := (nCapacity := 8);
 	sut   : FB_DfiDbWriter_Fake;
 	cfg   : ST_DfiConfig;
-	r     : ST_DfiRow;
+	linha     : ST_DfiRow;
 	i     : INT;
 END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[TEST('ErroExecute_NaoPop');
 sut.SetScript(SCRIPT_EXEC_ERROR);   // DoExecute retorna 2 (erro)
-fbBuf.Push(r);
+fbBuf.Push(linha);
 FOR i := 1 TO 30 DO sut(stConfig := cfg, fbBuffer := fbBuf); END_FOR
 AssertEquals_UDINT(1, fbBuf.nCount, 'linha PRESERVADA apos erro');
 AssertTrue(sut.nErrors >= 1, 'nErrors incrementa');
 AssertTrue(sut.eState = E_DfiWriterState.ERROR OR sut.eState = E_DfiWriterState.IDLE, 'em ERROR/backoff ou voltando');
-TEST_FINISHED();
-]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="Test_DbLost_DuranteExecute_VoltaIdle_SemPerder" Id="{4b9e809f-efbd-44b7-b1cd-e0fdefe1e856}">
-      <Declaration><![CDATA[METHOD PRIVATE Test_DbLost_DuranteExecute_VoltaIdle_SemPerder
-VAR
-	fbBuf : FB_DfiRowBuffer := (nCapacity := 8);
-	sut   : FB_DfiDbWriter_Fake;
-	cfg   : ST_DfiConfig;
-	r     : ST_DfiRow;
-	i     : INT;
-END_VAR
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[TEST('DbLost_SemPerder');
-sut.SetScript(SCRIPT_DB_LOST);
-fbBuf.Push(r);
-FOR i := 1 TO 20 DO sut(stConfig := cfg, fbBuffer := fbBuf); END_FOR
-AssertEquals_UDINT(1, fbBuf.nCount, 'linha preservada em DB_LOST');
 TEST_FINISHED();
 ]]></ST>
       </Implementation>
@@ -90,17 +66,41 @@ TEST_FINISHED();
 VAR
 	fbBuf : FB_DfiRowBuffer := (nCapacity := 8);
 	sut   : FB_DfiDbWriter_Fake;
-	cfg   : ST_DfiConfig; r : ST_DfiRow; i : INT;
+	cfg   : ST_DfiConfig; linha : ST_DfiRow; i : INT;
 END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[TEST('PeriodicoAtualizaBaseline');
 sut.SetScript(SCRIPT_OK);
-r.eKind := E_DfiRowKind.ESTOQUE_PERIODICO; r.stEstoque.nB := 2;
-fbBuf.Push(r);
+linha.eKind := E_DfiRowKind.ESTOQUE_PERIODICO; linha.stEstoque.nB := 2;
+fbBuf.Push(linha);
 FOR i := 1 TO 20 DO sut(stConfig := cfg, fbBuffer := fbBuf); END_FOR
 AssertTrue(sut.bUltimoGravadoValido, 'baseline valido apos periodico');
 AssertEquals_INT(2, sut.stUltimoGravado.nB, 'baseline B=2');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_Sucesso_PopEContagem" Id="{12474c00-025f-45fa-bc16-a874fc2797b8}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_Sucesso_PopEContagem
+VAR
+	fbBuf : FB_DfiRowBuffer := (nCapacity := 8);
+	sut   : FB_DfiDbWriter_Fake;   // DoExecute sempre retorna 1 (ok) apos 1 ciclo "busy"
+	cfg   : ST_DfiConfig;
+	linha : ST_DfiRow;
+	i     : INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Sucesso_PopEContagem');
+sut.SetScript(SCRIPT_OK);      // helper do fake
+linha.eKind := E_DfiRowKind.ESTOQUE_MUDANCA; linha.stEstoque.nA := 9;
+fbBuf.Push(linha);
+FOR i := 1 TO 20 DO sut(stConfig := cfg, fbBuffer := fbBuf); END_FOR
+AssertEquals_UDINT(0, fbBuf.nCount, 'linha removida apos sucesso');
+AssertEquals_ULINT(1, sut.nRowsWritten, 'nRowsWritten=1');
+AssertTrue(sut.bUltimoGravadoValido, 'dedupe baseline valido');
+AssertEquals_INT(9, sut.stUltimoGravado.nA, 'dedupe baseline = ultima linha de estoque');
 TEST_FINISHED();
 ]]></ST>
       </Implementation>

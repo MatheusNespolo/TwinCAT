@@ -2,12 +2,12 @@
 <Database>
   <ID>1</ID>
   <Name>DfiDb</Name>
-  <ServerName>127.0.0.1</ServerName>
+  <ServerName>/var/lib/dfi/historian.db</ServerName>
   <DatabaseName>dfi_historian</DatabaseName>
   <TableName />
-  <Authentication>True</Authentication>
-  <UserID>dfi</UserID>
-  <Password />
+  <Authentication>False</Authentication>
+  <UserID />
+  <Password>VERCATRFVXQGR3J9EdMmjJ6i0us=</Password>
   <Driver />
   <Provider />
   <Port>3306</Port>
@@ -19,7 +19,7 @@
   <OLDASCIIFormat>False</OLDASCIIFormat>
   <ASCIISeparator />
   <DBValueType>NONE</DBValueType>
-  <DBType>NET_MySQL</DBType>
+  <DBType>SQLite</DBType>
   <OdbcSubType>Unknown</OdbcSubType>
   <DriverType>Unknown</DriverType>
   <Temporary>False</Temporary>

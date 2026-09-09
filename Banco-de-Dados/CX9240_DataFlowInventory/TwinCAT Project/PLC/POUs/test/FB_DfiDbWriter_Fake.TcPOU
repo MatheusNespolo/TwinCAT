@@ -19,9 +19,11 @@ VAR CONSTANT
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[// A base FB_DfiDbWriter roda a maquina de estados; SUPER^() e obrigatorio
-// porque corpos de FB NAO sao encadeados por EXTENDS no TwinCAT.
-SUPER^();
+      <ST><![CDATA[// A maquina de estados da base vive no metodo herdado Cycle() (nao
+// sobrescrito). Chamado aqui em vez de SUPER^() porque VAR_IN_OUT (fbBuffer)
+// nao pode ser religado num SUPER^(). DoExecute/DoConnect continuam
+// despachando para os overrides deste fake.
+Cycle();
 ]]></ST>
     </Implementation>
     <Method Name="SetScript" Id="{5a7dc5b0-bb30-47f9-b8e6-a3eff9d86101}">

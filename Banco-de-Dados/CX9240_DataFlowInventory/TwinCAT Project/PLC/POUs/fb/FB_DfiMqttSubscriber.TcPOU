@@ -14,7 +14,7 @@ VAR_OUTPUT
 	nReconnectCount : UDINT;
 END_VAR
 VAR
-	fbMqtt    : Tc3_IotBase.FB_IotMqttClient;
+	fbMqtt    : FB_IotMqttClient;
 	fbMessage : Tc3_IotBase.FB_IotMqttMessage;   // confirmar nome do tipo do objeto-mensagem na lib instalada
 	bParamsSet    : BOOL;
 	bWasConnected : BOOL;
@@ -97,12 +97,39 @@ fbMqtt.nHostPort := stConfig.nMqttPort;
 fbMqtt.sClientId := 'dataflow-cx9240-historian';
 
 IF stConfig.sMqttUser <> '' THEN
-	fbMqtt.stMQTT.sUserName     := stConfig.sMqttUser;
-	fbMqtt.stMQTT.sUserPassword := stConfig.sMqttPass;
+	fbMqtt.sUserName   := stConfig.sMqttUser;
+	fbMqtt.sUserPassword := stConfig.sMqttPass;
 END_IF
 
 IF stConfig.bUseTls THEN
 	fbMqtt.stTLS.sCA := stConfig.sCaCertPath;
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="DrainOneMessage" Id="{58c87625-9afd-45d0-bab7-8f1ea3e7f897}">
+      <Declaration><![CDATA[METHOD PROTECTED DrainOneMessage : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// ISOLADO DE PROPOSITO: todo acesso a fila de mensagens do TF6701 vive aqui
+// (ipMessageQueue / nQueuedMessages / Dequeue / GetTopic / GetPayload).
+// Retira NO MAXIMO uma mensagem por ciclo -> contrapressao previsivel para o
+// pipeline a jusante. Em sucesso: sTopic e sPayload validos e bNewMessage = TRUE
+// por exatamente 1 ciclo (o corpo principal zera bNewMessage no inicio do ciclo).
+DrainOneMessage := FALSE;
+
+// ipMessageQueue e uma interface; guarda defensiva antes do 1o Execute.
+IF fbMqtt.ipMessageQueue = 0 THEN
+	RETURN;
+END_IF
+
+IF fbMqtt.ipMessageQueue.Dequeue(fbMessage) THEN
+	fbMessage.GetTopic(pTopic := ADR(sTopic), nTopicSize := SIZEOF(sTopic));
+	fbMessage.GetPayload(pPayload            := ADR(sPayload),
+	                     nPayloadSize        := SIZEOF(sPayload) - 1,
+	                     bSetNullTermination := TRUE);
+	bNewMessage     := TRUE;
+	DrainOneMessage := TRUE;
 END_IF
 ]]></ST>
       </Implementation>
@@ -126,37 +153,6 @@ IF NOT bSubEventos THEN
 END_IF
 
 EnsureSubscriptions := bSubEstoque AND bSubEventos;
-]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="DrainOneMessage" Id="{58c87625-9afd-45d0-bab7-8f1ea3e7f897}">
-      <Declaration><![CDATA[METHOD PROTECTED DrainOneMessage : BOOL
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[// ISOLADO DE PROPOSITO: todo acesso a fila de mensagens do TF6701 vive aqui
-// (ipMessageQueue / nQueuedMessages / Dequeue / GetTopic / GetPayload).
-// Retira NO MAXIMO uma mensagem por ciclo -> contrapressao previsivel para o
-// pipeline a jusante. Em sucesso: sTopic e sPayload validos e bNewMessage = TRUE
-// por exatamente 1 ciclo (o corpo principal zera bNewMessage no inicio do ciclo).
-DrainOneMessage := FALSE;
-
-// ipMessageQueue e uma interface; guarda defensiva antes do 1o Execute.
-IF fbMqtt.ipMessageQueue = 0 THEN
-	RETURN;
-END_IF
-
-IF fbMqtt.ipMessageQueue.nQueuedMessages = 0 THEN
-	RETURN;
-END_IF
-
-IF fbMqtt.ipMessageQueue.Dequeue(fbMessage) THEN
-	fbMessage.GetTopic(pTopic := ADR(sTopic), nTopicSize := SIZEOF(sTopic));
-	fbMessage.GetPayload(pPayload            := ADR(sPayload),
-	                     nPayloadSize        := SIZEOF(sPayload) - 1,
-	                     bSetNullTermination := TRUE);
-	bNewMessage     := TRUE;
-	DrainOneMessage := TRUE;
-END_IF
 ]]></ST>
       </Implementation>
     </Method>
