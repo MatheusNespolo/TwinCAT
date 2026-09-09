@@ -55,6 +55,7 @@ VAR
 	nEq   : INT;
 	nLen  : INT;
 	nBuf  : UDINT;
+	nHash : INT;
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[// --- normaliza: trim de espaços/tabs nas duas pontas ---
@@ -81,6 +82,17 @@ END_IF
 // --- separa chave / valor e faz trim dos dois ---
 sKey := THIS^.TrimBoth(LEFT(sWork, nEq - 1));
 sVal := THIS^.TrimBoth(RIGHT(sWork, nLen - nEq));
+
+// --- remove comentário inline no valor: ' #...' ou <tab>'#...' ---
+// (o '#' só conta como comentário se vier depois de espaço/tab; assim uma
+//  senha ou caminho com '#' colado no texto é preservada)
+nHash := FIND(sVal, ' #');
+IF nHash = 0 THEN
+	nHash := FIND(sVal, '$09#');
+END_IF
+IF nHash > 0 THEN
+	sVal := THIS^.TrimBoth(LEFT(sVal, nHash - 1));
+END_IF
 
 // --- CASE de string não é permitido em ST: cadeia de IF/ELSIF ---
 IF sKey = 'mqtt_host' THEN

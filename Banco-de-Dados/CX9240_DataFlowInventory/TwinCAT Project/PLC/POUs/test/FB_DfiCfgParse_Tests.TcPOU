@@ -9,6 +9,7 @@ END_VAR
       <ST><![CDATA[Test_ParseLine_MapeiaChavesConhecidas();
 Test_ParseLine_ComentarioEBranco_NoOp();
 Test_ParseLine_ChaveDesconhecida_RetornaFalse();
+Test_ParseLine_ComentarioInline_EhIgnorado();
 Test_ParseText_ExemploCompleto_ValidaEbValidTrue();
 Test_ParseText_SemHost_bValidFalse();
 ]]></ST>
@@ -23,6 +24,26 @@ END_VAR]]></Declaration>
         <ST><![CDATA[TEST('ParseLine_ChaveDesconhecida_RetornaFalse');
 AssertFalse(fb.ParseLine('foo=bar', cfg), 'chave desconhecida => FALSE');
 AssertFalse(fb.ParseLine('mqtt_port=abc', cfg), 'valor nao-numerico => FALSE');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Test_ParseLine_ComentarioInline_EhIgnorado" Id="{2f4b9c1a-7d63-4e08-9a52-6c1e0b8f34d7}">
+      <Declaration><![CDATA[METHOD PRIVATE Test_ParseLine_ComentarioInline_EhIgnorado
+VAR
+	fb  : FB_DfiCfgParse;
+	cfg : ST_DfiConfig;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('ParseLine_ComentarioInline_EhIgnorado');
+// ' #...' depois do valor e comentario -> deve ser removido antes de validar/converter
+AssertTrue(fb.ParseLine('db_id=1                  # hDBID da conexao DfiDb', cfg), 'db_id com comentario inline => TRUE');
+AssertEquals_UDINT(Expected := 1, Actual := cfg.nDbId, Message := 'db_id = 1 (comentario descartado)');
+AssertTrue(fb.ParseLine('mqtt_host=127.0.0.1   # broker local', cfg), 'host com comentario inline => TRUE');
+AssertEquals_STRING(Expected := '127.0.0.1', Actual := cfg.sMqttHost, Message := 'host sem o comentario');
+// '#' colado no valor (sem espaco antes) NAO e comentario
+AssertTrue(fb.ParseLine('mqtt_pass=P#ass', cfg), 'senha com # colado => TRUE');
+AssertEquals_STRING(Expected := 'P#ass', Actual := cfg.sMqttPass, Message := 'senha preserva o #');
 TEST_FINISHED();
 ]]></ST>
       </Implementation>

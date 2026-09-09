@@ -192,6 +192,11 @@ Plano: [`2026-09-08-cx9240-mqtt-historian-plan.md`](2026-09-08-cx9240-mqtt-histo
 > **Nota:** se o arquivo faltar ou não parsear no arranque, o historiador fica **inerte**
 > (`gDiag.bConfigOk = FALSE`) até o PLC ser reiniciado — **não há retry automático**. Validar o
 > arquivo antes de ativar o boot project.
+>
+> `FB_DfiCfgParse` aceita comentário de linha inteira (`# ...`) **e** comentário inline após o
+> valor (`db_id=1   # ...`), desde que haja espaço/tab antes do `#`. Linhas em branco são
+> ignoradas. Toda linha `chave=valor` precisa ser uma chave conhecida e, nas numéricas, o valor
+> (já sem o comentário) tem que ser só dígitos — senão `bValid = FALSE`.
 
 ---
 
