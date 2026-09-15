@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<TcSmItem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4026.26" ClassName="CNcTableDef">
+	<Table Id="1" MotionFunction="true" Maximum="360" MinIncr="1" Velocity="1" RoundValue="0.001" VelScale="1">
+		<Name>__FILENAME__</Name>
+		<ImageId>137</ImageId>
+	</Table>
+</TcSmItem>

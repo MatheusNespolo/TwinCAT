@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<TcSmItem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4026.26" ClassName="CDevEthernetProtocolPnSlaveDef" SubType="118">
+	<Device Id="2" DevType="118" AmsPort="28674" AmsNetId="5.162.186.144.3.1" RemoteName="Device 2 (EL6631-0010)">
+		<Name>__FILENAME__</Name>
+		<AddressInfo>
+			<Ecat>
+				<EtherCATDeviceId>2</EtherCATDeviceId>
+				<EtherCATDeviceName>TIID^Device 1 (EtherCAT)^Term 1 (EK1200)^Term 2 (EL6631-0010)</EtherCATDeviceName>
+			</Ecat>
+		</AddressInfo>
+		<Image Id="3" AddrType="4" ImageType="3" SizeIn="8" SizeOut="8">
+			<Name>Image</Name>
+		</Image>
+		<Box File="el6631-0010.xti" Id="4"/>
+		<Profinet PLCPortNr="851" AddPortCount="1">
+			<Ethernet DeviceDesc="EL6631-0010 PROFINET IO Device" PromiscuousModeNoCopy="true" SpecialTask="true" TaskPort="301"/>
+		</Profinet>
+	</Device>
+</TcSmItem>

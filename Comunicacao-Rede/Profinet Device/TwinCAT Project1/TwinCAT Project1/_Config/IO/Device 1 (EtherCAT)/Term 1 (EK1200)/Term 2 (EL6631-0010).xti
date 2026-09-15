@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<TcSmItem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4026.26" ClassName="CFlbDeviceTermDef" SubType="9107">
+	<DataTypes>
+		<DataType>
+			<Name GUID="{18071995-0000-0000-0000-000300000002}" IecBaseType="true" AutoDeleteType="true">ARRAY [0..1] OF BYTE</Name>
+			<BitSize>16</BitSize>
+			<BaseType GUID="{18071995-0000-0000-0000-000000000001}">BYTE</BaseType>
+			<ArrayInfo>
+				<LBound>0</LBound>
+				<Elements>2</Elements>
+			</ArrayInfo>
+		</DataType>
+	</DataTypes>
+	<Box Id="2" BoxType="9107" BoxFlags="#x00000020">
+		<Name>__FILENAME__</Name>
+		<ImageId>124</ImageId>
+		<EtherCAT SlaveType="5" AdsServerAddress="05a2ba9003010000" FixedAdsServerNetId="true" PdiType="#x0c08" ExecIo="true" MboxDataLinkLayer="true" StateMBoxPolling="true" CycleMBoxPollingTime="0" CoeType="47" FoeType="1" VendorId="#x00000002" ProductCode="#x19e73052" RevisionNo="#x0012000a" InfoDataAddr="true" InfoDataNetId="true" OwnAddrExtern="true" TimeoutStateChange1="10000" TimeoutStateChange3="20000" GenerateOwnNetId="true" InitializeOwnNetId="true" PortPhys="51" MaxSlotCount="256" MaxSlotGroupCount="1" SlotPdoIncrement="1" SlotIndexIncrement="16" Type="EL6631-0010 PROFINET IO Device" Desc="EL6631-0010">
+			<SyncMan>001000042600010001000000400000040004001026010000</SyncMan>
+			<SyncMan>001400042200010002000000400000040004001422010000</SyncMan>
+			<SyncMan>001808006400010003000000000000000000001864010000</SyncMan>
+			<SyncMan>002408002000010004000000000000000000002420010000</SyncMan>
+			<Fmmu>0000000000000000001800020100000001000000000000000000000000000000</Fmmu>
+			<Fmmu>0000000000000000002400010100000002000000000000000000000000000000</Fmmu>
+			<Fmmu>00000000000000000d0800010100000003000000000000000000000000000000</Fmmu>
+			<BootStrapData>0010000400140004</BootStrapData>
+			<Pdo Name="el6631-0010_Inputs" Index="#x1a00" Flags="#x0001" SyncMan="3">
+				<Entry Name="el6631-0010_PnIoBoxState" Index="#x6000" Sub="#x01" Flags="#x00000100">
+					<Type>UINT</Type>
+				</Entry>
+				<Entry Name="el6631-0010_SubmoduleData_1" Index="#x6001" Sub="#x01" Flags="#x00000100">
+					<Type GUID="{18071995-0000-0000-0000-000300000002}">ARRAY [0..1] OF BYTE</Type>
+				</Entry>
+				<Entry Name="el6631-0010_SubmoduleData_2" Index="#x6001" Sub="#x02" Flags="#x00000100">
+					<Type GUID="{18071995-0000-0000-0000-000300000002}">ARRAY [0..1] OF BYTE</Type>
+				</Entry>
+			</Pdo>
+			<Pdo Name="el6631-0010_Outputs" Index="#x1600" InOut="1" Flags="#x0001" SyncMan="2">
+				<Entry Name="el6631-0010_PnIoBoxCtrl" Index="#x7000" Sub="#x01" Flags="#x00000100">
+					<Type>UINT</Type>
+				</Entry>
+				<Entry Name="el6631-0010_SubmoduleData_1" Index="#x7001" Sub="#x01" Flags="#x00000100">
+					<Type GUID="{18071995-0000-0000-0000-000300000002}">ARRAY [0..1] OF BYTE</Type>
+				</Entry>
+				<Entry Name="el6631-0010_SubmoduleData_2" Index="#x7001" Sub="#x02" Flags="#x00000100">
+					<Type GUID="{18071995-0000-0000-0000-000300000002}">ARRAY [0..1] OF BYTE</Type>
+				</Entry>
+			</Pdo>
+			<Pdo Name="ECatState" Index="#x1bff" Flags="#x0001" SyncMan="3">
+				<Entry Name="Device_2_ECatState" Index="#xf101" Sub="#x01" Flags="#x00000100">
+					<Type>UINT</Type>
+				</Entry>
+			</Pdo>
+			<Pdo Name="ECatCtrl" Index="#x17ff" InOut="1" Flags="#x0001" SyncMan="2">
+				<Entry Name="Device_2_ECatCtrl" Index="#xf201" Sub="#x01" Flags="#x00000100">
+					<Type>UINT</Type>
+				</Entry>
+			</Pdo>
+			<CoeProfile ProfileNo="5001"/>
+		</EtherCAT>
+	</Box>
+</TcSmItem>

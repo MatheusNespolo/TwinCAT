@@ -1,0 +1,415 @@
+<?xml version="1.0"?>
+<TcSmItem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4026.26" ClassName="CPnIoBoxDef" SubType="9130">
+	<Box Id="4" BoxType="9130">
+		<Name>__FILENAME__</Name>
+		<Comment><![CDATA[GSDML Name: GSDML-V2.44-beckhoff-EL6631-20240715.xml
+Path: $(TWINCAT3DIR)Config\Io\Profinet\
+VendorName: Beckhoff Automation
+OrderNumber: EL6631-0010
+HW Release Version: 1
+SW Release Version: V1.00]]></Comment>
+		<ImageId>124</ImageId>
+		<Vars VarGrpType="1">
+			<Name>Inputs</Name>
+			<Var>
+				<Name>PnIoBoxState</Name>
+				<Comment><![CDATA[0 = No error
+1 = Profinet device state machine is in boot mode
+2 = Device not found
+3 = The stationname is not unique
+4 = IP could not be set
+5 = IP conflict
+6 = DCP set was not successful
+7 = Watchdog error
+8 = Datahold error
+9 = RTC3: Sync mode could not be initiated
+10 = Profinet controller has a link error
+11 = The aliasname is not unique
+12 = The automatic name assignement isn't possible - wrong device type
+13 = IOC-AR is established but no application ready
+14 = IOC-AR is established but module difference
+15 = At least one InputCR is invalid, provider in stop or problemindicator is set
+16 = At least one OutputCR is invalid, provider in stop or problemindicator is set
+31 = Only for EtherCAT gateways: WC-State of cyclic EtherCAT frame is 1
+]]></Comment>
+				<Type>WORD</Type>
+			</Var>
+			<Var>
+				<Name>PnIoBoxDiag</Name>
+				<Comment><![CDATA[0x0000 = No diagnosis
+0x0001 = IOC-AR is not established
+0x0002 = IOC-AR is established
+0x0004 = IOC-AR is established but no application ready
+0x0008 = IOC-AR is established but module difference
+0x0010 = At least one AlarmCR got a diagnosis alarm
+0x0100 = At least one InputCR is invalid
+0x0200 = At least one InputCR Provider is in stop
+0x0400 = At least one InputCR Problemindicator is set
+0x1000 = At least one OutputCR is invalid
+0x2000 = At least one OutputCR Provider is in stop
+0x4000 = At least one OutputCR Problemindicator is set
+]]></Comment>
+				<Type>WORD</Type>
+				<BitOffs>16</BitOffs>
+			</Var>
+		</Vars>
+		<Vars VarGrpType="2">
+			<Name>Outputs</Name>
+			<Var>
+				<Name>PnIoBoxCtrl</Name>
+				<Type>WORD</Type>
+			</Var>
+		</Vars>
+		<Profinet DeviceId="6631" VendorId="288" FrameOffset="49152" IPAdd="c0a80102" ProtocolType="3" BoxOnDeviceTyp="140" MaxPhysSlotNr="255" AvailableSlots="0..255" InstanceServerPort="50000" InstanceClientPort="50001" InstanceNumberOfARs="1" InstanceNumberOfAPIs="1" MinDeviceInterval="32" SavePnIoBoxValues="0100" MultipleWriteSupported="true" Phase="1" WatchdogFaktor="3" ReductionRatio="1" SendClockFaktor="32" MaxInputLen="1024" MaxOutputLen="1024" MaxDataLen="2048" SendClockFactorData="2000" RedRatio="0100020004000800100020004000800000010002" BoxTypeInfo="PROFINET I/O device - EtherCAT slave terminal, V2.0" MacAdd5="71" GSDMLPath="$(TWINCAT3DIR)Config\Io\Profinet\GSDML-V2.44-beckhoff-EL6631-20240715.xml" ImagePath="$(TWINCAT3DIR)Config\Io\Profinet\GSDML-0120-19E7-EL6631.bmp" MainFamily="I/O" ProductFamily="EL Device" OrderNr="EL6631-0010" DefaultDNSName="el6631-0010" VendorName="Beckhoff Automation" FamDescription="EL products, protection type IP20" GraphicFile="GSDML-0120-19E7-EL6631" SWVersion="V1.00" HWVersion="1" AltLanguage="7">
+			<UsedGsdmlModule ModuleIdentNumber="1" ModuleName="DAP Module" InfoText="PROFINET I/O device - EtherCAT slave terminal, V2.0" OrderNumber="EL6631-0010">
+				<Slot>0</Slot>
+			</UsedGsdmlModule>
+			<UsedGsdmlModule ModuleIdentNumber="16896" Id="WORD_IO" ModuleName="1 Word In- and Output" InfoText="1 Word In- and Output" ModuleCategory="Word modules">
+				<Slot>1</Slot>
+				<Slot>2</Slot>
+				<Slot>3</Slot>
+				<Slot>4</Slot>
+				<Slot>5</Slot>
+				<Slot>6</Slot>
+				<Slot>7</Slot>
+				<Slot>8</Slot>
+				<Slot>9</Slot>
+				<Slot>10</Slot>
+				<Slot>11</Slot>
+				<Slot>12</Slot>
+				<Slot>13</Slot>
+				<Slot>14</Slot>
+				<Slot>15</Slot>
+				<Slot>16</Slot>
+				<Slot>17</Slot>
+				<Slot>18</Slot>
+				<Slot>19</Slot>
+				<Slot>20</Slot>
+				<Slot>21</Slot>
+				<Slot>22</Slot>
+				<Slot>23</Slot>
+				<Slot>24</Slot>
+				<Slot>25</Slot>
+				<Slot>26</Slot>
+				<Slot>27</Slot>
+				<Slot>28</Slot>
+				<Slot>29</Slot>
+				<Slot>30</Slot>
+				<Slot>31</Slot>
+				<Slot>32</Slot>
+				<Slot>33</Slot>
+				<Slot>34</Slot>
+				<Slot>35</Slot>
+				<Slot>36</Slot>
+				<Slot>37</Slot>
+				<Slot>38</Slot>
+				<Slot>39</Slot>
+				<Slot>40</Slot>
+				<Slot>41</Slot>
+				<Slot>42</Slot>
+				<Slot>43</Slot>
+				<Slot>44</Slot>
+				<Slot>45</Slot>
+				<Slot>46</Slot>
+				<Slot>47</Slot>
+				<Slot>48</Slot>
+				<Slot>49</Slot>
+				<Slot>50</Slot>
+				<Slot>51</Slot>
+				<Slot>52</Slot>
+				<Slot>53</Slot>
+				<Slot>54</Slot>
+				<Slot>55</Slot>
+				<Slot>56</Slot>
+				<Slot>57</Slot>
+				<Slot>58</Slot>
+				<Slot>59</Slot>
+				<Slot>60</Slot>
+				<Slot>61</Slot>
+				<Slot>62</Slot>
+				<Slot>63</Slot>
+				<Slot>64</Slot>
+				<Slot>65</Slot>
+				<Slot>66</Slot>
+				<Slot>67</Slot>
+				<Slot>68</Slot>
+				<Slot>69</Slot>
+				<Slot>70</Slot>
+				<Slot>71</Slot>
+				<Slot>72</Slot>
+				<Slot>73</Slot>
+				<Slot>74</Slot>
+				<Slot>75</Slot>
+				<Slot>76</Slot>
+				<Slot>77</Slot>
+				<Slot>78</Slot>
+				<Slot>79</Slot>
+				<Slot>80</Slot>
+				<Slot>81</Slot>
+				<Slot>82</Slot>
+				<Slot>83</Slot>
+				<Slot>84</Slot>
+				<Slot>85</Slot>
+				<Slot>86</Slot>
+				<Slot>87</Slot>
+				<Slot>88</Slot>
+				<Slot>89</Slot>
+				<Slot>90</Slot>
+				<Slot>91</Slot>
+				<Slot>92</Slot>
+				<Slot>93</Slot>
+				<Slot>94</Slot>
+				<Slot>95</Slot>
+				<Slot>96</Slot>
+				<Slot>97</Slot>
+				<Slot>98</Slot>
+				<Slot>99</Slot>
+				<Slot>100</Slot>
+				<Slot>101</Slot>
+				<Slot>102</Slot>
+				<Slot>103</Slot>
+				<Slot>104</Slot>
+				<Slot>105</Slot>
+				<Slot>106</Slot>
+				<Slot>107</Slot>
+				<Slot>108</Slot>
+				<Slot>109</Slot>
+				<Slot>110</Slot>
+				<Slot>111</Slot>
+				<Slot>112</Slot>
+				<Slot>113</Slot>
+				<Slot>114</Slot>
+				<Slot>115</Slot>
+				<Slot>116</Slot>
+				<Slot>117</Slot>
+				<Slot>118</Slot>
+				<Slot>119</Slot>
+				<Slot>120</Slot>
+				<Slot>121</Slot>
+				<Slot>122</Slot>
+				<Slot>123</Slot>
+				<Slot>124</Slot>
+				<Slot>125</Slot>
+				<Slot>126</Slot>
+				<Slot>127</Slot>
+				<Slot>128</Slot>
+				<Slot>129</Slot>
+				<Slot>130</Slot>
+				<Slot>131</Slot>
+				<Slot>132</Slot>
+				<Slot>133</Slot>
+				<Slot>134</Slot>
+				<Slot>135</Slot>
+				<Slot>136</Slot>
+				<Slot>137</Slot>
+				<Slot>138</Slot>
+				<Slot>139</Slot>
+				<Slot>140</Slot>
+				<Slot>141</Slot>
+				<Slot>142</Slot>
+				<Slot>143</Slot>
+				<Slot>144</Slot>
+				<Slot>145</Slot>
+				<Slot>146</Slot>
+				<Slot>147</Slot>
+				<Slot>148</Slot>
+				<Slot>149</Slot>
+				<Slot>150</Slot>
+				<Slot>151</Slot>
+				<Slot>152</Slot>
+				<Slot>153</Slot>
+				<Slot>154</Slot>
+				<Slot>155</Slot>
+				<Slot>156</Slot>
+				<Slot>157</Slot>
+				<Slot>158</Slot>
+				<Slot>159</Slot>
+				<Slot>160</Slot>
+				<Slot>161</Slot>
+				<Slot>162</Slot>
+				<Slot>163</Slot>
+				<Slot>164</Slot>
+				<Slot>165</Slot>
+				<Slot>166</Slot>
+				<Slot>167</Slot>
+				<Slot>168</Slot>
+				<Slot>169</Slot>
+				<Slot>170</Slot>
+				<Slot>171</Slot>
+				<Slot>172</Slot>
+				<Slot>173</Slot>
+				<Slot>174</Slot>
+				<Slot>175</Slot>
+				<Slot>176</Slot>
+				<Slot>177</Slot>
+				<Slot>178</Slot>
+				<Slot>179</Slot>
+				<Slot>180</Slot>
+				<Slot>181</Slot>
+				<Slot>182</Slot>
+				<Slot>183</Slot>
+				<Slot>184</Slot>
+				<Slot>185</Slot>
+				<Slot>186</Slot>
+				<Slot>187</Slot>
+				<Slot>188</Slot>
+				<Slot>189</Slot>
+				<Slot>190</Slot>
+				<Slot>191</Slot>
+				<Slot>192</Slot>
+				<Slot>193</Slot>
+				<Slot>194</Slot>
+				<Slot>195</Slot>
+				<Slot>196</Slot>
+				<Slot>197</Slot>
+				<Slot>198</Slot>
+				<Slot>199</Slot>
+				<Slot>200</Slot>
+				<Slot>201</Slot>
+				<Slot>202</Slot>
+				<Slot>203</Slot>
+				<Slot>204</Slot>
+				<Slot>205</Slot>
+				<Slot>206</Slot>
+				<Slot>207</Slot>
+				<Slot>208</Slot>
+				<Slot>209</Slot>
+				<Slot>210</Slot>
+				<Slot>211</Slot>
+				<Slot>212</Slot>
+				<Slot>213</Slot>
+				<Slot>214</Slot>
+				<Slot>215</Slot>
+				<Slot>216</Slot>
+				<Slot>217</Slot>
+				<Slot>218</Slot>
+				<Slot>219</Slot>
+				<Slot>220</Slot>
+				<Slot>221</Slot>
+				<Slot>222</Slot>
+				<Slot>223</Slot>
+				<Slot>224</Slot>
+				<Slot>225</Slot>
+				<Slot>226</Slot>
+				<Slot>227</Slot>
+				<Slot>228</Slot>
+				<Slot>229</Slot>
+				<Slot>230</Slot>
+				<Slot>231</Slot>
+				<Slot>232</Slot>
+				<Slot>233</Slot>
+				<Slot>234</Slot>
+				<Slot>235</Slot>
+				<Slot>236</Slot>
+				<Slot>237</Slot>
+				<Slot>238</Slot>
+				<Slot>239</Slot>
+				<Slot>240</Slot>
+				<Slot>241</Slot>
+				<Slot>242</Slot>
+				<Slot>243</Slot>
+				<Slot>244</Slot>
+				<Slot>245</Slot>
+				<Slot>246</Slot>
+				<Slot>247</Slot>
+				<Slot>248</Slot>
+				<Slot>249</Slot>
+				<Slot>250</Slot>
+				<Slot>251</Slot>
+				<Slot>252</Slot>
+				<Slot>253</Slot>
+				<Slot>254</Slot>
+				<Slot>255</Slot>
+			</UsedGsdmlModule>
+			<UsedGsdmlSubModule SubModuleIdentNumber="1" SubSlotNumber="1" TypeOfSubmodule="3" Id="DAP 1" SubModuleName="EL6631-0010 V2.0" InfoText="PROFINET I/O device - EtherCAT slave terminal, V2.0"/>
+			<UsedGsdmlSubModule SubModuleIdentNumber="1" SubSlotNumber="1" TypeOfSubmodule="3" Id="42" SubModuleName="1 Word In- and Output" InfoText="1 Word In- and Output">
+				<DataItemIn Name="1 Word Input" VarSize="16" VarType="{18071995-0000-0000-0000-000000000005}"/>
+				<DataItemOut Name="1 Word Output" VarSize="16" VarType="{18071995-0000-0000-0000-000000000005}"/>
+			</UsedGsdmlSubModule>
+			<API Id="1">
+				<Name>API</Name>
+				<ImageId>4</ImageId>
+				<Module Id="#x031d0001" DAP="true" ModuleIdentNumber="1" ModuleInfo="PROFINET I/O device - EtherCAT slave terminal, V2.0">
+					<Name>Term 1 (DAP Module)</Name>
+					<Comment><![CDATA[GSDML: GSDML-V2.44-beckhoff-EL6631-20240715.xml
+Module Info: PROFINET I/O device - EtherCAT slave terminal, V2.0
+OrderNumber: EL6631-0010]]></Comment>
+					<ImageId>182</ImageId>
+					<SubModule Id="#x031c0001" SubModuleIdentNumber="1" TypeOfSubModule="3" SubSlotNumber="1" IsFixSubmodule="true" SubModuleID="DAP 1">
+						<Name>Subterm 1 (EL6631-0010 V2.0)</Name>
+						<Comment><![CDATA[GSDML: GSDML-V2.44-beckhoff-EL6631-20240715.xml
+Submodule Info: PROFINET I/O device - EtherCAT slave terminal, V2.0
+]]></Comment>
+						<ImageId>183</ImageId>
+						<Vars VarGrpType="1">
+							<Name>Inputs</Name>
+						</Vars>
+						<Vars VarGrpType="2">
+							<Name>Outputs</Name>
+						</Vars>
+					</SubModule>
+				</Module>
+				<Module Id="#x031d0002" ModuleIdentNumber="16896" SlotNumber="1" ModuleInfo="1 Word In- and Output" ModuleID="WORD_IO" DirectDeletable="true">
+					<Name>Term 2 (1 Word In- and Output)</Name>
+					<Comment><![CDATA[GSDML: GSDML-V2.44-beckhoff-EL6631-20240715.xml
+Module Info: 1 Word In- and Output
+]]></Comment>
+					<ImageId>182</ImageId>
+					<SubModule Id="#x031c0002" SubModuleIdentNumber="1" TypeOfSubModule="3" SubSlotNumber="1" IsFixSubmodule="true" SubModuleID="42">
+						<Name>Subterm 2 (1 Word In- and Output)</Name>
+						<Comment><![CDATA[GSDML: GSDML-V2.44-beckhoff-EL6631-20240715.xml
+Submodule Info: 1 Word In- and Output
+]]></Comment>
+						<ImageId>183</ImageId>
+						<Vars VarGrpType="1">
+							<Name>Inputs</Name>
+							<Var Swapping="#x1">
+								<Name>1 Word Input</Name>
+								<Type>UINT</Type>
+								<BitOffs>32</BitOffs>
+							</Var>
+						</Vars>
+						<Vars VarGrpType="2">
+							<Name>Outputs</Name>
+							<Var Swapping="#x1">
+								<Name>1 Word Output</Name>
+								<Type>UINT</Type>
+								<BitOffs>16</BitOffs>
+							</Var>
+						</Vars>
+					</SubModule>
+				</Module>
+				<Module Id="#x031d0003" ModuleIdentNumber="16896" SlotNumber="2" ModuleInfo="1 Word In- and Output" ModuleID="WORD_IO" DirectDeletable="true">
+					<Name>Term 3 (1 Word In- and Output)</Name>
+					<Comment><![CDATA[GSDML: GSDML-V2.44-beckhoff-EL6631-20240715.xml
+Module Info: 1 Word In- and Output
+]]></Comment>
+					<ImageId>182</ImageId>
+					<SubModule Id="#x031c0003" SubModuleIdentNumber="1" TypeOfSubModule="3" SubSlotNumber="1" IsFixSubmodule="true" SubModuleID="42">
+						<Name>Subterm 3 (1 Word In- and Output)</Name>
+						<Comment><![CDATA[GSDML: GSDML-V2.44-beckhoff-EL6631-20240715.xml
+Submodule Info: 1 Word In- and Output
+]]></Comment>
+						<ImageId>183</ImageId>
+						<Vars VarGrpType="1">
+							<Name>Inputs</Name>
+							<Var Swapping="#x1">
+								<Name>1 Word Input</Name>
+								<Type>UINT</Type>
+								<BitOffs>48</BitOffs>
+							</Var>
+						</Vars>
+						<Vars VarGrpType="2">
+							<Name>Outputs</Name>
+							<Var Swapping="#x1">
+								<Name>1 Word Output</Name>
+								<Type>UINT</Type>
+								<BitOffs>32</BitOffs>
+							</Var>
+						</Vars>
+					</SubModule>
+				</Module>
+			</API>
+		</Profinet>
+	</Box>
+</TcSmItem>

@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="MAIN" Id="{04832759-1a7b-41ab-8ca1-8e9904b62b12}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	DevState  AT %I* : UINT;
+	{attribute 'OPC.UA.DA' := '1'}
+	ContadorOpcUa : DINT := 0;
+    // Variáveis do lado Controller (Envia dados)
+    b_CtrlOut  AT %Q* : ARRAY[0..1] OF WORD;
+    b_CtrlIn   AT %I* : ARRAY[0..1] OF WORD;
+
+    // Variáveis do lado Device (Recebe e processa)
+    b_DevIn    AT %I* : ARRAY[0..1] OF WORD;
+    b_DevOut   AT %Q* : ARRAY[0..1] OF WORD;
+
+    // Contador para o teste
+    u_Counter         : WORD := 0;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// 1. Controller incrementa um contador e envia para a rede
+u_Counter := u_Counter + 1;
+b_CtrlOut[0] := u_Counter;
+
+// 2. Lógica de Eco/Loopback no Device (Pega o que entrou e joga na saída)
+b_DevOut[0] := b_DevIn[0];
+
+ContadorOpcUa := ContadorOpcUa + 1;
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

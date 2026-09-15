@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<TcSmItem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4026.26" ClassName="CTComPlcObjDef">
+	<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" XtvPath="PLC\PLC Instance.xtv" TmcPath="PLC\PLC.tmc">
+		<Name>__FILENAME__</Name>
+		<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
+		<UnrestoredVarLinks ImportTime="2026-09-11T11:20:58">
+			<OwnerA Name="InputDst" Prefix="TIPC^PLC^PLC Instance" Type="1">
+				<OwnerB Name="TIID^Device 1 (Profinet Controller CCAT (RT))^el6631-0010">
+					<Link VarA="MAIN.ECStatus0" TypeA="BYTE" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="API^Term 1 (DAP Module)^Subterm 1 (EL6631-0010 V2.44, at least FW 20)^Inputs^ECStatus[0]" RestoreInfo="ANotFound"/>
+					<Link VarA="MAIN.ECStatus1" TypeA="BYTE" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000001}" VarB="API^Term 1 (DAP Module)^Subterm 1 (EL6631-0010 V2.44, at least FW 20)^Inputs^ECStatus[1]" RestoreInfo="ANotFound"/>
+				</OwnerB>
+			</OwnerA>
+		</UnrestoredVarLinks>
+		<Contexts>
+			<Context>
+				<Id>0</Id>
+				<Name>PlcTask</Name>
+				<ManualConfig>
+					<OTCID>#x02010030</OTCID>
+				</ManualConfig>
+				<Priority>20</Priority>
+				<CycleTime>10000000</CycleTime>
+			</Context>
+		</Contexts>
+		<JsonDynPous><![CDATA[null]]></JsonDynPous>
+		<TaskPouOids>
+			<TaskPouOid Prio="20" OTCID="#x08502001"/>
+		</TaskPouOids>
+	</Instance>
+	<Mappings>
+		<OwnerA>
+			<OwnerB Name="TIID^Device 1 (EtherCAT)">
+				<Link VarA="PlcTask Inputs^MAIN.DevState" VarB="Inputs^DevState"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Device 3 (Profinet Controller CCAT (RT))^el6631-0010">
+				<Link VarA="PlcTask Inputs^MAIN.b_CtrlIn[0]" VarB="API^Term 2 (1 Word In- and Output)^Subterm 2 (1 Word In- and Output)^Inputs^1 Word Input"/>
+				<Link VarA="PlcTask Inputs^MAIN.b_CtrlIn[1]" VarB="API^Term 3 (1 Word In- and Output)^Subterm 3 (1 Word In- and Output)^Inputs^1 Word Input"/>
+				<Link VarA="PlcTask Outputs^MAIN.b_CtrlOut[0]" VarB="API^Term 2 (1 Word In- and Output)^Subterm 2 (1 Word In- and Output)^Outputs^1 Word Output"/>
+				<Link VarA="PlcTask Outputs^MAIN.b_CtrlOut[1]" VarB="API^Term 3 (1 Word In- and Output)^Subterm 3 (1 Word In- and Output)^Outputs^1 Word Output"/>
+			</OwnerB>
+		</OwnerA>
+	</Mappings>
+</TcSmItem>

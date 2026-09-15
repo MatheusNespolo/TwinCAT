@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<TcSmItem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4026.26" ClassName="CDevEthernetProtocolPnMasterDef" SubType="140">
+	<Device Id="3" DevType="140" AmsPort="28675" AmsNetId="5.162.174.122.4.1" RemoteName="Device 3 (Profinet Controller CCAT (RT))">
+		<Name>__FILENAME__</Name>
+		<AddressInfo>
+			<Ccat>
+				<Address>-1610612736</Address>
+				<Offset>65536</Offset>
+				<Size>8192</Size>
+				<BaseAddr>0</BaseAddr>
+				<BusNo>65535</BusNo>
+				<SlotNo>0</SlotNo>
+				<Dma>
+					<Address>0</Address>
+					<Offset>4096</Offset>
+					<Size>256</Size>
+					<BaseAddr>2</BaseAddr>
+					<RxChn>2</RxChn>
+					<TxChn>3</TxChn>
+				</Dma>
+				<SwitchSize>16384</SwitchSize>
+				<SwitchOffs>196608</SwitchOffs>
+				<TimeSize>128</TimeSize>
+				<TimeOffs>1024</TimeOffs>
+				<GpioSize>32</GpioSize>
+				<GpioOffs>768</GpioOffs>
+				<EepromSize>128</EepromSize>
+				<EepromOffs>512</EepromOffs>
+				<IntCtrlSize>16</IntCtrlSize>
+				<IntCtrlOffs>640</IntCtrlOffs>
+				<PortCount>2</PortCount>
+				<PortSwitched>true</PortSwitched>
+			</Ccat>
+		</AddressInfo>
+		<Image Id="5" AddrType="1" ImageType="3" SizeIn="8" SizeOut="14">
+			<Name>Image</Name>
+		</Image>
+		<Box File="el6631-0010.xti" Id="4"/>
+		<Profinet PLCPortNr="851" AddPortCount="1">
+			<Ethernet PromiscuousModeNoCopy="true" SpecialTask="true" TaskPort="301" CCatEepromOffs="#x00000200" CCatEepromSize="#x00000080" CCatSwitchOffs="#x00030000" CCatSwitchSize="#x00004000" CCatGpioOffs="#x00000300" CCatGpioSize="#x00000020" CCatTimeOffs="#x00000400" CCatTimeSize="#x00000080" CCatIntCtrlOffs="#x00000280" CCatIntCtrlSize="#x00000010" PortCount="2" PortSwitched="true"/>
+			<PNController ClientPort="60000" ServerPort="61000" VendorId="288" DeviceId="38" IPData="00000000c0a80101ffffff00c0a80101" SystemName="cx8290-master" IRTSendClock="32">
+				<RTData CableLength="10"/>
+			</PNController>
+		</Profinet>
+	</Device>
+</TcSmItem>
