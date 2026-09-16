@@ -14,28 +14,36 @@ VAR_OUTPUT
 	nReconnectCount : UDINT;
 END_VAR
 VAR
-	fbMqtt    : FB_IotMqttClient;
-	fbMessage : Tc3_IotBase.FB_IotMqttMessage;   // confirmar nome do tipo do objeto-mensagem na lib instalada
+	fbMqtt      : FB_IotMqttClient;
+	fbMsgQueue  : Tc3_IotBase.FB_IotMqttMessageQueue;   // fila de entrada: precisa ser instanciada
+	                                                     // e conectada em fbMqtt.ipMessageQueue -
+	                                                     // o client NAO cria isso sozinho (confirmado
+	                                                     // contra infosys.beckhoff.com/.../3391755403.html
+	                                                     // apos ipMessageQueue ficar 0 em bancada real)
+	fbMessage   : Tc3_IotBase.FB_IotMqttMessage;
 	bParamsSet    : BOOL;
 	bWasConnected : BOOL;
 	bSubEstoque, bSubEventos : BOOL;
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[// TF6701 API - confirmar contra a lib Tc3_IotBase instalada no CX9240:
+      <ST><![CDATA[// TF6701 API - confirmado contra infosys.beckhoff.com/.../tf6701_tc3_iot_communication_mqtt
+// apos bug real em bancada (ipMessageQueue chegava sempre 0 - ver historico do FB_init):
 //   FB_IotMqttClient.sHostName            : STRING  -> host do broker
 //   FB_IotMqttClient.nHostPort            : UINT    -> porta do broker
 //   FB_IotMqttClient.sClientId            : STRING  -> id fixo do cliente
 //   FB_IotMqttClient.stMQTT.sUserName     : STRING  -> usuario (pode ser .sUsername)  [ApplyBrokerParams]
 //   FB_IotMqttClient.stMQTT.sUserPassword : STRING  -> senha                          [ApplyBrokerParams]
 //   FB_IotMqttClient.stTLS.sCA            : STRING  -> caminho do CA PEM              [ApplyBrokerParams]
+//   FB_IotMqttClient.ipMessageQueue       : I_IotMqttMessageQueue  -> ENTRADA; o client
+//       NAO cria a fila sozinho. Precisa de uma FB_IotMqttMessageQueue propria (fbMsgQueue)
+//       atribuida ANTES do 1o Execute()                                              [ApplyBrokerParams]
 //   FB_IotMqttClient.Execute(bConnect := BOOL) : BOOL  -> chamada ciclica de conexao
 //   FB_IotMqttClient.bConnected           : BOOL    -> estado atual da conexao
 //   FB_IotMqttClient.Subscribe(sTopic := STRING, eQoS := Tc3_IotBase.TcIotMqttQos) : BOOL  [EnsureSubscriptions]
 //   Tc3_IotBase.TcIotMqttQos.AtLeastOnceDelivery   -> enum QoS 1                       [EnsureSubscriptions]
-//   FB_IotMqttClient.ipMessageQueue       : I_IotMqttMessageQueue                      [DrainOneMessage]
-//   I_IotMqttMessageQueue.nQueuedMessages : ULINT                                      [DrainOneMessage]
-//   I_IotMqttMessageQueue.Dequeue(REFERENCE TO FB_IotMqttMessage) : BOOL               [DrainOneMessage]
+//   FB_IotMqttMessageQueue.nQueuedMessages : UDINT                                     [DrainOneMessage]
+//   FB_IotMqttMessageQueue.Dequeue(fbMessage := FB_IotMqttMessage) : BOOL               [DrainOneMessage]
 //   FB_IotMqttMessage.GetTopic(pTopic := PVOID, nTopicSize := UDINT) : BOOL            [DrainOneMessage]
 //   FB_IotMqttMessage.GetPayload(pPayload := PVOID, nPayloadSize := UDINT,
 //                                bSetNullTermination := BOOL) : BOOL                   [DrainOneMessage]
@@ -104,6 +112,10 @@ END_IF
 IF stConfig.bUseTls THEN
 	fbMqtt.stTLS.sCA := stConfig.sCaCertPath;
 END_IF
+
+// Sem isso, ipMessageQueue fica 0 para sempre e DrainOneMessage nunca dequeue
+// nada - bConnected pode ficar TRUE mesmo assim (conexao e fila sao independentes).
+fbMqtt.ipMessageQueue := fbMsgQueue;
 ]]></ST>
       </Implementation>
     </Method>
@@ -112,18 +124,17 @@ END_IF
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[// ISOLADO DE PROPOSITO: todo acesso a fila de mensagens do TF6701 vive aqui
-// (ipMessageQueue / nQueuedMessages / Dequeue / GetTopic / GetPayload).
+// (fbMsgQueue / nQueuedMessages / Dequeue / GetTopic / GetPayload).
 // Retira NO MAXIMO uma mensagem por ciclo -> contrapressao previsivel para o
 // pipeline a jusante. Em sucesso: sTopic e sPayload validos e bNewMessage = TRUE
 // por exatamente 1 ciclo (o corpo principal zera bNewMessage no inicio do ciclo).
 DrainOneMessage := FALSE;
 
-// ipMessageQueue e uma interface; guarda defensiva antes do 1o Execute.
-IF fbMqtt.ipMessageQueue = 0 THEN
+IF fbMsgQueue.nQueuedMessages = 0 THEN
 	RETURN;
 END_IF
 
-IF fbMqtt.ipMessageQueue.Dequeue(fbMessage) THEN
+IF fbMsgQueue.Dequeue(fbMessage := fbMessage) THEN
 	fbMessage.GetTopic(pTopic := ADR(sTopic), nTopicSize := SIZEOF(sTopic));
 	fbMessage.GetPayload(pPayload            := ADR(sPayload),
 	                     nPayloadSize        := SIZEOF(sPayload) - 1,
