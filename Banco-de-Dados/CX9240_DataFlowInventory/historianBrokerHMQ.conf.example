@@ -1,0 +1,22 @@
+# /etc/dfi/historian.conf  —  copy to the CX9240, chmod 600, fill real values.
+# Lines starting with # and blank lines are ignored. Format: key=value (no quotes, no spaces around =).
+
+# /etc/dfi/historian.conf
+
+# --- MQTT broker (HiveMQ Cloud) ---
+mqtt_host=SUBSTITUA-pelo-seu-cluster.s1.eu.hivemq.cloud
+mqtt_port=8883
+mqtt_use_tls=1
+mqtt_ca_cert_path=/etc/ssl/certs/ca-certificates.crt
+mqtt_user=SUBSTITUA-usuario-hivemq
+mqtt_pass=SUBSTITUA-senha-hivemq
+topic_estoque=dataflow/estoque
+topic_eventos=dataflow/eventos
+
+# --- Database ---
+db_id=1
+
+# --- Historian ---
+sample_period_s=60
+buffer_size=128
+estoque_max=999
