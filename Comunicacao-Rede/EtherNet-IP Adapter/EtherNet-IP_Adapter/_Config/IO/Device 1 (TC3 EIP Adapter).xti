@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<TcSmItem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4026.26" ClassName="CDevEthernetProtocolEipSlaveDef" SubType="139">
+	<Device Id="1" DevType="139" DevFlags="#x0002" AmsPort="28673" AmsNetId="169.254.147.9.2.1" RemoteName="Device 1 (TC3 EIP Adapter)" InfoImageId="2">
+		<Name>__FILENAME__</Name>
+		<AddressInfo>
+			<Pnp>
+				<DeviceDesc>Ethernet 2 (TwinCAT-Intel PCI Ethernet Adapter (Gig</DeviceDesc>
+				<DeviceName>\DEVICE\{D96F1F46-B6E4-43E1-B832-1840BDF554BD}</DeviceName>
+				<DeviceData>0001059b9655</DeviceData>
+			</Pnp>
+		</AddressInfo>
+		<Image Id="1" AddrType="1" ImageType="3">
+			<Name>Image</Name>
+		</Image>
+		<Box File="Box 1 (TC EtherNet%_2FIP Slave).xti" Id="1"/>
+		<Ethernet DeviceDesc="Ethernet 2 (TwinCAT-Intel PCI Ethernet Adapter (Gigabit) V2 #2)" PromiscuousModeNoCopy="true" SpecialTask="true" TaskPort="301"/>
+		<EtherNetIPSlaveDev InfoDataSupport="true" InfoDataId="true" InfoDataNetId="true">
+			<Ethernet/>
+		</EtherNetIPSlaveDev>
+	</Device>
+</TcSmItem>

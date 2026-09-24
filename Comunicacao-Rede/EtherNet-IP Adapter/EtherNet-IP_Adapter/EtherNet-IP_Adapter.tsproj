@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4026.26">
+	<Project ProjectGUID="{6C49D972-FBA0-4F2E-9EB3-23C6188C7CEE}" TargetNetId="169.254.147.9.1.1" Target64Bit="true" ShowHideConfigurations="#x6">
+		<System>
+			<Tasks>
+				<Task Id="2" Priority="1" CycleTime="10000" AmsPort="301">
+					<Name>ENIPTask</Name>
+					<Vars VarGrpType="1" InsertType="1">
+						<Name>Inputs</Name>
+					</Vars>
+					<Vars VarGrpType="2" InsertType="1">
+						<Name>Outputs</Name>
+					</Vars>
+					<Image Id="3" AddrType="1" ImageType="1">
+						<Name>ENIPTask-Image</Name>
+					</Image>
+				</Task>
+			</Tasks>
+		</System>
+		<Io>
+			<Device File="Device 1 (TC3 EIP Adapter).xti" Id="1"/>
+		</Io>
+	</Project>
+	<Mappings>
+		<MappingInfo Identifier="{00000000-0010-0304-3000-040310000403}" Id="#x02030010"/>
+	</Mappings>
+</TcSmProject>

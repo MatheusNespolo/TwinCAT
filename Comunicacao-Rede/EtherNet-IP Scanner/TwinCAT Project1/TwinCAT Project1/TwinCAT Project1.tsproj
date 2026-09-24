@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4026.26">
+	<Project ProjectGUID="{F94BFFAA-7E42-4986-BFFA-06473E325879}" TargetNetId="5.162.174.122.1.1" Target64Bit="true" ShowHideConfigurations="#x6">
+		<System>
+			<Tasks>
+				<Task Id="2" Priority="1" CycleTime="10000" AmsPort="301">
+					<Name>ENIPTask</Name>
+					<Vars VarGrpType="1" InsertType="1">
+						<Name>Inputs</Name>
+					</Vars>
+					<Vars VarGrpType="2" InsertType="1">
+						<Name>Outputs</Name>
+					</Vars>
+					<Image Id="2" AddrType="1" ImageType="1">
+						<Name>ENIPTask-Image</Name>
+					</Image>
+				</Task>
+			</Tasks>
+		</System>
+		<Io>
+			<Device File="Device 3 (EtherCAT).xti" Id="3"/>
+			<Device File="Device 2 (CCAT EIP Scanner(Master)).xti" Id="2"/>
+		</Io>
+	</Project>
+</TcSmProject>
