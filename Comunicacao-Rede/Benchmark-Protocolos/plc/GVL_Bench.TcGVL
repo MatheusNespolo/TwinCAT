@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.0">
+  <GVL Name="GVL_Bench" Id="{4d1c0a52-7b0e-4a41-9b6e-0c1d5e7a2f01}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+    {attribute 'OPC.UA.DA' := '1'}
+    nIn  : DINT;   // escrito pelo cliente (Python)
+    {attribute 'OPC.UA.DA' := '1'}
+    nOut : DINT;   // eco: PRG_Echo copia nIn aqui a cada ciclo
+END_VAR
+]]></Declaration>
+  </GVL>
+</TcPlcObject>

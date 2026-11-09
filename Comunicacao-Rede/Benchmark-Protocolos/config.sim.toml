@@ -1,0 +1,24 @@
+# Dry-run contra os servidores simulados (python -m bench.sim_servers).
+# Valida o código do benchmark; os números NÃO representam o TwinCAT.
+
+[meta]
+target = "SIMULADO (asyncua + servidor Modbus mínimo, em localhost)"
+plc_cycle_ms = 5
+network = "loopback"
+
+[run]
+samples = 300
+warmup = 30
+timeout_s = 2.0
+
+[opcua]
+url = "opc.tcp://127.0.0.1:48400"
+node_in = "ns=2;s=GVL_Bench.nIn"
+node_out = "ns=2;s=GVL_Bench.nOut"
+
+[modbus]
+host = "127.0.0.1"
+port = 5020
+device_id = 1
+register_write = 32768
+register_read = 32768
