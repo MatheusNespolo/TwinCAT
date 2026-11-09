@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+  <POU Name="PRG_Ex08_CameEletronico" Id="{a1b2c3d4-0001-4001-8001-000000000008}" SpecialFunc="None">
+    <Declaration><![CDATA[(*
+    Exercício 08 - Came eletrônico (camming)
+    ---------------------------------------------------------------------------
+    Cenário: o fuso (Axis1, mm) segue uma tabela de came em função de um eixo
+    mestre virtual (Axis3, 360 graus/volta, módulo). Faz o mesmo curso do Ex07
+    (5 a 40 mm), mas o tempo não vem de um TON: vem da velocidade do mestre.
+
+    ATENÇÃO: este gabarito ainda NÃO foi compilado nem testado no XAE. Os nomes
+    dos blocos e das entradas foram conferidos na documentação da Beckhoff
+    (Tc2_MC2_Camming), mas confirme os identificadores no Library Manager da sua
+    versão (por exemplo MC_STARTMODE_ABSOLUTE e MC_TABLETYPE_EQUIDISTANT).
+
+    Requisitos: TF5050 (NC Camming), biblioteca Tc2_MC2_Camming 3.4.0 ou superior,
+    GVL_Axes com Axis1 (fuso), Axis2 (mesa do Ex07, não usada aqui) e Axis3 (mestre).
+
+    Blocos:
+      MC_Power, MC_Home, MC_Reset                  (Ex.01, 03, 05)
+      MC_MoveAbsolute, MC_MoveModulo, MC_Halt      (Ex.02, 04)
+      MC_MoveVelocity                              (mestre em velocidade constante)
+      MC_CamTableSelect, MC_CamIn, MC_CamOut       (novos neste exercício)
+*)
+PROGRAM PRG_Ex08_CameEletronico
+VAR CONSTANT
+    POSICAO_REPOUSO_FUSO : LREAL := 5.0;    // mm, igual a F_PerfilCame(0)
+    VELOCIDADE_MESTRE    : LREAL := 60.0;   // graus/s (volta de 6 s)
+    INICIO_ZONA_REPOUSO  : LREAL := 300.0;  // graus: a partir daqui o fuso está parado em repouso
+    LINHAS_TABELA        : UDINT := 361;    // 0 a 360 graus, passo de 1 grau
+END_VAR
+VAR
+    // ------------------- Tabela do came (montada por código) -------------------
+    aTabelaCame       : ARRAY [0..360, 0..1] OF LREAL; // coluna 0 = mestre, coluna 1 = escravo
+    stCamRef          : MC_CAM_REF;
+    nCamTableID       : MC_CAM_ID := 1;
+    xTabelaMontada    : BOOL;
+    i                 : DINT;
+
+    // ------------------- Habilitação dos eixos -------------------
+    fbHabilitaFuso    : MC_Power;
+    fbHabilitaMestre  : MC_Power;
+    xHabilitaEixos    : BOOL; // habilita fuso e mestre
+    xFusoHabilitado   : BOOL;
+    xMestreHabilitado : BOOL;
+
+    // ------------------- Referência (home) do fuso -------------------
+    fbHomeFuso        : MC_Home;
+    xBotaoReferencia  : BOOL;
+    xFusoReferenciado : BOOL;
+
+    // ------------------- Falha e reset -------------------
+    xFalhaEixos       : BOOL;
+    fbResetFuso       : MC_Reset;
+    fbResetMestre     : MC_Reset;
+    xBotaoReset       : BOOL;
+    xErroCame         : BOOL;  // erro em MC_CamTableSelect ou MC_CamIn
+    nErroCame         : UDINT; // ErrorID correspondente
+
+    // ------------------- Comandos e sinalizações -------------------
+    xLigarCame        : BOOL;
+    xPararCame        : BOOL;
+    xPedidoParada     : BOOL;  // memória do pedido de parada
+    xCameLigado       : BOOL;
+    xSincronizado     : BOOL;  // fuso acoplado e seguindo a tabela
+    xPermiteCame      : BOOL;  // interlock de início
+
+    // ------------------- Máquina de estados -------------------
+    eEstado           : E_EstadoCame := E_EstadoCame.DESLIGADO;
+
+    fbCamTableSelect  : MC_CamTableSelect;
+    fbCamIn           : MC_CamIn;
+    fbCamOut          : MC_CamOut;
+    fbFusoRepouso     : MC_MoveAbsolute;
+    fbMestreZero      : MC_MoveModulo;
+    fbMestreVel       : MC_MoveVelocity;
+    fbMestreHalt      : MC_Halt;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// ==================================================================
+// 0) Montagem da tabela (uma vez) e leitura de status
+// ==================================================================
+IF NOT xTabelaMontada THEN
+    FOR i := 0 TO 360 DO
+        aTabelaCame[i, 0] := DINT_TO_LREAL(i);               // mestre, em graus
+        aTabelaCame[i, 1] := F_PerfilCame(DINT_TO_LREAL(i)); // escravo, em mm
+    END_FOR
+    stCamRef.pArray       := ADR(aTabelaCame);
+    stCamRef.ArraySize    := SIZEOF(aTabelaCame);
+    stCamRef.TableType    := MC_TABLETYPE_EQUIDISTANT; // passo constante de 1 grau
+    stCamRef.NoOfRows     := LINHAS_TABELA;
+    stCamRef.NoOfColumns  := 2;                        // tabela de posição: mestre e escravo
+    xTabelaMontada        := TRUE;
+END_IF
+
+GVL_Axes.Axis1.ReadStatus(); // fuso
+GVL_Axes.Axis3.ReadStatus(); // mestre virtual
+
+// ==================================================================
+// 1) FALHA GLOBAL - qualquer erro derruba o ciclo imediatamente
+//    (falha é diferente de parada normal: não espera o fim da volta).
+// ==================================================================
+xFalhaEixos := GVL_Axes.Axis1.Status.Error OR GVL_Axes.Axis3.Status.Error;
+IF xFalhaEixos THEN
+    xCameLigado   := FALSE;
+    xSincronizado := FALSE;
+    xPedidoParada := FALSE;
+    eEstado       := E_EstadoCame.DESLIGADO;
+    // Após a falha, confira no Online se o fuso continua acoplado; se sim, rode
+    // MC_CamOut antes de um novo MC_CamIn (observação deste gabarito, não testada).
+END_IF
+
+// ==================================================================
+// 2) HABILITAÇÃO (cortada em caso de falha)
+// ==================================================================
+fbHabilitaFuso(
+    Axis := GVL_Axes.Axis1,
+    Enable := xHabilitaEixos AND NOT xFalhaEixos,
+    Enable_Positive := xHabilitaEixos AND NOT xFalhaEixos,
+    Enable_Negative := xHabilitaEixos AND NOT xFalhaEixos,
+    Override := 100.0);
+xFusoHabilitado := fbHabilitaFuso.Status;
+
+fbHabilitaMestre(
+    Axis := GVL_Axes.Axis3,
+    Enable := xHabilitaEixos AND NOT xFalhaEixos,
+    Enable_Positive := xHabilitaEixos AND NOT xFalhaEixos,
+    Enable_Negative := xHabilitaEixos AND NOT xFalhaEixos,
+    Override := 100.0);
+xMestreHabilitado := fbHabilitaMestre.Status;
+
+// ==================================================================
+// 3) RESET - só age quando existe falha real
+// ==================================================================
+fbResetFuso(Axis := GVL_Axes.Axis1, Execute := xBotaoReset AND xFalhaEixos);
+fbResetMestre(Axis := GVL_Axes.Axis3, Execute := xBotaoReset AND xFalhaEixos);
+IF xBotaoReset AND NOT xFalhaEixos THEN
+    xErroCame := FALSE; // limpa o aviso de erro do came quando não há falha de eixo
+END_IF
+
+// ==================================================================
+// 4) REFERÊNCIA DO FUSO - só com o came desligado (interlock)
+// ==================================================================
+fbHomeFuso(
+    Axis := GVL_Axes.Axis1,
+    Execute := xBotaoReferencia AND xFusoHabilitado AND NOT xCameLigado,
+    Position := 0.0);
+IF fbHomeFuso.Done THEN
+    xFusoReferenciado := TRUE;
+ELSIF (NOT xFusoHabilitado) OR xFalhaEixos THEN
+    xFusoReferenciado := FALSE;
+END_IF
+
+// ==================================================================
+// 5) INTERLOCK DE INÍCIO E PEDIDO DE PARADA
+// ==================================================================
+xPermiteCame := xFusoHabilitado AND xMestreHabilitado AND xFusoReferenciado AND NOT xFalhaEixos;
+IF xPararCame THEN
+    xPedidoParada := TRUE;
+END_IF
+
+// ==================================================================
+// 6) BLOCOS DE MOTION - cada um com Execute amarrado ao estado em que é usado
+//    (a borda de subida ocorre na entrada do estado; o Done fica alto
+//    enquanto o estado durar e cai quando o estado muda).
+// ==================================================================
+fbCamTableSelect(
+    Master         := GVL_Axes.Axis3,
+    Slave          := GVL_Axes.Axis1,
+    CamTable       := stCamRef,
+    Execute        := (eEstado = E_EstadoCame.CARREGA_TABELA),
+    Periodic       := TRUE,   // a tabela se repete a cada volta do mestre
+    MasterAbsolute := TRUE,
+    SlaveAbsolute  := TRUE,
+    CamTableID     := nCamTableID);
+
+fbFusoRepouso(
+    Axis     := GVL_Axes.Axis1,
+    Execute  := (eEstado = E_EstadoCame.PRE_POSICIONA),
+    Position := POSICAO_REPOUSO_FUSO,
+    Velocity := 50.0);
+
+fbMestreZero(
+    Axis      := GVL_Axes.Axis3,
+    Execute   := (eEstado = E_EstadoCame.PRE_POSICIONA),
+    Position  := 0.0,
+    Velocity  := 90.0,
+    Direction := MC_Direction.MC_Positive_Direction);
+
+fbCamIn(
+    Master        := GVL_Axes.Axis3,
+    Slave         := GVL_Axes.Axis1,
+    Execute       := (eEstado = E_EstadoCame.ACOPLA) OR (eEstado = E_EstadoCame.SINCRONIZADO),
+    MasterOffset  := 0.0,
+    SlaveOffset   := 0.0,
+    MasterScaling := 1.0,
+    SlaveScaling  := 1.0,
+    StartMode     := MC_STARTMODE_ABSOLUTE, // a tabela está no mesmo sistema de coordenadas dos eixos
+    CamTableID    := nCamTableID);
+
+// O mestre só gira depois de acoplado (estado SINCRONIZADO).
+fbMestreVel(
+    Axis      := GVL_Axes.Axis3,
+    Execute   := (eEstado = E_EstadoCame.SINCRONIZADO),
+    Velocity  := VELOCIDADE_MESTRE,
+    Direction := MC_Direction.MC_Positive_Direction);
+
+fbCamOut(
+    Slave   := GVL_Axes.Axis1,
+    Execute := (eEstado = E_EstadoCame.DESACOPLA));
+
+fbMestreHalt(
+    Axis         := GVL_Axes.Axis3,
+    Execute      := (eEstado = E_EstadoCame.PARA_MESTRE),
+    Deceleration := 120.0);
+
+// ==================================================================
+// 7) MÁQUINA DE ESTADOS
+// ==================================================================
+CASE eEstado OF
+
+    E_EstadoCame.DESLIGADO:
+        IF xLigarCame AND xPermiteCame THEN
+            xPedidoParada := FALSE;
+            xErroCame     := FALSE;
+            xCameLigado   := TRUE;
+            eEstado       := E_EstadoCame.CARREGA_TABELA;
+        END_IF
+
+    E_EstadoCame.CARREGA_TABELA:
+        IF fbCamTableSelect.Done THEN
+            eEstado := E_EstadoCame.PRE_POSICIONA;
+        ELSIF fbCamTableSelect.Error THEN
+            xErroCame := TRUE; nErroCame := fbCamTableSelect.ErrorID;
+            xCameLigado := FALSE; eEstado := E_EstadoCame.DESLIGADO;
+        END_IF
+
+    E_EstadoCame.PRE_POSICIONA:
+        // Fuso em 5 mm e mestre em 0 grau: é onde a tabela começa. Acoplar com o
+        // mestre em outra posição faria o fuso ter que "pular" para F(mestre).
+        IF fbFusoRepouso.Done AND fbMestreZero.Done THEN
+            eEstado := E_EstadoCame.ACOPLA;
+        END_IF
+
+    E_EstadoCame.ACOPLA:
+        IF fbCamIn.InSync THEN
+            eEstado := E_EstadoCame.SINCRONIZADO;
+        ELSIF fbCamIn.Error THEN
+            xErroCame := TRUE; nErroCame := fbCamIn.ErrorID;
+            xCameLigado := FALSE; eEstado := E_EstadoCame.DESLIGADO;
+        END_IF
+
+    E_EstadoCame.SINCRONIZADO:
+        xSincronizado := fbCamIn.InSync;
+        // Parada suave: só desacopla quando o mestre entra na zona de repouso
+        // (300 a 360 graus), em que o escravo está parado em 5 mm.
+        IF xPedidoParada AND (GVL_Axes.Axis3.NcToPlc.ActPos >= INICIO_ZONA_REPOUSO) THEN
+            xSincronizado := FALSE;
+            eEstado := E_EstadoCame.DESACOPLA;
+        END_IF
+
+    E_EstadoCame.DESACOPLA:
+        // MC_CamOut NÃO para o escravo: ele segue na velocidade que tinha (zero nesta zona).
+        IF fbCamOut.Done THEN
+            eEstado := E_EstadoCame.PARA_MESTRE;
+        END_IF
+
+    E_EstadoCame.PARA_MESTRE:
+        IF fbMestreHalt.Done THEN
+            xCameLigado   := FALSE;
+            xPedidoParada := FALSE;
+            eEstado       := E_EstadoCame.DESLIGADO;
+        END_IF
+
+END_CASE
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

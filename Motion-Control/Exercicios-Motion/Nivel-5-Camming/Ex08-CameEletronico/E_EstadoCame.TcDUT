@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+  <DUT Name="E_EstadoCame" Id="{a1b2c3d4-0001-4002-8002-000000000008}">
+    <Declaration><![CDATA[(*
+    Estados do ciclo do came eletrônico (Exercício 08).
+
+    DESLIGADO      -> ocioso, aguardando comando de ligar e interlock liberado.
+    CARREGA_TABELA -> MC_CamTableSelect cria a tabela no NC a partir do array do PLC.
+    PRE_POSICIONA  -> fuso em 5 mm e mestre em 0 grau, antes de acoplar.
+    ACOPLA         -> MC_CamIn ativo, aguardando InSync.
+    SINCRONIZADO   -> mestre girando; o fuso segue a tabela.
+    DESACOPLA      -> MC_CamOut, só com o mestre entre 300 e 360 graus (fuso parado em repouso).
+    PARA_MESTRE    -> MC_Halt no mestre; ao terminar, volta a DESLIGADO.
+*)
+TYPE E_EstadoCame :
+(
+    DESLIGADO,
+    CARREGA_TABELA,
+    PRE_POSICIONA,
+    ACOPLA,
+    SINCRONIZADO,
+    DESACOPLA,
+    PARA_MESTRE
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

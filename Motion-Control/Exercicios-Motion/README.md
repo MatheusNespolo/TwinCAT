@@ -28,6 +28,7 @@ Os arquivos de projeto dos programas resolvendo os exercícios foram feitos como
 | 2 — Intermediário | [`Nivel-2-Intermediario/`](Nivel-2-Intermediario/) | Referenciamento (home) e eixo rotativo | `MC_Home`, `MC_MoveModulo`, `MC_Direction` |
 | 3 — Avançado | [`Nivel-3-Avancado/`](Nivel-3-Avancado/) | Erros e sequenciamento automático | `MC_Reset`, máquina de estados (`CASE`), interlocks |
 | 4 — Simulado | [`Nivel-4-Simulado-Prova/`](Nivel-4-Simulado-Prova/) | Cenário completo estilo prova de certificação | Todos os anteriores combinados |
+| 5 — Camming | [`Nivel-5-Camming/`](Nivel-5-Camming/) | Came eletrônico com eixo mestre virtual (extensão, fora da prova) | `MC_CamTableSelect`, `MC_CamIn`, `MC_CamOut`, `MC_MoveVelocity` |
 
 ## Convenção de eixos usada nos gabaritos
 
