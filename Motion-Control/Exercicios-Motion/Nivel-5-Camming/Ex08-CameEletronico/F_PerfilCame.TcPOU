@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+  <POU Name="F_PerfilCame" Id="{a1b2c3d4-0001-4003-8003-000000000008}" SpecialFunc="None">
+    <Declaration><![CDATA[(*
+    Perfil do came do Exercício 08: posição do escravo (mm) em função da posição do mestre (graus).
+      0 a 120   : sobe de 5 a 40 mm, cicloidal
+      120 a 180 : espera em 40 mm
+      180 a 300 : desce de 40 a 5 mm, cicloidal
+      300 a 360 : espera em 5 mm
+    Cicloidal: S(s) = s - sin(2*pi*s)/(2*pi), s de 0 a 1 (velocidade e aceleração nulas nas pontas).
+    O mesmo cálculo está em tools/gen_cam_table.py, para conferir os valores.
+*)
+FUNCTION F_PerfilCame : LREAL
+VAR_INPUT
+    rTheta : LREAL; // posição do mestre, de 0 a 360 graus
+END_VAR
+VAR CONSTANT
+    rH0 : LREAL := 5.0;   // mm, repouso
+    rH1 : LREAL := 40.0;  // mm, trabalho
+    rPi : LREAL := 3.14159265358979;
+END_VAR
+VAR
+    s : LREAL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF rTheta < 120.0 THEN
+    s := rTheta / 120.0;
+    F_PerfilCame := rH0 + (rH1 - rH0) * (s - SIN(2.0 * rPi * s) / (2.0 * rPi));
+ELSIF rTheta < 180.0 THEN
+    F_PerfilCame := rH1;
+ELSIF rTheta < 300.0 THEN
+    s := (rTheta - 180.0) / 120.0;
+    F_PerfilCame := rH1 - (rH1 - rH0) * (s - SIN(2.0 * rPi * s) / (2.0 * rPi));
+ELSE
+    F_PerfilCame := rH0;
+END_IF
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>
