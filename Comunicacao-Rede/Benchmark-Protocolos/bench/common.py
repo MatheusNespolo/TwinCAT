@@ -6,6 +6,11 @@ Duas métricas por protocolo:
   Inclui: escrita, espera pelo ciclo do PLC e as leituras repetidas até o eco chegar.
   Como só o relógio do cliente é usado, não há necessidade de sincronizar relógios.
 - ``read_single``: tempo de uma única leitura (custo puro do protocolo, sem o ciclo do PLC).
+- ``publish_ack``: (MQTT) tempo até o broker confirmar um publish com QoS 1; o equivalente de
+  ``read_single`` num protocolo sem leitura direta.
+
+Nos modos por notificação (``ads_notify``, ``opcua_sub``) e no MQTT a resposta chega por push,
+então só ``echo_rtt`` (e ``publish_ack``) existem.
 """
 from __future__ import annotations
 
@@ -151,4 +156,60 @@ async def ameasure_read(read: Callable[[], Awaitable[int]], *, n: int, warmup: i
         dt_ms = (_now_ns() - t0) / 1e6
         if i >= warmup:
             res.samples_ms.append(dt_ms)
+    return res
+
+
+def measure_echo_push(
+    send: Callable[[int], None],
+    wait: Callable[[int, float], bool],
+    *,
+    n: int,
+    warmup: int,
+    timeout_s: float,
+    protocol: str,
+) -> Result:
+    """Eco por *push*: a resposta chega por callback, sem laço de leitura.
+
+    ``send(seq)`` envia o valor (e deve registrar a espera ANTES de escrever, para não perder
+    uma resposta rápida); ``wait(seq, timeout_s)`` bloqueia até o eco de ``seq`` chegar e
+    devolve True, ou False se estourar o tempo. Só ``echo_rtt`` é medido: não existe "leitura
+    única" num protocolo que entrega por notificação.
+    """
+    res = Result(protocol, "echo_rtt")
+    for i in range(warmup + n):
+        seq = next_seq(i)
+        t0 = _now_ns()
+        send(seq)
+        ok = wait(seq, timeout_s)
+        dt_ms = (_now_ns() - t0) / 1e6
+        if i >= warmup:
+            if ok:
+                res.samples_ms.append(dt_ms)
+            else:
+                res.failures += 1
+    return res
+
+
+async def ameasure_echo_push(
+    send: Callable[[int], Awaitable[None]],
+    wait: Callable[[int, float], Awaitable[bool]],
+    *,
+    n: int,
+    warmup: int,
+    timeout_s: float,
+    protocol: str,
+) -> Result:
+    """Versão assíncrona de :func:`measure_echo_push`."""
+    res = Result(protocol, "echo_rtt")
+    for i in range(warmup + n):
+        seq = next_seq(i)
+        t0 = _now_ns()
+        await send(seq)
+        ok = await wait(seq, timeout_s)
+        dt_ms = (_now_ns() - t0) / 1e6
+        if i >= warmup:
+            if ok:
+                res.samples_ms.append(dt_ms)
+            else:
+                res.failures += 1
     return res

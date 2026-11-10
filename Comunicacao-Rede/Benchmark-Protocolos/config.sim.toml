@@ -15,6 +15,8 @@ timeout_s = 2.0
 url = "opc.tcp://127.0.0.1:48400"
 node_in = "ns=2;s=GVL_Bench.nIn"
 node_out = "ns=2;s=GVL_Bench.nOut"
+sub_period_ms = 1
+sampling_ms = 1
 
 [modbus]
 host = "127.0.0.1"
@@ -22,3 +24,8 @@ port = 5020
 device_id = 1
 register_write = 32768
 register_read = 32768
+
+[mqtt]
+host = "127.0.0.1"
+port = 18830
+qos = 1

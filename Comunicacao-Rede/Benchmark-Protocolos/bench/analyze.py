@@ -15,7 +15,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import pandas as pd  # noqa: E402
 
-METRIC_LABEL = {"echo_rtt": "Eco (ida e volta, com ciclo do PLC)", "read_single": "Leitura única"}
+METRIC_LABEL = {
+    "echo_rtt": "Eco (ida e volta, com ciclo do PLC)",
+    "read_single": "Leitura única",
+    "publish_ack": "Publicação confirmada (MQTT, QoS 1, até o broker)",
+}
 COLS = ["protocol", "n", "failures", "p50_ms", "p95_ms", "p99_ms", "max_ms", "ops_per_s"]
 HEAD = ["Protocolo", "n", "Falhas", "p50 (ms)", "p95 (ms)", "p99 (ms)", "máx (ms)", "ops/s"]
 
@@ -51,17 +55,16 @@ def main(argv: list[str] | None = None) -> int:
         md += [f"**{label}**", "", to_markdown(sub), ""]
     (folder / "summary.md").write_text("\n".join(md), encoding="utf-8")
 
-    fig, axes = plt.subplots(1, 2, figsize=(11, 4.2), sharey=False)
-    for ax, (metric, label) in zip(axes, METRIC_LABEL.items()):
+    metrics = [m for m in METRIC_LABEL if not samples[samples["metric"] == m].empty]
+    fig, axes = plt.subplots(1, max(len(metrics), 1), figsize=(5.5 * max(len(metrics), 1), 4.4), squeeze=False)
+    for ax, metric in zip(axes[0], metrics):
         sub = samples[samples["metric"] == metric]
-        protos = [p for p in sub["protocol"].unique()]
-        if not protos:
-            ax.set_visible(False)
-            continue
+        protos = list(sub["protocol"].unique())
         ax.boxplot([sub[sub["protocol"] == p]["ms"] for p in protos], tick_labels=protos, showfliers=True)
-        ax.set_title(label, fontsize=10)
+        ax.set_title(METRIC_LABEL[metric], fontsize=9)
         ax.set_ylabel("ms")
         ax.set_yscale("log")
+        ax.tick_params(axis="x", labelrotation=30)
         ax.grid(True, axis="y", alpha=0.3)
     fig.suptitle("Benchmark de protocolos (escala log)", fontsize=11)
     fig.tight_layout()

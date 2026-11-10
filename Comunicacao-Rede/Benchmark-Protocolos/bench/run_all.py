@@ -2,6 +2,9 @@
 
 Uso (a partir da pasta Benchmark-Protocolos):
     python -m bench.run_all --config config.toml --protocols ads opcua modbus
+    python -m bench.run_all --config config.toml --protocols ads_notify opcua_sub mqtt
+
+Protocolos: ads, ads_notify (notificações), opcua, opcua_sub (assinatura), modbus, mqtt.
 """
 from __future__ import annotations
 
@@ -16,7 +19,15 @@ from pathlib import Path
 
 from .common import Result, load_config, summarize
 
-PROTOCOLS = {"ads": "proto_ads", "opcua": "proto_opcua", "modbus": "proto_modbus"}
+# nome -> (módulo, função, seção do arquivo de configuração)
+PROTOCOLS = {
+    "ads": ("proto_ads", "run", "ads"),
+    "ads_notify": ("proto_ads", "run_notify", "ads"),
+    "opcua": ("proto_opcua", "run", "opcua"),
+    "opcua_sub": ("proto_opcua", "run_sub", "opcua"),
+    "modbus": ("proto_modbus", "run", "modbus"),
+    "mqtt": ("proto_mqtt", "run", "mqtt"),
+}
 SUMMARY_FIELDS = [
     "protocol", "metric", "n", "failures", "mean_ms", "p50_ms", "p95_ms", "p99_ms", "max_ms", "ops_per_s",
     "target", "plc_cycle_ms", "network", "host_os", "stamp",
@@ -26,12 +37,13 @@ SUMMARY_FIELDS = [
 def run_protocols(cfg: dict, names: list[str], n: int, warmup: int, timeout_s: float) -> list[Result]:
     results: list[Result] = []
     for name in names:
-        mod = importlib.import_module(f"bench.{PROTOCOLS[name]}")
+        module, func, section = PROTOCOLS[name]
+        mod = importlib.import_module(f"bench.{module}")
         print(f"[{name}] medindo {n} amostras (+{warmup} de aquecimento)...", flush=True)
         try:
-            results.extend(mod.run(cfg, n, warmup, timeout_s))
+            results.extend(getattr(mod, func)(cfg, n, warmup, timeout_s))
         except KeyError as exc:  # seção ou chave ausente no arquivo de configuração
-            print(f"[{name}] PULADO: a configuração não tem {exc} (seção [{name}] ausente?)", file=sys.stderr)
+            print(f"[{name}] PULADO: a configuração não tem {exc} (seção [{section}] incompleta?)", file=sys.stderr)
         except Exception as exc:  # um protocolo indisponível não deve derrubar os outros
             print(f"[{name}] FALHOU: {exc!r}", file=sys.stderr)
     return results

@@ -17,6 +17,7 @@ net_id = "192.168.1.42.1.1"  # AmsNetId do controlador (rota ADS já criada)
 port = 851                   # primeiro runtime de PLC
 symbol_in = "GVL_Bench.nIn"
 symbol_out = "GVL_Bench.nOut"
+notify_cycle_ms = 1          # modo ads_notify: ciclo da notificação
 
 [opcua]
 url = "opc.tcp://192.168.1.42:4840"
@@ -24,6 +25,8 @@ url = "opc.tcp://192.168.1.42:4840"
 node_in = "ns=4;s=GVL_Bench.nIn"
 node_out = "ns=4;s=GVL_Bench.nOut"
 # security = "Basic256Sha256,SignAndEncrypt,cert.der,key.pem"   # opcional
+sub_period_ms = 1            # modo opcua_sub: intervalo de publicação pedido ao servidor
+sampling_ms = 1              # modo opcua_sub: intervalo de amostragem pedido ao servidor
 
 [modbus]
 host = "192.168.1.42"
@@ -31,3 +34,15 @@ port = 502
 device_id = 1
 register_write = 32768       # mb_Output_Registers[0] (função 6)
 register_read = 32768        # mb_Input_Registers[0]  (função 4)
+
+[mqtt]
+host = "192.168.1.10"        # broker (ex.: o Mosquitto do DFI). O PLC deve apontar para o mesmo broker.
+port = 1883
+topic_in = "bench/in"        # o cliente publica aqui; o PLC assina
+topic_out = "bench/out"      # o PLC devolve aqui; o cliente assina
+topic_probe = "bench/probe"  # publish_ack: tópico sem assinantes
+qos = 1
+client_id = "bench-client"
+# tls = true                  # HiveMQ Cloud usa 8883 com TLS
+# ca_cert = "/caminho/ca.pem"
+# credenciais: variáveis de ambiente BENCH_MQTT_USER e BENCH_MQTT_PASSWORD

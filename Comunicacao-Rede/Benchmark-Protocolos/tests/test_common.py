@@ -66,3 +66,47 @@ def test_measure_echo_needs_several_reads_when_echo_is_late():
 def test_measure_read_discards_warmup():
     res = measure_read(lambda: 0, n=10, warmup=4, protocol="fake")
     assert len(res.samples_ms) == 10
+
+
+# ---- modos por push ---------------------------------------------------------------------
+import asyncio
+import threading
+
+from bench.common import ameasure_echo_push, measure_echo_push
+
+
+def test_measure_echo_push_registers_wait_before_send():
+    seen = {}
+    cond = threading.Condition()
+
+    def send(seq):
+        # eco imediato, em outra thread, ANTES de send voltar: wait não pode perdê-lo
+        def reply():
+            with cond:
+                seen["v"] = seq
+                cond.notify_all()
+        threading.Thread(target=reply).start()
+
+    def wait(seq, timeout):
+        with cond:
+            return cond.wait_for(lambda: seen.get("v") == seq, timeout)
+
+    res = measure_echo_push(send, wait, n=20, warmup=3, timeout_s=0.5, protocol="fake_push")
+    assert res.metric == "echo_rtt" and len(res.samples_ms) == 20 and res.failures == 0
+
+
+def test_measure_echo_push_counts_timeouts():
+    res = measure_echo_push(lambda s: None, lambda s, t: False, n=4, warmup=1, timeout_s=0.01, protocol="x")
+    assert res.failures == 4 and res.samples_ms == []
+
+
+def test_ameasure_echo_push_async():
+    async def send(seq):
+        pass
+
+    async def wait(seq, timeout):
+        await asyncio.sleep(0.001)
+        return True
+
+    res = asyncio.run(ameasure_echo_push(send, wait, n=10, warmup=2, timeout_s=0.5, protocol="x"))
+    assert len(res.samples_ms) == 10 and res.failures == 0
