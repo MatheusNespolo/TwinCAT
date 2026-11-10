@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.0">
+  <GVL Name="GVL" Id="{8a3e6f10-2c94-4d77-a1b5-3f9e0d6c4b02}">
+    <Declaration><![CDATA[// Áreas do servidor Modbus TCP (TF6250), a partir do endereço 32768.
+// Sem 'qualified_only': o servidor Modbus procura estas variáveis pelo nome.
+VAR_GLOBAL
+    mb_Input_Coils      : ARRAY [0..255] OF BOOL;
+    mb_Output_Coils     : ARRAY [0..255] OF BOOL;
+    mb_Input_Registers  : ARRAY [0..255] OF WORD;
+    mb_Output_Registers : ARRAY [0..255] OF WORD;
+END_VAR
+]]></Declaration>
+  </GVL>
+</TcPlcObject>

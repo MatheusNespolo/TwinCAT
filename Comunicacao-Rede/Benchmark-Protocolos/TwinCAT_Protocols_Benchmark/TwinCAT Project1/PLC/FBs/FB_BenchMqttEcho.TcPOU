@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.0">
+  <POU Name="FB_BenchMqttEcho" Id="{e2f4a6c8-3b5d-4f71-9a0c-6d8e1f3a5b04}" SpecialFunc="None">
+    <Declaration><![CDATA[(*
+    Eco MQTT do benchmark: assina sTopicIn e devolve, em sTopicOut, o mesmo payload.
+
+    Exige a TF6701 (IoT Communication MQTT) e a referência Tc3_IotBase no projeto PLC.
+    A conexão, a fila de entrada (ipMessageQueue), o Subscribe e o Dequeue seguem o
+    FB_DfiMqttSubscriber do projeto CX9240_DataFlowInventory, validado em bancada. O que
+    este FB acrescenta é o Publish, conferido apenas na documentação da Beckhoff (TF6701,
+    FB_IotMqttClient.Publish) e AINDA NÃO TESTADO no XAE.
+
+    Uma mensagem por ciclo (mesma contrapressão do DrainOneMessage do DFI).
+    O payload é texto ASCII (o número em decimal) e volta sem alteração.
+*)
+FUNCTION_BLOCK FB_BenchMqttEcho
+VAR_INPUT
+    bEnable   : BOOL;
+    sHost     : STRING(80) := '192.168.1.10'; // broker
+    nPort     : UINT := 1883;
+    sTopicIn  : STRING(80) := 'bench/in';
+    sTopicOut : STRING(80) := 'bench/out';
+END_VAR
+VAR_OUTPUT
+    bConnected : BOOL;
+    bError     : BOOL;
+    nEchoed    : UDINT; // mensagens devolvidas
+END_VAR
+VAR
+    fbMqtt        : FB_IotMqttClient;
+    fbMsgQueue    : Tc3_IotBase.FB_IotMqttMessageQueue; // fila de entrada: o client não a cria sozinho
+    fbMessage     : Tc3_IotBase.FB_IotMqttMessage;
+    bParamsSet    : BOOL;
+    bSubscribed   : BOOL;
+    bWasConnected : BOOL;
+    sTopicSub     : STRING(80); // Subscribe e Publish recebem o tópico por referência
+    sTopicPub     : STRING(80);
+    sPayload      : STRING(63);
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// -- desabilitado: derruba a conexão e zera o handshake de assinatura --
+IF NOT bEnable THEN
+    fbMqtt.Execute(bConnect := FALSE);
+    bConnected    := FALSE;
+    bSubscribed   := FALSE;
+    bWasConnected := FALSE;
+    RETURN;
+END_IF
+
+// -- parametrização única (igual ao ApplyBrokerParams do DFI) --
+IF NOT bParamsSet THEN
+    fbMqtt.sHostName      := sHost;
+    fbMqtt.nHostPort      := nPort;
+    fbMqtt.sClientId      := 'bench-plc-echo';
+    fbMqtt.ipMessageQueue := fbMsgQueue; // sem isso a fila de entrada fica 0 para sempre
+    bParamsSet := TRUE;
+END_IF
+
+// -- conexão cíclica --
+fbMqtt.Execute(bConnect := TRUE);
+bConnected := fbMqtt.bConnected;
+bError     := fbMqtt.bError;
+
+// a queda invalida a assinatura
+IF bWasConnected AND NOT bConnected THEN
+    bSubscribed := FALSE;
+END_IF
+bWasConnected := bConnected;
+
+IF bConnected AND NOT bSubscribed THEN
+    sTopicSub   := sTopicIn;
+    bSubscribed := fbMqtt.Subscribe(sTopic := sTopicSub,
+                                    eQoS   := Tc3_IotBase.TcIotMqttQos.AtLeastOnceDelivery);
+END_IF
+
+// -- eco: tira no máximo UMA mensagem por ciclo e a devolve --
+IF bConnected AND bSubscribed AND (fbMsgQueue.nQueuedMessages > 0) THEN
+    IF fbMsgQueue.Dequeue(fbMessage := fbMessage) THEN
+        fbMessage.GetPayload(pPayload            := ADR(sPayload),
+                             nPayloadSize        := SIZEOF(sPayload) - 1,
+                             bSetNullTermination := TRUE);
+        sTopicPub := sTopicOut;
+        IF fbMqtt.Publish(sTopic       := sTopicPub,
+                          pPayload     := ADR(sPayload),
+                          nPayloadSize := INT_TO_UDINT(LEN(sPayload)), // sem o byte nulo: o cliente lê texto
+                          eQoS         := Tc3_IotBase.TcIotMqttQos.AtLeastOnceDelivery,
+                          bRetain      := FALSE,
+                          bQueue       := FALSE) THEN // bQueue é reservado: sempre FALSE
+            nEchoed := nEchoed + 1;
+        END_IF
+    END_IF
+END_IF
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

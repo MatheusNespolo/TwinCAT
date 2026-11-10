@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.0">
+  <POU Name="PRG_Echo" Id="{c5b7d2e4-91a3-4f68-8e0d-7a1b3c9d5e03}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM PRG_Echo
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// Eco usado pelo benchmark: devolve, no mesmo ciclo, o que o cliente escreveu.
+// ADS e OPC UA: DINT.
+GVL_Bench.nOut := GVL_Bench.nIn;
+
+// Modbus TCP: o cliente escreve o holding register (função 6) e lê o input register (função 4).
+GVL.mb_Input_Registers[0] := GVL.mb_Output_Registers[0];
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

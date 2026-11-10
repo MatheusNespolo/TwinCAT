@@ -3,9 +3,9 @@
 # BENCH_OPCUA_USER e BENCH_OPCUA_PASSWORD.
 
 [meta]                       # registrado junto aos resultados
-target = "CX9240 (Beckhoff RT Linux)"
+target = "CX8290 (Beckhoff RT Linux)"
 plc_cycle_ms = 1             # ciclo da task do PLC que executa PRG_Echo
-network = "cabo direto"      # ex.: "cabo direto", "switch", "Wi-Fi"
+network = "switch"      # ex.: "cabo direto", "switch", "Wi-Fi"
 
 [run]
 samples = 1000
@@ -13,7 +13,7 @@ warmup = 100
 timeout_s = 2.0
 
 [ads]
-net_id = "192.168.1.42.1.1"  # AmsNetId do controlador (rota ADS já criada)
+net_id = "5.162.174.122.1.1"  # AmsNetId do controlador (rota ADS já criada)
 port = 851                   # primeiro runtime de PLC
 symbol_in = "GVL_Bench.nIn"
 symbol_out = "GVL_Bench.nOut"
