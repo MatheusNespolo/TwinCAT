@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.0">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
   <POU Name="PRG_EchoMqtt" Id="{f3a5b7d9-4c6e-4082-8b1d-7e9f2a4b6c05}" SpecialFunc="None">
     <Declaration><![CDATA[(*
     Chama o eco MQTT. É um programa à parte do PRG_Echo de propósito: usar o MQTT exige a
@@ -15,7 +15,7 @@ END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[fbEcho(bEnable   := xHabilita,
-       sHost     := '192.168.1.10',   // o mesmo broker de [mqtt] host no config.toml
+       sHost     := '10.199.162.30',   // o mesmo broker de [mqtt] host no config.toml
        nPort     := 1883,
        sTopicIn  := 'bench/in',
        sTopicOut := 'bench/out');
